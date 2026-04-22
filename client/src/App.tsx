@@ -4,11 +4,13 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { ChildProvider } from "./contexts/ChildContext";
 import Dashboard from "./pages/Dashboard";
 import Scheduler from "./pages/Scheduler";
 import Development from "./pages/Development";
 import PlayLab from "./pages/PlayLab";
 import Coach from "./pages/Coach";
+import Onboarding from "./pages/Onboarding";
 
 function Router() {
   return (
@@ -18,6 +20,7 @@ function Router() {
       <Route path="/development" component={Development} />
       <Route path="/play" component={PlayLab} />
       <Route path="/coach" component={Coach} />
+      <Route path="/onboarding" component={Onboarding} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -29,8 +32,10 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
-          <Toaster />
-          <Router />
+          <ChildProvider>
+            <Toaster />
+            <Router />
+          </ChildProvider>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

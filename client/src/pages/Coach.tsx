@@ -1,290 +1,385 @@
 /**
  * KINLOOP Parenting Coach (Quadrant 4) — Rose accent
- * Chat interface with curated topic cards and book citations
+ * RAG-powered chat with parenting knowledge corpus and book citations
  */
 import AppShell from "@/components/AppShell";
-import {
-  demoChildren,
-  demoCoachConversation,
-  demoCoachTopics,
-  type CoachMessage,
-  type CoachTopic,
-} from "@/lib/demo-data";
+import { useChild } from "@/contexts/ChildContext";
+import { trpc } from "@/lib/trpc";
 import { useState, useRef, useEffect } from "react";
 import {
   MessageCircle,
   Send,
-  BookOpen,
-  GraduationCap,
-  Heart,
-  Monitor,
-  Utensils,
-  Users,
-  Pencil,
   Sparkles,
+  Loader2,
+  BookOpen,
+  Plus,
   ChevronRight,
+  Clock,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { Streamdown } from "streamdown";
 
-const topicIcons: Record<string, typeof Heart> = {
-  GraduationCap,
-  Heart,
-  Monitor,
-  Utensils,
-  Users,
-  Pencil,
+const TOPIC_STARTERS = [
+  { label: "Managing big emotions", prompt: "My child has been having big emotional outbursts lately. What strategies can help?" },
+  { label: "Picky eating", prompt: "My child is a very picky eater. How can I encourage them to try new foods?" },
+  { label: "Sleep struggles", prompt: "We're having trouble with bedtime. My child keeps getting out of bed. What can we do?" },
+  { label: "Sibling conflicts", prompt: "How do I handle fighting between siblings?" },
+  { label: "Screen time balance", prompt: "How much screen time is appropriate and how do I set healthy boundaries?" },
+  { label: "Kindergarten readiness", prompt: "How can I prepare my child for starting kindergarten?" },
+];
+
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  sources?: Array<{ book: string; chapter: string }>;
 };
 
-// Simulated AI responses for demo
-const demoResponses: Record<string, { content: string; sources: { book: string; chapter: string }[] }> = {
-  default: {
-    content: `That's a great question! Based on what I know about Mia (4 years old, at Bright Horizons Preschool), here are some thoughts:\n\nAt this age, children are developing rapidly in their ability to understand and regulate emotions, build friendships, and develop pre-academic skills. The research consistently shows that play-based learning and responsive parenting are the most effective approaches.\n\nWould you like me to dive deeper into any specific aspect? I can draw from Mia's recent school progress report and health records to give more personalized guidance.`,
-    sources: [
-      { book: 'The Whole-Brain Child', chapter: 'Ch. 1: Parenting with the Brain in Mind' },
-      { book: 'Cribsheet', chapter: 'Ch. 12: Preschool' },
-    ],
-  },
-  kindergarten: {
-    content: `Great timing to think about kindergarten readiness! Based on Mia's spring progress report from Ms. Rodriguez, here's where she stands:\n\n**Strengths (on track):**\n- Social-emotional: Exceeds expectations — shares well, resolves conflicts with words\n- Language: Strong vocabulary, tells stories with detail\n- Gross motor: Runs, jumps, climbs confidently\n- Math: Counts to 20, sorts by shape and color\n\n**Areas to develop before kindergarten:**\n- Letter recognition: Currently knows 15/26 letters. Aim for all 26 by fall.\n- Fine motor/pencil grip: Ms. Rodriguez specifically flagged this. Practice letter tracing daily (5 minutes is enough).\n- Name writing: Work on writing "Mia" independently.\n\n**What research says:**\nEmily Oster's analysis shows that the strongest predictor of kindergarten success isn't academic skills — it's self-regulation and the ability to follow multi-step instructions. Mia's strong social-emotional scores suggest she's well-positioned.\n\n**Practical next steps:**\n1. Letter tracing worksheets (5 min/day)\n2. Playdough and bead stringing for hand strength\n3. Practice following 2-3 step instructions\n4. Read together daily — point out letters in books`,
-    sources: [
-      { book: 'Family Firm', chapter: 'Ch. 8: School Decisions' },
-      { book: 'The Whole-Brain Child', chapter: 'Ch. 7: The Me-We Connection' },
-      { book: 'How to Talk So Kids Will Listen', chapter: 'Ch. 3: Alternatives to Punishment' },
-    ],
-  },
-  screen: {
-    content: `Screen time is one of the most researched — and most debated — topics in parenting. Here's what the evidence actually says for a 4-year-old like Mia:\n\n**AAP Guidelines (2023 update):**\n- Ages 2-5: Limit to 1 hour/day of high-quality programming\n- Co-viewing is strongly recommended (watch together, discuss)\n- No screens during meals or 1 hour before bedtime\n\n**What "high-quality" means:**\nPrograms like Sesame Street, Daniel Tiger, and Bluey are specifically designed with developmental research. The key factor isn't screen time quantity alone — it's whether the content is interactive, age-appropriate, and discussed with a caregiver.\n\n**Emily Oster's take:**\nThe data on moderate screen time (1-2 hours) shows minimal negative effects when it replaces passive activities. The concern is when it replaces active play, reading, or social interaction.\n\n**Practical approach for Mia:**\n1. Set a consistent daily limit (e.g., 1 episode after lunch)\n2. Use a visual timer so she knows when it ends\n3. Choose shows that connect to her interests (dinosaurs!)\n4. Talk about what she watched afterward\n5. Keep screens out of the bedroom`,
-    sources: [
-      { book: 'Cribsheet', chapter: 'Ch. 14: Screen Time' },
-      { book: 'AAP Clinical Report', chapter: 'Media and Young Minds (2016, updated 2023)' },
-      { book: 'Family Firm', chapter: 'Ch. 6: The Data on Parenting Decisions' },
-    ],
-  },
+type Conversation = {
+  id: number;
+  childId: number;
+  messages: ChatMessage[] | null;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export default function Coach() {
-  const child = demoChildren[0];
-  const [messages, setMessages] = useState<CoachMessage[]>(demoCoachConversation);
-  const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const { selectedChild } = useChild();
+  const childId = selectedChild?.id ?? 0;
 
+  const { data: conversations, refetch: refetchConversations } = trpc.coach.conversations.useQuery(
+    { childId },
+    { enabled: !!childId, staleTime: 10_000 }
+  );
+  const { data: corpusStatus } = trpc.coach.corpusStatus.useQuery(undefined, {
+    enabled: !!childId,
+    staleTime: 60_000,
+  });
+
+  const chatMutation = trpc.coach.chat.useMutation();
+  const seedMutation = trpc.coach.seedCorpus.useMutation();
+
+  const [activeConvId, setActiveConvId] = useState<number | null>(null);
+  const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [showConvList, setShowConvList] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const convList = (conversations ?? []) as Conversation[];
+
+  // Auto-seed corpus on first load
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (corpusStatus && !corpusStatus.seeded && childId) {
+      seedMutation.mutate(undefined, {
+        onSuccess: (result) => {
+          if (result.seeded) {
+            toast.success(`Knowledge base loaded: ${result.count} parenting insights`);
+          }
+        },
+      });
+    }
+  }, [corpusStatus?.seeded, childId]);
 
-  const handleSend = (text?: string) => {
-    const content = text || input;
-    if (!content.trim()) return;
-    setInput("");
+  // Load conversation messages when selected
+  useEffect(() => {
+    if (activeConvId) {
+      const conv = convList.find((c) => c.id === activeConvId);
+      if (conv?.messages) {
+        setLocalMessages((conv.messages ?? []) as ChatMessage[]);
+      }
+    }
+  }, [activeConvId, convList]);
 
-    const userMsg: CoachMessage = {
-      id: `msg-${Date.now()}`,
-      role: 'user',
-      content,
-      timestamp: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    setIsTyping(true);
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [localMessages]);
 
-    setTimeout(() => {
-      let response = demoResponses.default;
-      if (content.toLowerCase().includes('kindergarten') || content.toLowerCase().includes('school ready')) {
-        response = demoResponses.kindergarten;
-      } else if (content.toLowerCase().includes('screen') || content.toLowerCase().includes('tv') || content.toLowerCase().includes('ipad')) {
-        response = demoResponses.screen;
+  const handleSend = async (message?: string) => {
+    const text = message ?? chatInput;
+    if (!childId || !text.trim()) return;
+    setChatInput("");
+    setChatLoading(true);
+
+    const userMsg: ChatMessage = { role: "user", content: text };
+    setLocalMessages((prev) => [...prev, userMsg]);
+    setShowConvList(false);
+
+    try {
+      const result = await chatMutation.mutateAsync({
+        childId,
+        message: text,
+        conversationId: activeConvId ?? undefined,
+      });
+
+      const assistantMsg: ChatMessage = {
+        role: "assistant",
+        content: result.message.content,
+        sources: result.message.sources as ChatMessage["sources"],
+      };
+      setLocalMessages((prev) => [...prev, assistantMsg]);
+
+      if (!activeConvId && result.conversationId) {
+        setActiveConvId(result.conversationId);
       }
 
-      const assistantMsg: CoachMessage = {
-        id: `msg-${Date.now() + 1}`,
-        role: 'assistant',
-        content: response.content,
-        sources: response.sources,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
-      setIsTyping(false);
-    }, 1500);
+      refetchConversations();
+    } catch (err) {
+      setLocalMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "I'm sorry, I couldn't process that right now. Please try again." },
+      ]);
+    } finally {
+      setChatLoading(false);
+    }
   };
 
-  const handleTopicClick = (topic: CoachTopic) => {
-    handleSend(topic.title.toLowerCase().includes('kindergarten')
-      ? 'How can I prepare Mia for kindergarten? What skills should we focus on?'
-      : topic.title.toLowerCase().includes('screen')
-      ? 'What are the guidelines for screen time for a 4-year-old?'
-      : `Tell me about ${topic.title.toLowerCase()} for a ${child.age} old.`
-    );
+  const startNewConversation = () => {
+    setActiveConvId(null);
+    setLocalMessages([]);
+    setShowConvList(false);
+  };
+
+  const openConversation = (conv: Conversation) => {
+    setActiveConvId(conv.id);
+    setLocalMessages((conv.messages ?? []) as ChatMessage[]);
+    setShowConvList(false);
   };
 
   return (
     <AppShell>
-      <div className="h-[calc(100vh-3.5rem)] lg:h-screen flex flex-col lg:flex-row">
-        {/* Chat area */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <div className="px-4 md:px-6 lg:px-8 py-4 border-b border-border bg-card/50">
-            <h1 className="font-heading text-xl font-bold text-foreground flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-rose-light flex items-center justify-center">
-                <MessageCircle className="h-4.5 w-4.5 text-rose" />
-              </div>
-              Parenting Coach
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Evidence-based guidance personalized for {child.name}
-            </p>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-4">
-            {messages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`max-w-lg ${msg.role === 'user' ? '' : ''}`}>
-                  {msg.role === 'assistant' && (
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <div className="h-6 w-6 rounded-full bg-rose-light flex items-center justify-center">
-                        <Sparkles className="h-3 w-3 text-rose" />
-                      </div>
-                      <span className="text-xs font-medium text-muted-foreground">KINLOOP Coach</span>
-                    </div>
-                  )}
-                  <div
-                    className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'bg-rose text-white rounded-br-md'
-                        : 'bg-card border border-border text-foreground rounded-bl-md'
-                    }`}
-                  >
-                    {msg.content.split('\n').map((line, i) => {
-                      if (line.startsWith('**') && line.endsWith('**')) {
-                        return <p key={i} className="font-semibold mt-2 mb-1">{line.replace(/\*\*/g, '')}</p>;
-                      }
-                      if (line.startsWith('- ') || line.startsWith('* ')) {
-                        return <p key={i} className="ml-4 before:content-['•'] before:mr-2 before:text-muted-foreground">{line.slice(2)}</p>;
-                      }
-                      if (line.match(/^\d+\./)) {
-                        return <p key={i} className="ml-4">{line}</p>;
-                      }
-                      if (line === '') return <br key={i} />;
-                      return <p key={i}>{line}</p>;
-                    })}
+      <div className="h-[calc(100vh-3.5rem)] lg:h-screen flex flex-col">
+        {/* Header */}
+        <div className="px-4 md:px-6 lg:px-8 py-4 md:py-5 border-b border-border bg-card/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {!showConvList && (
+                <button
+                  className="md:hidden text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowConvList(true)}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              )}
+              <div>
+                <h1 className="font-heading text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-rose-light flex items-center justify-center">
+                    <MessageCircle className="h-4.5 w-4.5 text-rose" />
                   </div>
-                  {/* Sources */}
-                  {msg.sources && msg.sources.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {msg.sources.map((src, i) => (
-                        <span
-                          key={i}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-rose-light/50 text-xs text-rose"
-                        >
-                          <BookOpen className="h-3 w-3" />
-                          {src.book} — {src.chapter}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-
-            {/* Typing indicator */}
-            {isTyping && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-2"
-              >
-                <div className="h-6 w-6 rounded-full bg-rose-light flex items-center justify-center">
-                  <Sparkles className="h-3 w-3 text-rose" />
-                </div>
-                <div className="flex gap-1 p-3 rounded-xl bg-card border border-border">
-                  <span className="h-2 w-2 rounded-full bg-rose/40 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="h-2 w-2 rounded-full bg-rose/40 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="h-2 w-2 rounded-full bg-rose/40 animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-              </motion.div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Input */}
-          <div className="p-4 md:p-6 lg:px-8 border-t border-border bg-card/50">
-            <div className="flex gap-2 max-w-2xl">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={`Ask about ${child.name}...`}
-                className="flex-1 px-4 py-3 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-rose/30"
-              />
-              <Button
-                size="icon"
-                className="bg-rose hover:bg-rose/90 text-white rounded-xl h-11 w-11"
-                onClick={() => handleSend()}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+                  Parenting Coach
+                </h1>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Evidence-based guidance with book citations
+                </p>
+              </div>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={startNewConversation}
+            >
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
+              New chat
+            </Button>
           </div>
         </div>
 
-        {/* Topic sidebar */}
-        <div className="hidden lg:block w-80 border-l border-border overflow-y-auto bg-card/30 p-5">
-          <h2 className="font-heading text-sm font-semibold text-foreground mb-1">
-            Topics for your {child.age} old
-          </h2>
-          <p className="text-xs text-muted-foreground mb-4">
-            Curated guidance based on {child.name}'s age and recent activity
-          </p>
-
-          <div className="space-y-2.5">
-            {demoCoachTopics.map((topic) => {
-              const Icon = topicIcons[topic.icon] || Heart;
-              return (
-                <button
-                  key={topic.id}
-                  className="w-full text-left p-3.5 rounded-xl bg-card border border-border hover:border-rose/20 hover:shadow-sm transition-all group"
-                  onClick={() => handleTopicClick(topic)}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-rose-light flex items-center justify-center flex-shrink-0">
-                      <Icon className="h-4 w-4 text-rose" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-foreground group-hover:text-rose transition-colors">
-                        {topic.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                        {topic.description}
+        {/* Content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Conversation sidebar */}
+          <div className={`w-full md:w-72 lg:w-80 border-r border-border overflow-y-auto bg-card/30 ${!showConvList && "hidden md:block"}`}>
+            <div className="p-3">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-2 mb-2">
+                Conversations ({convList.length})
+              </p>
+              {convList.length > 0 ? (
+                <div className="space-y-1">
+                  {convList.map((conv) => (
+                    <button
+                      key={conv.id}
+                      className={`w-full text-left p-3 rounded-lg hover:bg-muted/30 transition-colors ${
+                        activeConvId === conv.id ? "bg-rose-light/30" : ""
+                      }`}
+                      onClick={() => openConversation(conv)}
+                    >
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {conv.messages?.[0]?.content?.slice(0, 50) ?? "New conversation"}
                       </p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-rose transition-colors flex-shrink-0 mt-0.5" />
-                  </div>
-                </button>
-              );
-            })}
+                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(conv.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="px-2 py-4 text-center">
+                  <p className="text-xs text-muted-foreground">No conversations yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Topic starters */}
+            <div className="p-3 border-t border-border/50">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-2 mb-2">
+                Quick topics
+              </p>
+              <div className="space-y-1">
+                {TOPIC_STARTERS.map((topic, i) => (
+                  <button
+                    key={i}
+                    className="w-full text-left p-2.5 rounded-lg hover:bg-muted/30 transition-colors text-sm text-foreground flex items-center justify-between"
+                    onClick={() => {
+                      startNewConversation();
+                      setTimeout(() => handleSend(topic.prompt), 100);
+                    }}
+                  >
+                    <span className="truncate">{topic.label}</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Source attribution */}
-          <div className="mt-6 p-3 rounded-xl bg-muted/30 border border-border/50">
-            <div className="flex items-center gap-2 mb-2">
-              <BookOpen className="h-4 w-4 text-rose" />
-              <span className="text-xs font-semibold text-foreground">Curated sources</span>
+          {/* Chat area */}
+          <div className={`flex-1 flex flex-col ${showConvList && "hidden md:flex"}`}>
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+              {localMessages.length === 0 && (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center max-w-sm">
+                    <div className="h-14 w-14 rounded-2xl bg-rose-light flex items-center justify-center mx-auto mb-4">
+                      <Sparkles className="h-7 w-7 text-rose" />
+                    </div>
+                    <h3 className="font-heading text-lg font-semibold text-foreground mb-2">
+                      Hi! I'm your parenting coach
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      I draw on evidence-based parenting books and {selectedChild?.name}'s specific context.
+                      Ask me anything about child development, behavior, or daily challenges.
+                    </p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {TOPIC_STARTERS.slice(0, 3).map((topic, i) => (
+                        <Button
+                          key={i}
+                          variant="outline"
+                          size="sm"
+                          className="text-xs rounded-full"
+                          onClick={() => handleSend(topic.prompt)}
+                        >
+                          {topic.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {localMessages.map((msg, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div className={`max-w-[85%] md:max-w-[75%]`}>
+                    {msg.role === "assistant" && (
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className="h-6 w-6 rounded-full bg-rose-light flex items-center justify-center">
+                          <Sparkles className="h-3 w-3 text-rose" />
+                        </div>
+                        <span className="text-xs font-medium text-muted-foreground">KINLOOP Coach</span>
+                      </div>
+                    )}
+                    <div
+                      className={`p-4 rounded-2xl text-sm leading-relaxed ${
+                        msg.role === "user"
+                          ? "bg-rose text-white rounded-br-md"
+                          : "bg-card border border-border text-foreground rounded-bl-md"
+                      }`}
+                    >
+                      {msg.role === "assistant" ? (
+                        <Streamdown>{msg.content}</Streamdown>
+                      ) : (
+                        <p>{msg.content}</p>
+                      )}
+                    </div>
+
+                    {/* Source citations */}
+                    {msg.sources && msg.sources.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {msg.sources
+                          .filter((s, idx, arr) => arr.findIndex((x) => x.book === s.book) === idx)
+                          .map((source, j) => (
+                            <span
+                              key={j}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-rose-light/50 text-xs text-rose"
+                            >
+                              <BookOpen className="h-3 w-3" />
+                              {source.book}
+                            </span>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+
+              {chatLoading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center gap-2"
+                >
+                  <div className="h-6 w-6 rounded-full bg-rose-light flex items-center justify-center">
+                    <Sparkles className="h-3 w-3 text-rose" />
+                  </div>
+                  <div className="flex gap-1 p-3 rounded-xl bg-card border border-border">
+                    <span className="h-2 w-2 rounded-full bg-rose/40 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="h-2 w-2 rounded-full bg-rose/40 animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="h-2 w-2 rounded-full bg-rose/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </div>
+                </motion.div>
+              )}
+
+              <div ref={messagesEndRef} />
             </div>
-            <div className="space-y-1 text-xs text-muted-foreground">
-              <p>Siegel & Bryson — Whole-Brain Child</p>
-              <p>Faber & Mazlish — How to Talk So Kids Will Listen</p>
-              <p>Emily Oster — Cribsheet, Family Firm</p>
-              <p>Janet Lansbury — RIE Approach</p>
-              <p>AAP Clinical Reports</p>
+
+            {/* Input */}
+            <div className="p-4 border-t border-border bg-card/50">
+              <div className="flex gap-2 max-w-3xl mx-auto">
+                <Input
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder={`Ask about ${selectedChild?.name ?? "your child"}...`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  size="icon"
+                  className="bg-rose hover:bg-rose/90 text-white flex-shrink-0"
+                  onClick={() => handleSend()}
+                  disabled={chatLoading || !chatInput.trim()}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Advice is AI-generated from parenting research. Always consult your pediatrician for medical concerns.
+              </p>
             </div>
           </div>
         </div>

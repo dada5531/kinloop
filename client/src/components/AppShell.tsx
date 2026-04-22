@@ -3,7 +3,8 @@
  * Design: Scandinavian Warm Minimalism — cream background, soft shadows, DM Sans headings
  */
 import { Link, useLocation } from "wouter";
-import { demoChildren, demoParent } from "@/lib/demo-data";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { useChild } from "@/contexts/ChildContext";
 import {
   Calendar,
   TrendingUp,
@@ -14,11 +15,18 @@ import {
   Plus,
   Bell,
   Settings,
+  LogOut,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutGrid, color: "text-foreground" },
@@ -28,9 +36,21 @@ const navItems = [
   { path: "/coach", label: "Coach", icon: MessageCircle, color: "text-rose" },
 ];
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({ children: content }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const child = demoChildren[0];
+  const { user, logout } = useAuth();
+  const { children: childList, selectedChild, selectChild } = useChild();
+
+  const childAge = selectedChild?.dob
+    ? (() => {
+        const dob = new Date(selectedChild.dob);
+        const now = new Date();
+        const months = (now.getFullYear() - dob.getFullYear()) * 12 + (now.getMonth() - dob.getMonth());
+        const years = Math.floor(months / 12);
+        const rem = months % 12;
+        return `${years}y ${rem}mo`;
+      })()
+    : "";
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -47,21 +67,50 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Child selector */}
         <div className="px-4 pb-4">
-          <button
-            className="w-full flex items-center gap-3 p-3 rounded-xl bg-background hover:bg-muted transition-colors"
-            onClick={() => toast("Child selector coming soon")}
-          >
-            <Avatar className="h-9 w-9 bg-purple-light">
-              <AvatarFallback className="bg-purple-light text-purple font-heading font-semibold text-sm">
-                {child.name[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 text-left">
-              <p className="text-sm font-medium text-foreground">{child.name}</p>
-              <p className="text-xs text-muted-foreground">{child.age}</p>
+          {childList.length > 1 ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center gap-3 p-3 rounded-xl bg-background hover:bg-muted transition-colors">
+                  <Avatar className="h-9 w-9 bg-purple-light">
+                    <AvatarFallback className="bg-purple-light text-purple font-heading font-semibold text-sm">
+                      {selectedChild?.name?.[0] ?? "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium text-foreground">{selectedChild?.name ?? "Select child"}</p>
+                    <p className="text-xs text-muted-foreground">{childAge}</p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {childList.map((c) => (
+                  <DropdownMenuItem key={c.id} onClick={() => selectChild(c.id)}>
+                    {c.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : selectedChild ? (
+            <div className="w-full flex items-center gap-3 p-3 rounded-xl bg-background">
+              <Avatar className="h-9 w-9 bg-purple-light">
+                <AvatarFallback className="bg-purple-light text-purple font-heading font-semibold text-sm">
+                  {selectedChild.name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-medium text-foreground">{selectedChild.name}</p>
+                <p className="text-xs text-muted-foreground">{childAge}</p>
+              </div>
             </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </button>
+          ) : (
+            <Link href="/onboarding">
+              <div className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-purple/20 hover:border-purple/40 transition-colors text-center justify-center">
+                <Plus className="h-4 w-4 text-purple" />
+                <span className="text-sm font-medium text-purple">Add your child</span>
+              </div>
+            </Link>
+          )}
         </div>
 
         {/* Navigation */}
@@ -94,12 +143,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Settings className="h-4 w-4" />
             Settings
           </button>
-          <div className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground">
-            <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
-              {demoParent.name[0]}
+          {user && (
+            <div className="flex items-center justify-between px-3 py-2">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                  {user.name?.[0] ?? "U"}
+                </div>
+                <span className="truncate max-w-[120px]">{user.name ?? "User"}</span>
+              </div>
+              <button
+                onClick={() => logout()}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                title="Sign out"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
             </div>
-            {demoParent.name}
-          </div>
+          )}
         </div>
       </aside>
 
@@ -118,7 +178,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </Button>
             <Avatar className="h-7 w-7 bg-purple-light">
               <AvatarFallback className="bg-purple-light text-purple text-xs font-semibold">
-                {child.name[0]}
+                {selectedChild?.name?.[0] ?? "?"}
               </AvatarFallback>
             </Avatar>
           </div>
@@ -129,9 +189,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           className="flex-1"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const }}
         >
-          {children}
+          {content}
         </motion.main>
 
         {/* Mobile bottom nav */}
