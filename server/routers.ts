@@ -123,14 +123,12 @@ export const appRouter = router({
           sourceType: z.string(),
           sourceLabel: z.string(),
           fileUrl: z.string().optional(),
+          fileMimeType: z.string().optional(),
         })
       )
       .mutation(async ({ input }) => {
-        const response = await invokeLLM({
-          messages: [
-            {
-              role: "system",
-              content: `You are a parenting assistant that extracts structured information from school emails, permission slips, medical notices, and other parenting-related documents.
+        // Build user message content — supports text, images, and PDFs
+        const systemPrompt = `You are a parenting assistant that extracts structured information from school emails, permission slips, medical notices, and other parenting-related documents.
 
 Extract all actionable information and return valid JSON with this exact structure:
 {
@@ -141,11 +139,40 @@ Extract all actionable information and return valid JSON with this exact structu
   "confidence": number (0-1)
 }
 
-Be thorough — extract every date, deadline, payment, and action item. If there's a natural reply the parent should send, draft it.`,
+Be thorough — extract every date, deadline, payment, and action item. If there's a natural reply the parent should send, draft it.`;
+
+        let userContent: any;
+        if (input.fileUrl && input.fileMimeType) {
+          // For uploaded files, get a signed URL for the LLM to access
+          const { storageGetSignedUrl } = await import("./storage");
+          const signedUrl = await storageGetSignedUrl(input.fileUrl.replace(/^\/manus-storage\//, ""));
+
+          if (input.fileMimeType.startsWith("image/")) {
+            // Image files — use image_url content type
+            userContent = [
+              { type: "text", text: input.content || "Extract all events, dates, deadlines, payments, and action items from this document image." },
+              { type: "image_url", image_url: { url: signedUrl, detail: "high" } },
+            ];
+          } else {
+            // PDF and other document files — use file_url content type
+            userContent = [
+              { type: "text", text: input.content || "Extract all events, dates, deadlines, payments, and action items from this document." },
+              { type: "file_url", file_url: { url: signedUrl, mime_type: input.fileMimeType as any } },
+            ];
+          }
+        } else {
+          userContent = input.content;
+        }
+
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: systemPrompt,
             },
             {
               role: "user",
-              content: input.content,
+              content: userContent,
             },
           ],
           response_format: {

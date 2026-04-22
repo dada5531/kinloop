@@ -20,7 +20,7 @@
 - [x] Paste text → Claude extraction
 - [x] Review UI with extracted events, action items, amounts, reply
 - [x] Approve → save to events table
-- [ ] File upload (PDF/image) → S3 → Claude extraction (text paste works, file upload pending)
+- [x] File upload (PDF/image) → S3 → Claude extraction (multimodal: images via image_url, PDFs via file_url)
 
 ## Phase 4: Development Hub (real AI)
 - [x] Upload pediatrician summary / school report (paste text)
@@ -53,4 +53,9 @@
 - [x] Final end-to-end regression of all quadrants after fixes
 - [x] 19 vitest tests passing
 - [x] Final checkpoint
-- [ ] Guide user to export to GitHub
+- [x] Guide user to export to GitHub
+
+## Phase 9: File Upload E2E Verification
+- [x] Upload dialog UI (drag-and-drop, click-to-upload)
+- [x] Image upload → S3 → multimodal AI extraction (tested with permission slip image)
+- [x] Extracted event, action items, payment, suggested reply from image

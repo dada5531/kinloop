@@ -5,7 +5,7 @@
 import AppShell from "@/components/AppShell";
 import { useChild } from "@/contexts/ChildContext";
 import { trpc } from "@/lib/trpc";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   Calendar,
   Mail,
@@ -24,6 +24,8 @@ import {
   Edit3,
   Loader2,
   Plus,
+  Image as ImageIcon,
+  File,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +43,7 @@ import { motion, AnimatePresence } from "framer-motion";
 function SourceIcon({ type }: { type: string }) {
   if (type === "email") return <Mail className="h-4 w-4" />;
   if (type === "pdf") return <FileText className="h-4 w-4" />;
+  if (type === "image") return <ImageIcon className="h-4 w-4" />;
   return <ClipboardPaste className="h-4 w-4" />;
 }
 
@@ -81,6 +84,7 @@ export default function Scheduler() {
   const extractMutation = trpc.scheduler.extract.useMutation();
   const approveMutation = trpc.scheduler.approve.useMutation();
   const updateStatusMutation = trpc.scheduler.updateStatus.useMutation();
+  const uploadMutation = trpc.upload.file.useMutation();
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showPasteDialog, setShowPasteDialog] = useState(false);
@@ -89,13 +93,23 @@ export default function Scheduler() {
   const [extracting, setExtracting] = useState(false);
   const [extractedResult, setExtractedResult] = useState<ExtractedResult | null>(null);
   const [rawContent, setRawContent] = useState("");
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
+  const [uploadedFileMime, setUploadedFileMime] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const eventList = events ?? [];
   const selected = eventList.find((e: any) => e.id === selectedId);
 
-  const handleExtract = async (content: string, sourceType: string, sourceLabel: string) => {
-    if (!childId || !content.trim()) return;
+  const handleExtract = async (
+    content: string,
+    sourceType: string,
+    sourceLabel: string,
+    fileUrl?: string,
+    fileMimeType?: string
+  ) => {
+    if (!childId || (!content.trim() && !fileUrl)) return;
     setExtracting(true);
     setRawContent(content);
     try {
@@ -104,6 +118,8 @@ export default function Scheduler() {
         content,
         sourceType,
         sourceLabel,
+        fileUrl,
+        fileMimeType,
       });
       setExtractedResult(result as ExtractedResult);
       setShowPasteDialog(false);
@@ -116,20 +132,101 @@ export default function Scheduler() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFileUpload = useCallback(
+    async (file: globalThis.File) => {
+      if (!childId) return;
 
-    // Read file as text (for PDFs we'll read as text; for images we'd need OCR)
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const text = ev.target?.result as string;
-      if (text) {
-        await handleExtract(text, "pdf", `Uploaded: ${file.name}`);
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        toast.error("File too large. Maximum size is 10MB.");
+        return;
       }
-    };
-    reader.readAsText(file);
+
+      const allowedTypes = [
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+        "image/webp",
+        "image/gif",
+        "text/plain",
+      ];
+
+      if (!allowedTypes.includes(file.type) && !file.name.endsWith(".txt")) {
+        toast.error("Unsupported file type. Upload PDF, image, or text files.");
+        return;
+      }
+
+      setUploadProgress("Reading file...");
+
+      // For text files, just read as text and extract directly
+      if (file.type === "text/plain" || file.name.endsWith(".txt")) {
+        const text = await file.text();
+        setUploadProgress(null);
+        await handleExtract(text, "text", `Uploaded: ${file.name}`);
+        return;
+      }
+
+      // For PDFs and images, upload to S3 first, then send to LLM
+      try {
+        setUploadProgress("Uploading to cloud...");
+
+        // Read file as base64
+        const arrayBuffer = await file.arrayBuffer();
+        const base64 = btoa(
+          new Uint8Array(arrayBuffer).reduce(
+            (data, byte) => data + String.fromCharCode(byte),
+            ""
+          )
+        );
+
+        // Upload to S3
+        const uploadResult = await uploadMutation.mutateAsync({
+          fileName: file.name,
+          fileData: base64,
+          contentType: file.type,
+        });
+
+        setUploadedFileUrl(uploadResult.url);
+        setUploadedFileMime(file.type);
+
+        setUploadProgress("Extracting with AI...");
+
+        // Determine source type
+        const sourceType = file.type.startsWith("image/") ? "image" : "pdf";
+
+        // Extract with AI using the uploaded file URL
+        await handleExtract(
+          `Uploaded file: ${file.name}`,
+          sourceType,
+          `Uploaded: ${file.name}`,
+          uploadResult.url,
+          file.type
+        );
+      } catch (err) {
+        toast.error("Upload failed. Please try again.");
+      } finally {
+        setUploadProgress(null);
+      }
+    },
+    [childId, extractMutation, uploadMutation]
+  );
+
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) await handleFileUpload(file);
+    // Reset input so the same file can be re-uploaded
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragActive(false);
+      const file = e.dataTransfer.files?.[0];
+      if (file) await handleFileUpload(file);
+    },
+    [handleFileUpload]
+  );
 
   const handleApproveExtracted = async (eventData: ExtractedResult["events"][0]) => {
     if (!childId) return;
@@ -147,16 +244,19 @@ export default function Scheduler() {
         startTime,
         endTime,
         location: eventData.location ?? undefined,
-        sourceType: "paste",
-        sourceLabel: "Pasted content",
+        sourceType: uploadedFileMime ? (uploadedFileMime.startsWith("image/") ? "image" : "pdf") : "paste",
+        sourceLabel: rawContent.startsWith("Uploaded file:") ? rawContent : "Pasted content",
         actionItems: extractedResult?.actionItems ?? [],
         amountDue: extractedResult?.amountDue ?? undefined,
         confidence: extractedResult?.confidence,
         rawContent,
         replyDraft: extractedResult?.replyDraft ?? undefined,
+        fileUrl: uploadedFileUrl ?? undefined,
       });
       toast.success(`"${eventData.title}" approved and saved`);
       setExtractedResult(null);
+      setUploadedFileUrl(null);
+      setUploadedFileMime(null);
       refetch();
     } catch (err) {
       toast.error("Failed to save event");
@@ -236,7 +336,11 @@ export default function Scheduler() {
                 variant="ghost"
                 size="sm"
                 className="ml-auto text-xs"
-                onClick={() => setExtractedResult(null)}
+                onClick={() => {
+                  setExtractedResult(null);
+                  setUploadedFileUrl(null);
+                  setUploadedFileMime(null);
+                }}
               >
                 <X className="h-3.5 w-3.5" />
               </Button>
@@ -579,32 +683,56 @@ export default function Scheduler() {
               Upload document
             </DialogTitle>
             <DialogDescription>
-              Upload a text file, PDF, or document to extract events and action items
+              Upload a PDF, image, or text file — AI will extract events and action items
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-8">
-            <div
-              className="w-full border-2 border-dashed border-purple/20 rounded-xl p-8 text-center hover:border-purple/40 transition-colors cursor-pointer"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Upload className="h-8 w-8 text-purple mx-auto mb-3" />
-              <p className="text-sm font-medium text-foreground">Click to upload</p>
-              <p className="text-xs text-muted-foreground mt-1">TXT files supported</p>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".txt,.text"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
+          <div
+            className={`flex flex-col items-center gap-4 py-8 border-2 border-dashed rounded-xl transition-colors cursor-pointer ${
+              dragActive
+                ? "border-purple bg-purple-light/30"
+                : "border-purple/20 hover:border-purple/40"
+            }`}
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragActive(true);
+            }}
+            onDragLeave={() => setDragActive(false)}
+            onDrop={handleDrop}
+          >
+            {uploadProgress ? (
+              <>
+                <Loader2 className="h-8 w-8 text-purple animate-spin" />
+                <p className="text-sm font-medium text-foreground">{uploadProgress}</p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-purple-light flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-purple" />
+                  </div>
+                  <div className="h-10 w-10 rounded-lg bg-purple-light flex items-center justify-center">
+                    <ImageIcon className="h-5 w-5 text-purple" />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-foreground">
+                    {dragActive ? "Drop file here" : "Click or drag to upload"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PDF, PNG, JPG, or TXT — up to 10MB
+                  </p>
+                </div>
+              </>
+            )}
           </div>
-          {extracting && (
-            <div className="flex items-center justify-center gap-2 text-sm text-purple">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Extracting...
-            </div>
-          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.text,application/pdf,image/*,text/plain"
+            className="hidden"
+            onChange={handleFileInputChange}
+          />
         </DialogContent>
       </Dialog>
     </AppShell>
