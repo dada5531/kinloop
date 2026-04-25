@@ -2,7 +2,6 @@ import Link from "next/link";
 
 /**
  * Marketing landing page — public, no auth required.
- * TODO: Replace with full marketing design (hero, features, pricing, CTA).
  */
 export default function LandingPage() {
   return (
@@ -13,7 +12,8 @@ export default function LandingPage() {
         </h1>
         <p className="mt-6 text-lg leading-8 text-muted-foreground">
           A 4-quadrant AI dashboard that turns the chaos of modern parenting — emails, PDFs, doctor
-          notes, social links — into structured calendars, shopping lists, and personalized guidance.
+          notes, social links — into structured calendars, shopping lists, and personalized
+          guidance.
         </p>
 
         <div className="mt-10 grid grid-cols-2 gap-4 text-left">
@@ -45,12 +45,12 @@ export default function LandingPage() {
 
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Link
-            href="/sign-up"
+            href="/enter"
             className="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90"
           >
             Get started
           </Link>
-          <Link href="/sign-in" className="text-sm font-semibold text-foreground hover:underline">
+          <Link href="/enter" className="text-sm font-semibold text-foreground hover:underline">
             Sign in &rarr;
           </Link>
         </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import { UserButton } from "@clerk/nextjs";
 import {
   Calendar,
   BarChart3,
@@ -11,9 +10,10 @@ import {
   Baby,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useChild } from "@/components/providers/ChildProvider";
@@ -28,9 +28,17 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { children, selectedChild, setSelectedChildId, getAgeDisplay, isLoading } = useChild();
   const [childDropdownOpen, setChildDropdownOpen] = useState(false);
+
+  function handleLogout() {
+    // Clear the access cookie by setting it to expire
+    document.cookie = "kinloop_access=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    router.push("/enter");
+    router.refresh();
+  }
 
   const sidebarContent = (
     <>
@@ -121,7 +129,13 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto pt-4">
-        <UserButton afterSignOutUrl="/" />
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </button>
       </div>
     </>
   );

@@ -180,6 +180,22 @@ grep -r "claude-" src/ --include="*.ts" --include="*.tsx" | grep -v CLAUDE_MODEL
 
 Current model: `claude-sonnet-4-6` (as of April 2026)
 
+## 5b. Authentication (Demo Mode)
+
+Demo uses a **single shared password gate** via the `KINLOOP_ACCESS_PASSWORD` env var. This is intentional for the HBS demo — no accounts, no signup, no OAuth.
+
+**How it works:**
+
+- `src/middleware.ts` checks for a `kinloop_access` cookie on every request to protected routes
+- If missing, redirects to `/enter` (branded password input page)
+- `POST /api/auth/verify` validates the password using `crypto.timingSafeEqual`, sets a 30-day httpOnly cookie
+- Public routes (no password needed): `/`, `/enter`, `/api/health`, `/api/auth/verify`
+- Rate limiting: 5 attempts per minute per IP (in-memory)
+
+**To change the password:** Update the `KINLOOP_ACCESS_PASSWORD` env var in Vercel and redeploy. No code change needed.
+
+**To upgrade to real auth:** Replace the middleware with Clerk (or similar), restore `AuthProvider` to use `ClerkProvider`, and add user-scoped queries. The database schema already has `user_id` columns on every table.
+
 ## 6. Database Conventions
 
 - Every table has `user_id` (and `child_id` where applicable) for multi-tenancy
@@ -234,7 +250,7 @@ pnpm install
 
 # 2. Set up environment
 cp .env.example .env.local
-# Fill in: ANTHROPIC_API_KEY, CLERK keys, SUPABASE keys
+# Fill in: KINLOOP_ACCESS_PASSWORD, ANTHROPIC_API_KEY, SUPABASE keys
 # Optional for V1: GOOGLE_CLIENT_ID/SECRET, YOUTUBE_API_KEY, VOYAGE_API_KEY
 
 # 3. Start Supabase locally
