@@ -1,28 +1,25 @@
 "use client";
 
-import {
-  Calendar,
-  BarChart3,
-  Palette,
-  MessageCircle,
-  LayoutDashboard,
-  Menu,
-  X,
-  LogOut,
-  CheckCircle2,
-} from "lucide-react";
+import { LayoutDashboard, Menu, X, LogOut, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 
+import {
+  SchedulerIcon,
+  DevelopmentIcon,
+  PlayLabIcon,
+  CoachIcon,
+} from "@/components/icons/QuadrantIcons";
 import { useChild } from "@/components/providers/ChildProvider";
 
+// Dashboard uses Lucide (utility icon), quadrants use custom icons
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/scheduler", label: "Scheduler", icon: Calendar },
-  { href: "/development", label: "Development", icon: BarChart3 },
-  { href: "/play", label: "Play Lab", icon: Palette },
-  { href: "/coach", label: "Coach", icon: MessageCircle },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, custom: false },
+  { href: "/scheduler", label: "Scheduler", icon: SchedulerIcon, custom: true },
+  { href: "/development", label: "Development", icon: DevelopmentIcon, custom: true },
+  { href: "/play", label: "Play Lab", icon: PlayLabIcon, custom: true },
+  { href: "/coach", label: "Coach", icon: CoachIcon, custom: true },
 ];
 
 interface MetricChips {
@@ -56,7 +53,6 @@ export function TopBar() {
       const health = healthRes.ok ? await healthRes.json() : [];
       const activities = activitiesRes.ok ? await activitiesRes.json() : [];
 
-      // Count events this week
       const now = new Date();
       const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
       const thisWeekEvents = events.filter((e: { start_time: string | null }) => {
@@ -103,7 +99,6 @@ export function TopBar() {
             <nav className="hidden items-center gap-1 lg:flex">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
-                const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
@@ -114,7 +109,7 @@ export function TopBar() {
                         : "text-muted-foreground hover:bg-background-secondary hover:text-foreground"
                     }`}
                   >
-                    <Icon className="h-3.5 w-3.5" />
+                    {item.custom ? <item.icon size={14} /> : <item.icon className="h-3.5 w-3.5" />}
                     {item.label}
                   </Link>
                 );
@@ -189,7 +184,6 @@ export function TopBar() {
             <nav className="flex flex-col gap-1">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
-                const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
@@ -201,7 +195,7 @@ export function TopBar() {
                         : "text-muted-foreground hover:bg-background-secondary hover:text-foreground"
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    {item.custom ? <item.icon size={16} /> : <item.icon className="h-4 w-4" />}
                     {item.label}
                   </Link>
                 );

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Calendar,
   Check,
   X,
   ChevronRight,
@@ -20,6 +19,7 @@ import {
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 
+import { SchedulerIcon } from "@/components/icons/QuadrantIcons";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -307,7 +307,7 @@ export default function SchedulerPage() {
       <div className="mb-6 flex items-start justify-between">
         <div>
           <div className="mb-1 flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-scheduler" />
+            <SchedulerIcon size={16} className="text-scheduler" />
             <span className="text-[11px] font-medium uppercase tracking-wider text-scheduler">
               Scheduler
             </span>
@@ -485,7 +485,7 @@ export default function SchedulerPage() {
                       ) : evt.status === "dismissed" ? (
                         <X className="h-3.5 w-3.5" />
                       ) : (
-                        <Calendar className="h-3.5 w-3.5" />
+                        <SchedulerIcon size={14} />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -524,7 +524,7 @@ export default function SchedulerPage() {
             </div>
           ) : (
             <EmptyState
-              icon={Calendar}
+              icon={SchedulerIcon}
               title="No events yet"
               description="Paste an email or upload a document to extract events"
               actionLabel="Add content"
