@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
-import { DM_Sans, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import { AuthProvider } from "@/components/providers/AuthProvider";
 
 import "./globals.css";
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
-  display: "swap",
-});
-
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-sans",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 // Force dynamic rendering to avoid SSG issues with auth providers
@@ -29,7 +24,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${dmSans.variable} ${inter.variable} min-h-screen font-sans antialiased`}>
+      <body className={`${inter.variable} min-h-screen font-sans antialiased`}>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

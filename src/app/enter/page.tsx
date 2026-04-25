@@ -41,25 +41,25 @@ function EnterForm() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
+      <div className="animate-fade-in w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            KIN<span className="text-primary">LOOP</span>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+            kin<span className="font-normal text-muted-foreground">loop</span>
           </h1>
-          <p className="mt-3 text-sm text-muted-foreground">Demo access for HBS preview.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Demo access for HBS preview</p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border bg-card p-8 shadow-sm">
-          <h2 className="text-center text-lg font-semibold text-card-foreground">
+        <div className="rounded-xl border-[0.5px] border-border bg-card p-6">
+          <h2 className="text-center text-base font-semibold text-foreground">
             Welcome to Kinloop
           </h2>
           <p className="mt-1 text-center text-sm text-muted-foreground">
             Enter the access password to continue.
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-6">
+          <form onSubmit={handleSubmit} className="mt-5">
             <label htmlFor="password" className="sr-only">
               Access Password
             </label>
@@ -74,15 +74,15 @@ function EnterForm() {
               }}
               autoFocus
               autoComplete="off"
-              className="w-full rounded-lg border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full rounded-xl border-[0.5px] border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
             />
 
-            {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+            {error && <p className="animate-slide-fade-in mt-2 text-sm text-red-600">{error}</p>}
 
             <button
               type="submit"
               disabled={loading || !password}
-              className="mt-4 w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="mt-4 w-full rounded-full bg-foreground px-4 py-2.5 text-[13px] font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-40"
             >
               {loading ? "Verifying..." : "Enter"}
             </button>
@@ -90,7 +90,7 @@ function EnterForm() {
         </div>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center text-[11px] text-muted-foreground">
           AI-native parenting dashboard &middot; HBS MBA Capstone 2026
         </p>
       </div>
@@ -103,7 +103,7 @@ export default function EnterPage() {
     <Suspense
       fallback={
         <main className="flex min-h-screen items-center justify-center bg-background">
-          <div className="text-muted-foreground">Loading...</div>
+          <div className="text-sm text-muted-foreground">Loading...</div>
         </main>
       }
     >

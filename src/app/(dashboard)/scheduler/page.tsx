@@ -15,12 +15,15 @@ import {
   Loader2,
   Plus,
   FileText,
-  AlertTriangle,
   Image as ImageIcon,
+  AlertTriangle,
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 
 import { useChild } from "@/components/providers/ChildProvider";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // ─── Types ──────────────────────────────────────────────────────
 interface ExtractedEvent {
@@ -77,25 +80,44 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
   const color =
     confidence >= 0.8 ? "text-green-600" : confidence >= 0.5 ? "text-yellow-600" : "text-red-500";
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium ${color}`}>
+    <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${color}`}>
       <Sparkles className="h-3 w-3" />
-      {pct}% confidence
+      {pct}%
     </span>
   );
 }
 
 function PriorityBadge({ priority }: { priority: string }) {
   const colors: Record<string, string> = {
-    high: "bg-red-100 text-red-700",
-    medium: "bg-yellow-100 text-yellow-700",
-    low: "bg-green-100 text-green-700",
+    high: "bg-red-50 text-red-600 border-red-100",
+    medium: "bg-yellow-50 text-yellow-600 border-yellow-100",
+    low: "bg-green-50 text-green-600 border-green-100",
   };
   return (
     <span
-      className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${colors[priority] || "bg-gray-100 text-gray-700"}`}
+      className={`inline-flex items-center rounded-full border-[0.5px] px-2 py-0.5 text-[10px] font-medium ${colors[priority] || "bg-muted text-muted-foreground"}`}
     >
       {priority}
     </span>
+  );
+}
+
+function InboxSkeleton() {
+  return (
+    <div className="space-y-0">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="border-b-[0.5px] border-border p-4">
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-9 w-9 rounded-lg" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+              <Skeleton className="h-3 w-1/3" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -280,48 +302,41 @@ export default function SchedulerPage() {
 
   // ─── Render ─────────────────────────────────────────────────
   return (
-    <div className="flex h-screen flex-col pt-14 lg:h-screen lg:pt-0">
+    <div className="animate-fade-in">
       {/* Page header */}
-      <div className="flex-shrink-0 border-b bg-card/50 px-4 py-4 md:px-6 md:py-5 lg:px-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="flex items-center gap-2 text-xl font-bold text-foreground md:text-2xl">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-scheduler-muted">
-                <Calendar className="h-4 w-4 text-scheduler" />
-              </div>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <div className="mb-1 flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-scheduler" />
+            <span className="text-[11px] font-medium uppercase tracking-wider text-scheduler">
               Scheduler
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Paste emails or upload documents — AI extracts events, deadlines &amp; action items
-            </p>
+            </span>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowUploadDialog(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/50"
-            >
-              <Upload className="h-3.5 w-3.5" />
-              Upload
-            </button>
-            <button
-              onClick={() => setShowPasteDialog(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-scheduler px-3 py-2 text-xs font-medium text-white transition-opacity hover:opacity-90"
-            >
-              <ClipboardPaste className="h-3.5 w-3.5" />
-              Paste
-            </button>
-          </div>
+          <h1 className="text-xl font-semibold text-foreground">Events &amp; deadlines</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Paste emails or upload documents — AI extracts events, deadlines &amp; action items
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowUploadDialog(true)}>
+            <Upload className="mr-1.5 h-3.5 w-3.5" />
+            Upload
+          </Button>
+          <Button size="sm" onClick={() => setShowPasteDialog(true)}>
+            <ClipboardPaste className="mr-1.5 h-3.5 w-3.5" />
+            Paste
+          </Button>
         </div>
       </div>
 
       {/* Extraction error */}
       {extractionError && (
-        <div className="flex items-center gap-2 border-b border-red-100 bg-red-50 px-4 py-3 md:px-6 lg:px-8">
+        <div className="animate-slide-fade-in mb-4 flex items-center gap-2 rounded-xl border-[0.5px] border-red-200 bg-red-50 px-4 py-3">
           <AlertTriangle className="h-4 w-4 flex-shrink-0 text-red-500" />
           <p className="text-sm text-red-700">{extractionError}</p>
           <button
             onClick={() => setExtractionError(null)}
-            className="ml-auto text-red-400 hover:text-red-600"
+            className="ml-auto rounded-lg p-1 text-red-400 hover:bg-red-100 hover:text-red-600"
           >
             <X className="h-4 w-4" />
           </button>
@@ -330,45 +345,47 @@ export default function SchedulerPage() {
 
       {/* Extracted result banner */}
       {extractedResult && (
-        <div className="max-h-[40vh] flex-shrink-0 overflow-y-auto border-b border-scheduler/10 bg-scheduler-muted/30 px-4 py-4 md:px-6 lg:px-8">
-          <div className="mb-3 flex items-start gap-3">
-            <Sparkles className="mt-0.5 h-5 w-5 flex-shrink-0 text-scheduler" />
-            <div>
-              <p className="text-sm font-medium text-foreground">AI Extraction Results</p>
+        <div className="animate-slide-fade-in mb-6 rounded-xl border-[0.5px] border-scheduler/20 bg-scheduler-muted p-5">
+          <div className="mb-4 flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-scheduler" />
+              <span className="text-[11px] font-medium uppercase tracking-wider text-scheduler">
+                AI extraction
+              </span>
               <ConfidenceBadge confidence={extractedResult.confidence} />
             </div>
             <button
-              className="ml-auto rounded p-1 hover:bg-background/50"
+              className="rounded-lg p-1 text-muted-foreground hover:bg-background-secondary"
               onClick={() => setExtractedResult(null)}
             >
-              <X className="h-4 w-4 text-muted-foreground" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
           {/* Extracted events */}
           <div className="space-y-3">
             {extractedResult.events.map((evt, i) => (
-              <div key={i} className="rounded-xl border bg-card p-4 shadow-sm">
-                <div className="mb-2 flex items-start justify-between">
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground">{evt.title}</h3>
-                    <p className="text-xs text-muted-foreground">
+              <div key={i} className="rounded-xl border-[0.5px] border-border bg-card p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-medium text-foreground">{evt.title}</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       {evt.startDate}
                       {evt.endDate && ` – ${evt.endDate}`}
                       {evt.location && ` · ${evt.location}`}
                     </p>
                     {evt.description && (
-                      <p className="mt-1 text-xs text-muted-foreground">{evt.description}</p>
+                      <p className="mt-1 text-xs text-muted-foreground/80">{evt.description}</p>
                     )}
                   </div>
-                  <button
+                  <Button
+                    size="sm"
                     onClick={() => handleApproveExtracted(evt)}
                     disabled={approving}
-                    className="inline-flex items-center gap-1 rounded-lg bg-scheduler px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
                   >
-                    <Check className="h-3 w-3" />
+                    <Check className="mr-1 h-3 w-3" />
                     Approve
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -376,17 +393,19 @@ export default function SchedulerPage() {
 
           {/* Action items */}
           {extractedResult.actionItems.length > 0 && (
-            <div className="mt-3">
-              <p className="mb-2 text-xs font-medium text-foreground">Action items:</p>
+            <div className="mt-4">
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                Action items
+              </p>
               <div className="space-y-1.5">
                 {extractedResult.actionItems.map((item, i) => (
-                  <div key={i} className="flex items-start gap-2 text-xs">
-                    <span className="font-medium text-scheduler">{i + 1}.</span>
-                    <span className="text-foreground">{item.task}</span>
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-background-secondary text-[10px] font-medium text-muted-foreground">
+                      {i + 1}
+                    </span>
+                    <span className="flex-1 text-foreground">{item.task}</span>
                     {item.dueDate && (
-                      <span className="ml-auto whitespace-nowrap text-muted-foreground">
-                        Due {item.dueDate}
-                      </span>
+                      <span className="text-muted-foreground">Due {item.dueDate}</span>
                     )}
                     <PriorityBadge priority={item.priority} />
                   </div>
@@ -397,18 +416,18 @@ export default function SchedulerPage() {
 
           {/* Amounts due */}
           {extractedResult.amountsDue.length > 0 && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-4 space-y-2">
               {extractedResult.amountsDue.map((amt, i) => (
-                <div key={i} className="rounded-lg border border-scheduler/10 bg-card p-3">
+                <div key={i} className="rounded-lg border-[0.5px] border-border bg-card p-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-foreground">{amt.description}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[11px] text-muted-foreground">
                         {amt.dueDate && `Due ${amt.dueDate}`}
                         {amt.payableTo && ` to ${amt.payableTo}`}
                       </p>
                     </div>
-                    <span className="text-base font-bold text-scheduler">
+                    <span className="text-base font-semibold text-scheduler">
                       ${amt.amount.toFixed(2)}
                     </span>
                   </div>
@@ -419,11 +438,11 @@ export default function SchedulerPage() {
 
           {/* Suggested reply */}
           {extractedResult.suggestedReply && (
-            <div className="mt-3">
-              <p className="mb-1 flex items-center gap-1 text-xs font-medium text-foreground">
-                <Send className="h-3 w-3 text-scheduler" /> Suggested reply
+            <div className="mt-4">
+              <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                <Send className="h-3 w-3" /> Suggested reply
               </p>
-              <div className="whitespace-pre-line rounded-lg border bg-card p-3 text-xs text-foreground">
+              <div className="whitespace-pre-line rounded-lg border-[0.5px] border-border bg-card p-3 text-xs leading-relaxed text-foreground">
                 {extractedResult.suggestedReply}
               </div>
             </div>
@@ -432,113 +451,108 @@ export default function SchedulerPage() {
       )}
 
       {/* Content: inbox + detail */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-[60vh] gap-5">
         {/* Inbox list */}
         <div
-          className={`w-full overflow-y-auto border-r bg-card/30 md:w-96 lg:w-[380px] ${
+          className={`w-full overflow-hidden rounded-xl border-[0.5px] border-border bg-card md:w-96 lg:w-[380px] ${
             selectedEvent ? "hidden md:block" : ""
           }`}
         >
           {eventsLoading ? (
-            <div className="p-6 text-center">
-              <Loader2 className="mx-auto mb-2 h-6 w-6 animate-spin text-scheduler" />
-              <p className="text-sm text-muted-foreground">Loading events...</p>
-            </div>
+            <InboxSkeleton />
           ) : events.length > 0 ? (
-            events.map((evt) => (
-              <button
-                key={evt.id}
-                className={`w-full border-b border-border/50 p-4 text-left transition-colors hover:bg-muted/30 ${
-                  selectedEventId === evt.id ? "bg-scheduler-muted/30" : ""
-                }`}
-                onClick={() => setSelectedEventId(evt.id)}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${
-                      evt.status === "approved"
-                        ? "bg-green-50 text-green-600"
-                        : evt.status === "dismissed"
-                          ? "bg-muted text-muted-foreground"
-                          : "bg-scheduler-muted text-scheduler"
-                    }`}
-                  >
-                    {evt.status === "approved" ? (
-                      <Check className="h-4 w-4" />
-                    ) : evt.status === "dismissed" ? (
-                      <X className="h-4 w-4" />
-                    ) : (
-                      <Calendar className="h-4 w-4" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="truncate text-sm font-medium text-foreground">{evt.title}</h3>
-                      <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                    </div>
-                    {evt.source_label && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">{evt.source_label}</p>
-                    )}
-                    <div className="mt-1.5 flex items-center gap-3">
-                      {evt.start_time && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {new Date(evt.start_time).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
-                      )}
-                      {evt.location && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          <span className="max-w-[120px] truncate">{evt.location}</span>
-                        </span>
+            <div className="divide-y divide-border/50">
+              {events.map((evt) => (
+                <button
+                  key={evt.id}
+                  className={`w-full p-4 text-left transition-colors duration-150 hover:bg-background-secondary ${
+                    selectedEventId === evt.id ? "bg-scheduler-muted/30" : ""
+                  }`}
+                  onClick={() => setSelectedEventId(evt.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
+                        evt.status === "approved"
+                          ? "bg-green-50 text-green-600"
+                          : evt.status === "dismissed"
+                            ? "bg-muted text-muted-foreground"
+                            : "bg-scheduler-muted text-scheduler"
+                      }`}
+                    >
+                      {evt.status === "approved" ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : evt.status === "dismissed" ? (
+                        <X className="h-3.5 w-3.5" />
+                      ) : (
+                        <Calendar className="h-3.5 w-3.5" />
                       )}
                     </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="truncate text-sm font-medium text-foreground">
+                          {evt.title}
+                        </h3>
+                        <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/40" />
+                      </div>
+                      {evt.source_label && (
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          {evt.source_label}
+                        </p>
+                      )}
+                      <div className="mt-1.5 flex items-center gap-3">
+                        {evt.start_time && (
+                          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {new Date(evt.start_time).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        )}
+                        {evt.location && (
+                          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            <span className="max-w-[120px] truncate">{evt.location}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))
-          ) : (
-            <div className="p-6 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-scheduler-muted">
-                <Calendar className="h-6 w-6 text-scheduler" />
-              </div>
-              <p className="mb-1 text-sm font-medium text-foreground">No events yet</p>
-              <p className="mb-4 text-xs text-muted-foreground">
-                Paste an email or upload a document to extract events
-              </p>
-              <button
-                onClick={() => setShowPasteDialog(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-scheduler px-4 py-2 text-xs font-medium text-white hover:opacity-90"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add content
-              </button>
+                </button>
+              ))}
             </div>
+          ) : (
+            <EmptyState
+              icon={Calendar}
+              title="No events yet"
+              description="Paste an email or upload a document to extract events"
+              actionLabel="Add content"
+              onAction={() => setShowPasteDialog(true)}
+              accentColor="scheduler"
+            />
           )}
         </div>
 
         {/* Detail pane */}
-        <div className={`flex-1 overflow-y-auto ${!selectedEvent ? "hidden md:block" : ""}`}>
+        <div className={`flex-1 ${!selectedEvent ? "hidden md:block" : ""}`}>
           {selectedEvent ? (
-            <div className="max-w-2xl p-4 md:p-6 lg:p-8">
+            <div className="animate-fade-in rounded-xl border-[0.5px] border-border bg-card p-6">
               <button
-                className="mb-4 flex items-center gap-1 text-sm text-muted-foreground md:hidden"
+                className="mb-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground md:hidden"
                 onClick={() => setSelectedEventId(null)}
               >
                 <ArrowLeft className="h-4 w-4" /> Back
               </button>
 
-              <div className="mb-4 flex items-center gap-3">
+              <div className="mb-3 flex items-center gap-2">
                 <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                  className={`inline-flex items-center rounded-full border-[0.5px] px-2.5 py-1 text-[11px] font-medium ${
                     selectedEvent.status === "approved"
-                      ? "bg-green-100 text-green-700"
+                      ? "border-green-100 bg-green-50 text-green-700"
                       : selectedEvent.status === "dismissed"
-                        ? "bg-gray-100 text-gray-600"
-                        : "bg-scheduler-muted text-scheduler"
+                        ? "border-border bg-muted text-muted-foreground"
+                        : "border-scheduler/20 bg-scheduler-muted text-scheduler"
                   }`}
                 >
                   {selectedEvent.status === "pending"
@@ -552,7 +566,7 @@ export default function SchedulerPage() {
                 )}
               </div>
 
-              <h2 className="mb-2 text-xl font-bold text-foreground">{selectedEvent.title}</h2>
+              <h2 className="mb-2 text-lg font-semibold text-foreground">{selectedEvent.title}</h2>
 
               <div className="mb-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
                 {selectedEvent.start_time && (
@@ -584,7 +598,9 @@ export default function SchedulerPage() {
                 (selectedEvent.action_items as Array<{ task: string; due_date?: string | null }>)
                   .length > 0 && (
                   <div className="mb-6">
-                    <h3 className="mb-3 text-sm font-semibold text-foreground">Action items</h3>
+                    <h3 className="mb-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      Action items
+                    </h3>
                     <div className="space-y-2">
                       {(
                         selectedEvent.action_items as Array<{
@@ -594,10 +610,10 @@ export default function SchedulerPage() {
                       ).map((item, i) => (
                         <div
                           key={i}
-                          className="flex items-start gap-2.5 rounded-lg bg-muted/50 p-3"
+                          className="flex items-start gap-2.5 rounded-lg bg-background-secondary p-3"
                         >
-                          <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border">
-                            <span className="text-xs text-muted-foreground">{i + 1}</span>
+                          <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-[0.5px] border-border bg-card">
+                            <span className="text-[10px] text-muted-foreground">{i + 1}</span>
                           </div>
                           <div className="flex-1">
                             <span className="text-sm text-foreground">{item.task}</span>
@@ -615,7 +631,7 @@ export default function SchedulerPage() {
 
               {/* Amount due */}
               {selectedEvent.amount_due && (
-                <div className="mb-6 rounded-xl border border-scheduler/10 bg-scheduler-muted/30 p-4">
+                <div className="mb-6 rounded-xl border-[0.5px] border-scheduler/20 bg-scheduler-muted p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-foreground">
@@ -627,7 +643,7 @@ export default function SchedulerPage() {
                           ` to ${(selectedEvent.amount_due as { payee: string }).payee}`}
                       </p>
                     </div>
-                    <span className="text-lg font-bold text-scheduler">
+                    <span className="text-lg font-semibold text-scheduler">
                       ${(selectedEvent.amount_due as { amount: number }).amount}
                     </span>
                   </div>
@@ -637,12 +653,12 @@ export default function SchedulerPage() {
               {/* Reply draft */}
               {selectedEvent.reply_draft && (
                 <div className="mb-6">
-                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                    <Send className="h-4 w-4 text-scheduler" />
+                  <h3 className="mb-3 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    <Send className="h-3 w-3" />
                     Suggested reply
                   </h3>
-                  <div className="rounded-xl border bg-card p-4">
-                    <p className="whitespace-pre-line text-sm text-foreground">
+                  <div className="rounded-xl border-[0.5px] border-border bg-card p-4">
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-foreground">
                       {selectedEvent.reply_draft}
                     </p>
                   </div>
@@ -652,8 +668,10 @@ export default function SchedulerPage() {
               {/* Raw content */}
               {selectedEvent.raw_content && (
                 <div className="mb-6">
-                  <h3 className="mb-3 text-sm font-semibold text-foreground">Original content</h3>
-                  <div className="rounded-xl border border-border/50 bg-muted/30 p-4">
+                  <h3 className="mb-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    Original content
+                  </h3>
+                  <div className="rounded-xl border-[0.5px] border-border bg-background-secondary p-4">
                     <p className="whitespace-pre-line font-mono text-xs leading-relaxed text-muted-foreground">
                       {selectedEvent.raw_content}
                     </p>
@@ -663,29 +681,31 @@ export default function SchedulerPage() {
 
               {/* Actions */}
               {selectedEvent.status === "pending" && (
-                <div className="sticky bottom-4 flex gap-3">
-                  <button
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    className="flex-1"
                     onClick={() => handleUpdateStatus(selectedEvent.id, "approved")}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-scheduler py-2.5 text-sm font-medium text-white hover:opacity-90"
                   >
-                    <Check className="h-4 w-4" />
+                    <Check className="mr-1.5 h-3.5 w-3.5" />
                     Approve
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="outline"
                     onClick={() => handleUpdateStatus(selectedEvent.id, "dismissed")}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium hover:bg-accent/50"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="mr-1.5 h-3.5 w-3.5" />
                     Dismiss
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              {events.length > 0
-                ? "Select an item to view details"
-                : "Paste content or upload a document to get started"}
+            <div className="flex h-full min-h-[400px] items-center justify-center rounded-xl border-[0.5px] border-dashed border-border bg-card/50">
+              <p className="text-sm text-muted-foreground">
+                {events.length > 0
+                  ? "Select an item to view details"
+                  : "Paste content or upload a document to get started"}
+              </p>
             </div>
           )}
         </div>
@@ -693,11 +713,14 @@ export default function SchedulerPage() {
 
       {/* Paste Dialog */}
       {showPasteDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowPasteDialog(false)} />
-          <div className="relative mx-4 w-full max-w-lg rounded-xl bg-card p-6 shadow-xl">
-            <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold">
-              <ClipboardPaste className="h-5 w-5 text-scheduler" />
+        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => setShowPasteDialog(false)}
+          />
+          <div className="relative mx-4 w-full max-w-lg rounded-2xl border-[0.5px] border-border bg-card p-6">
+            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
+              <ClipboardPaste className="h-4 w-4 text-scheduler" />
               Paste content
             </h2>
             <p className="mb-4 text-sm text-muted-foreground">
@@ -708,32 +731,28 @@ export default function SchedulerPage() {
               onChange={(e) => setPasteContent(e.target.value)}
               placeholder="Paste your email or document text here..."
               rows={10}
-              className="w-full resize-none rounded-lg border bg-background p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-scheduler/50"
+              className="w-full resize-none rounded-xl border-[0.5px] border-border bg-background p-4 text-sm focus:outline-none focus:ring-2 focus:ring-scheduler/30"
             />
             <div className="mt-4 flex justify-end gap-2">
-              <button
-                onClick={() => setShowPasteDialog(false)}
-                className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent/50"
-              >
+              <Button variant="ghost" onClick={() => setShowPasteDialog(false)}>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => handleExtract(pasteContent)}
                 disabled={extracting || !pasteContent.trim()}
-                className="inline-flex items-center gap-2 rounded-lg bg-scheduler px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
                 {extracting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                     Extracting...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4" />
+                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
                     Extract with AI
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -741,24 +760,24 @@ export default function SchedulerPage() {
 
       {/* Upload Dialog */}
       {showUploadDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
             onClick={() => setShowUploadDialog(false)}
           />
-          <div className="relative mx-4 w-full max-w-lg rounded-xl bg-card p-6 shadow-xl">
-            <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold">
-              <Upload className="h-5 w-5 text-scheduler" />
+          <div className="relative mx-4 w-full max-w-lg rounded-2xl border-[0.5px] border-border bg-card p-6">
+            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
+              <Upload className="h-4 w-4 text-scheduler" />
               Upload document
             </h2>
             <p className="mb-4 text-sm text-muted-foreground">
               Upload a text file — AI will extract events and action items
             </p>
             <div
-              className={`flex cursor-pointer flex-col items-center gap-4 rounded-xl border-2 border-dashed py-8 transition-colors ${
+              className={`flex cursor-pointer flex-col items-center gap-4 rounded-xl border-[0.5px] border-dashed py-10 transition-colors ${
                 dragActive
-                  ? "border-scheduler bg-scheduler-muted/30"
-                  : "border-scheduler/20 hover:border-scheduler/40"
+                  ? "border-scheduler bg-scheduler-muted"
+                  : "border-border hover:border-scheduler/40 hover:bg-background-secondary"
               }`}
               onClick={() => fileInputRef.current?.click()}
               onDragOver={(e) => {
@@ -769,10 +788,10 @@ export default function SchedulerPage() {
               onDrop={handleDrop}
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-scheduler-muted">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-scheduler-muted">
                   <FileText className="h-5 w-5 text-scheduler" />
                 </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-scheduler-muted">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-scheduler-muted">
                   <ImageIcon className="h-5 w-5 text-scheduler" />
                 </div>
               </div>

@@ -13,10 +13,13 @@ import {
   Baby,
   BookOpen,
   AlertTriangle,
+  RotateCcw,
+  X,
 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 
 import { useChild } from "@/components/providers/ChildProvider";
+import { Button } from "@/components/ui/button";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -100,7 +103,6 @@ export default function CoachPage() {
         throw new Error(err.error || "Chat failed");
       }
 
-      // Handle streaming response
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let assistantContent = "";
@@ -140,7 +142,6 @@ export default function CoachPage() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Chat failed");
-      // Remove the empty assistant message on error
       setMessages(newMessages);
     } finally {
       setStreaming(false);
@@ -155,51 +156,56 @@ export default function CoachPage() {
   };
 
   return (
-    <div className="flex h-screen flex-col pt-14 lg:h-screen lg:pt-0">
+    <div className="animate-fade-in flex h-[calc(100vh-4rem)] flex-col">
       {/* Page header */}
-      <div className="flex-shrink-0 border-b bg-card/50 px-4 py-4 md:px-6 md:py-5 lg:px-8">
-        <div className="flex items-center justify-between">
+      <div className="flex-shrink-0 px-0 pb-4">
+        <div className="flex items-start justify-between">
           <div>
-            <h1 className="flex items-center gap-2 text-xl font-bold text-foreground md:text-2xl">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-coach-muted">
-                <MessageCircle className="h-4 w-4 text-coach" />
-              </div>
-              Coach
-            </h1>
+            <div className="mb-1 flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 text-coach" />
+              <span className="text-[11px] font-medium uppercase tracking-wider text-coach">
+                Coach
+              </span>
+            </div>
+            <h1 className="text-xl font-semibold text-foreground">Parenting guidance</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Evidence-based parenting guidance personalized to{" "}
+              Evidence-based advice personalized to{" "}
               {selectedChild ? selectedChild.name : "your child"}
             </p>
           </div>
           {messages.length > 0 && (
-            <button
-              onClick={() => setMessages([])}
-              className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              New conversation
-            </button>
+            <Button variant="ghost" size="sm" onClick={() => setMessages([])}>
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+              New chat
+            </Button>
           )}
         </div>
       </div>
 
       {/* Error banner */}
       {error && (
-        <div className="flex items-center gap-2 border-b border-red-100 bg-red-50 px-4 py-3 md:px-6 lg:px-8">
+        <div className="animate-slide-fade-in mb-3 flex items-center gap-2 rounded-xl border-[0.5px] border-red-200 bg-red-50 px-4 py-3">
           <AlertTriangle className="h-4 w-4 flex-shrink-0 text-red-500" />
           <p className="text-sm text-red-700">{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="ml-auto rounded-lg p-1 text-red-400 hover:bg-red-100 hover:text-red-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto rounded-xl border-[0.5px] border-border bg-card">
         {messages.length === 0 ? (
           // Empty state with topic suggestions
           <div className="flex h-full flex-col items-center justify-center px-4 py-8">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-coach-muted">
-              <MessageCircle className="h-7 w-7 text-coach" />
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-coach-muted">
+              <MessageCircle className="h-6 w-6 text-coach" />
             </div>
-            <h2 className="mb-1 text-lg font-semibold text-foreground">Hi there!</h2>
-            <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
+            <h2 className="mb-1 text-base font-semibold text-foreground">Hi there!</h2>
+            <p className="mb-6 max-w-md text-center text-sm leading-relaxed text-muted-foreground">
               I&apos;m your parenting coach. Ask me anything about{" "}
               {selectedChild ? `${selectedChild.name}'s` : "your child's"} development, behavior,
               sleep, nutrition, or any parenting challenge.
@@ -210,9 +216,9 @@ export default function CoachPage() {
                 <button
                   key={topic.label}
                   onClick={() => handleSend(topic.prompt)}
-                  className="flex items-center gap-2 rounded-xl border bg-card p-3 text-left transition-colors hover:bg-accent/50"
+                  className="flex items-center gap-2 rounded-xl border-[0.5px] border-border bg-background p-3 text-left transition-colors hover:bg-background-secondary"
                 >
-                  <topic.icon className="h-4 w-4 flex-shrink-0 text-coach" />
+                  <topic.icon className="h-3.5 w-3.5 flex-shrink-0 text-coach" />
                   <span className="text-xs font-medium text-foreground">{topic.label}</span>
                 </button>
               ))}
@@ -220,35 +226,37 @@ export default function CoachPage() {
           </div>
         ) : (
           // Message list
-          <div className="mx-auto max-w-2xl space-y-6 px-4 py-6 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl space-y-5 px-4 py-6 md:px-6">
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
                 {msg.role === "assistant" && (
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-coach-muted">
-                    <Sparkles className="h-4 w-4 text-coach" />
+                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-coach-muted">
+                    <Sparkles className="h-3.5 w-3.5 text-coach" />
                   </div>
                 )}
                 <div
-                  className={`max-w-[85%] rounded-xl px-4 py-3 ${
-                    msg.role === "user" ? "bg-coach text-white" : "border bg-card"
+                  className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                    msg.role === "user"
+                      ? "bg-foreground text-background"
+                      : "border-[0.5px] border-border bg-background"
                   }`}
                 >
                   <div
                     className={`whitespace-pre-wrap text-sm leading-relaxed ${
-                      msg.role === "user" ? "text-white" : "text-foreground"
+                      msg.role === "user" ? "text-background" : "text-foreground"
                     }`}
                   >
                     {msg.content || (
-                      <span className="inline-flex items-center gap-1 text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                         <Loader2 className="h-3 w-3 animate-spin" />
-                        Thinking...
+                        <span className="text-xs">Thinking...</span>
                       </span>
                     )}
                   </div>
                 </div>
                 {msg.role === "user" && (
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <User className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-background-secondary">
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
                 )}
               </div>
@@ -259,7 +267,7 @@ export default function CoachPage() {
       </div>
 
       {/* Input area */}
-      <div className="flex-shrink-0 border-t bg-card/50 px-4 py-3 md:px-6 lg:px-8">
+      <div className="flex-shrink-0 pt-3">
         <div className="mx-auto max-w-2xl">
           <div className="flex items-end gap-2">
             <div className="relative flex-1">
@@ -270,7 +278,7 @@ export default function CoachPage() {
                 onKeyDown={handleKeyDown}
                 placeholder={`Ask about ${selectedChild ? selectedChild.name + "'s" : "your child's"} development...`}
                 rows={1}
-                className="max-h-[120px] min-h-[44px] w-full resize-none rounded-xl border bg-background px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-coach/50"
+                className="max-h-[120px] min-h-[44px] w-full resize-none rounded-xl border-[0.5px] border-border bg-card px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-coach/30"
                 style={{ height: "auto" }}
                 onInput={(e) => {
                   const target = e.target as HTMLTextAreaElement;
@@ -282,7 +290,7 @@ export default function CoachPage() {
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() || streaming}
-              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-coach text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-foreground text-background transition-opacity hover:opacity-80 disabled:opacity-40"
             >
               {streaming ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -291,7 +299,7 @@ export default function CoachPage() {
               )}
             </button>
           </div>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
             Coach uses AI to provide guidance. Always consult a healthcare professional for medical
             concerns.
           </p>
