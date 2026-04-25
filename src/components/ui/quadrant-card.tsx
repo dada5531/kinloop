@@ -1,7 +1,8 @@
 "use client";
 
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
+import React from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -10,7 +11,8 @@ interface QuadrantCardProps {
   label: string;
   headline: string;
   accentColor: "scheduler" | "development" | "play" | "coach";
-  icon: LucideIcon;
+  /** Custom SVG icon component — receives { size, className } */
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   children: React.ReactNode;
   className?: string;
 }
@@ -52,7 +54,7 @@ export function QuadrantCard({
         {/* Header row */}
         <div className="mb-3 flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <Icon className={cn("h-3.5 w-3.5", labelClasses[accentColor])} />
+            <Icon size={16} className={labelClasses[accentColor]} />
             <span
               className={cn(
                 "text-[11px] font-medium uppercase tracking-wider",

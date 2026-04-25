@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  MessageCircle,
   Send,
   Loader2,
   User,
@@ -11,13 +10,13 @@ import {
   Heart,
   Brain,
   Baby,
-  BookOpen,
   AlertTriangle,
   RotateCcw,
   X,
 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 
+import { CoachIcon } from "@/components/icons/QuadrantIcons";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 
@@ -53,7 +52,7 @@ const TOPIC_SUGGESTIONS = [
     prompt: "What developmental milestones should I be watching for at my child's age?",
   },
   {
-    icon: BookOpen,
+    icon: CoachIcon,
     label: "Reading",
     prompt: "How can I encourage a love of reading in my child?",
   },
@@ -162,7 +161,7 @@ export default function CoachPage() {
         <div className="flex items-start justify-between">
           <div>
             <div className="mb-1 flex items-center gap-2">
-              <MessageCircle className="h-4 w-4 text-coach" />
+              <CoachIcon size={16} className="text-coach" />
               <span className="text-[11px] font-medium uppercase tracking-wider text-coach">
                 Coach
               </span>
@@ -202,7 +201,7 @@ export default function CoachPage() {
           // Empty state with topic suggestions
           <div className="flex h-full flex-col items-center justify-center px-4 py-8">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-coach-muted">
-              <MessageCircle className="h-6 w-6 text-coach" />
+              <CoachIcon size={24} className="text-coach" />
             </div>
             <h2 className="mb-1 text-base font-semibold text-foreground">Hi there!</h2>
             <p className="mb-6 max-w-md text-center text-sm leading-relaxed text-muted-foreground">
@@ -218,7 +217,7 @@ export default function CoachPage() {
                   onClick={() => handleSend(topic.prompt)}
                   className="flex items-center gap-2 rounded-xl border-[0.5px] border-border bg-background p-3 text-left transition-colors hover:bg-background-secondary"
                 >
-                  <topic.icon className="h-3.5 w-3.5 flex-shrink-0 text-coach" />
+                  <topic.icon className="h-3.5 w-3.5 flex-shrink-0 text-coach" size={14} />
                   <span className="text-xs font-medium text-foreground">{topic.label}</span>
                 </button>
               ))}

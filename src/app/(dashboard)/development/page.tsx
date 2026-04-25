@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BarChart3,
   ClipboardPaste,
   Sparkles,
   Loader2,
@@ -20,6 +19,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
+import { DevelopmentIcon } from "@/components/icons/QuadrantIcons";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -230,7 +230,7 @@ export default function DevelopmentPage() {
       <div className="mb-6 flex items-start justify-between">
         <div>
           <div className="mb-1 flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-development" />
+            <DevelopmentIcon size={16} className="text-development" />
             <span className="text-[11px] font-medium uppercase tracking-wider text-development">
               Development Hub
             </span>
@@ -337,7 +337,7 @@ export default function DevelopmentPage() {
               {extractedResult.growthData.bmi && (
                 <div className="rounded-xl border-[0.5px] border-border bg-card p-3">
                   <div className="mb-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <BarChart3 className="h-3 w-3" /> BMI
+                    <DevelopmentIcon size={12} /> BMI
                   </div>
                   <p className="text-sm font-semibold text-foreground">
                     {extractedResult.growthData.bmi.toFixed(1)}
@@ -553,7 +553,7 @@ export default function DevelopmentPage() {
           </div>
         ) : (
           <EmptyState
-            icon={BarChart3}
+            icon={DevelopmentIcon}
             title="No health records yet"
             description="Paste pediatrician notes to extract growth data and milestones"
             actionLabel="Add notes"

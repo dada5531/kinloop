@@ -1,8 +1,13 @@
 "use client";
 
-import { Calendar, BarChart3, Palette, MessageCircle, Clock } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
+import {
+  SchedulerIcon,
+  DevelopmentIcon,
+  PlayLabIcon,
+  CoachIcon,
+} from "@/components/icons/QuadrantIcons";
 import { useChild } from "@/components/providers/ChildProvider";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QuadrantCard, PreviewRow } from "@/components/ui/quadrant-card";
@@ -121,7 +126,7 @@ export default function DashboardPage() {
               : "No events yet"
           }
           accentColor="scheduler"
-          icon={Calendar}
+          icon={SchedulerIcon}
         >
           {data?.events && data.events.length > 0 ? (
             data.events.map((evt) => (
@@ -156,7 +161,7 @@ export default function DashboardPage() {
               : "No records yet"
           }
           accentColor="development"
-          icon={BarChart3}
+          icon={DevelopmentIcon}
         >
           {data?.healthRecords && data.healthRecords.length > 0 ? (
             data.healthRecords.map((rec) => (
@@ -187,7 +192,7 @@ export default function DashboardPage() {
               : "No activities yet"
           }
           accentColor="play"
-          icon={Palette}
+          icon={PlayLabIcon}
         >
           {data?.activities && data.activities.length > 0 ? (
             data.activities.map((act) => (
@@ -211,7 +216,7 @@ export default function DashboardPage() {
           label="Coach"
           headline="AI parenting guidance"
           accentColor="coach"
-          icon={MessageCircle}
+          icon={CoachIcon}
         >
           <p className="text-xs leading-relaxed text-muted-foreground">
             Ask about sleep, nutrition, tantrums, milestones — personalized to{" "}

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Gamepad2,
   ClipboardPaste,
   Sparkles,
   Loader2,
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
+import { PlayLabIcon } from "@/components/icons/QuadrantIcons";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -252,7 +252,7 @@ export default function PlayLabPage() {
       <div className="mb-6 flex items-start justify-between">
         <div>
           <div className="mb-1 flex items-center gap-2">
-            <Gamepad2 className="h-4 w-4 text-play" />
+            <PlayLabIcon size={16} className="text-play" />
             <span className="text-[11px] font-medium uppercase tracking-wider text-play">
               Play Lab
             </span>
@@ -429,7 +429,7 @@ export default function PlayLabPage() {
                     className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-background-secondary"
                   >
                     <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-play-muted">
-                      <Gamepad2 className="h-3.5 w-3.5 text-play" />
+                      <PlayLabIcon size={14} className="text-play" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate text-sm font-medium text-foreground">
@@ -530,7 +530,7 @@ export default function PlayLabPage() {
           </div>
         ) : (
           <EmptyState
-            icon={Gamepad2}
+            icon={PlayLabIcon}
             title="No activities yet"
             description="Paste a link or describe an activity to get a structured plan"
             actionLabel="New activity"
@@ -549,7 +549,7 @@ export default function PlayLabPage() {
           />
           <div className="relative mx-4 w-full max-w-lg rounded-2xl border-[0.5px] border-border bg-card p-6">
             <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
-              <Gamepad2 className="h-4 w-4 text-play" />
+              <PlayLabIcon size={16} className="text-play" />
               New activity
             </h2>
             <p className="mb-4 text-sm text-muted-foreground">

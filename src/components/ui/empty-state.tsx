@@ -1,11 +1,12 @@
-import { type LucideIcon } from "lucide-react";
+import React from "react";
 
 import { cn } from "@/lib/utils";
 
 import { Button } from "./button";
 
 interface EmptyStateProps {
-  icon: LucideIcon;
+  /** Accepts both Lucide icons and custom SVG icons (any component with size/className) */
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   title: string;
   description: string;
   actionLabel?: string;
@@ -51,6 +52,7 @@ export function EmptyState({
         )}
       >
         <Icon
+          size={20}
           className={cn(
             "h-5 w-5",
             accentColor ? textClasses[accentColor] : "text-muted-foreground",
