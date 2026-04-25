@@ -22,6 +22,9 @@ import {
 import { useState, useEffect, useCallback } from "react";
 
 import { useChild } from "@/components/providers/ChildProvider";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // ─── Types ──────────────────────────────────────────────────────
 interface ActivityExtractionResult {
@@ -62,13 +65,13 @@ interface SavedActivity {
 
 function DifficultyBadge({ difficulty }: { difficulty: string }) {
   const colors: Record<string, string> = {
-    easy: "bg-green-100 text-green-700",
-    medium: "bg-yellow-100 text-yellow-700",
-    hard: "bg-red-100 text-red-700",
+    easy: "border-green-100 bg-green-50 text-green-700",
+    medium: "border-yellow-100 bg-yellow-50 text-yellow-700",
+    hard: "border-red-100 bg-red-50 text-red-700",
   };
   return (
     <span
-      className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${colors[difficulty] || "bg-gray-100 text-gray-700"}`}
+      className={`inline-flex items-center rounded-full border-[0.5px] px-2 py-0.5 text-[10px] font-medium ${colors[difficulty] || "border-border bg-muted text-muted-foreground"}`}
     >
       {difficulty}
     </span>
@@ -87,7 +90,7 @@ function CategoryBadge({ category }: { category: string }) {
     other: "✨",
   };
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-play-muted px-2 py-0.5 text-xs font-medium text-play">
+    <span className="inline-flex items-center gap-1 rounded-full border-[0.5px] border-play/20 bg-play-muted px-2 py-0.5 text-[10px] font-medium text-play">
       {icons[category] || "✨"} {category}
     </span>
   );
@@ -109,6 +112,28 @@ function formatAgeRange(min: number | null, max: number | null): string {
   if (min && max) return `${formatAge(minYears, minMonths)} – ${formatAge(maxYears, maxMonths)}`;
   if (min) return `${formatAge(minYears, minMonths)}+`;
   return `Up to ${formatAge(maxYears, maxMonths)}`;
+}
+
+function LibrarySkeleton() {
+  return (
+    <div className="max-w-2xl space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="rounded-xl border-[0.5px] border-border bg-card p-4">
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-9 w-9 rounded-lg" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-2/3" />
+              <div className="flex gap-2">
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-5 w-14 rounded-full" />
+                <Skeleton className="h-4 w-12" />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function PlayLabPage() {
@@ -222,39 +247,35 @@ export default function PlayLabPage() {
   };
 
   return (
-    <div className="flex h-screen flex-col pt-14 lg:h-screen lg:pt-0">
+    <div className="animate-fade-in">
       {/* Page header */}
-      <div className="flex-shrink-0 border-b bg-card/50 px-4 py-4 md:px-6 md:py-5 lg:px-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="flex items-center gap-2 text-xl font-bold text-foreground md:text-2xl">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-play-muted">
-                <Gamepad2 className="h-4 w-4 text-play" />
-              </div>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <div className="mb-1 flex items-center gap-2">
+            <Gamepad2 className="h-4 w-4 text-play" />
+            <span className="text-[11px] font-medium uppercase tracking-wider text-play">
               Play Lab
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Paste a link or describe an activity — AI creates a structured plan with materials
-            </p>
+            </span>
           </div>
-          <button
-            onClick={() => setShowInputDialog(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-play px-3 py-2 text-xs font-medium text-white transition-opacity hover:opacity-90"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            New activity
-          </button>
+          <h1 className="text-xl font-semibold text-foreground">Activity library</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Paste a link or describe an activity — AI creates a structured plan with materials
+          </p>
         </div>
+        <Button size="sm" onClick={() => setShowInputDialog(true)}>
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          New activity
+        </Button>
       </div>
 
       {/* Extraction error */}
       {extractionError && (
-        <div className="flex items-center gap-2 border-b border-red-100 bg-red-50 px-4 py-3 md:px-6 lg:px-8">
+        <div className="animate-slide-fade-in mb-4 flex items-center gap-2 rounded-xl border-[0.5px] border-red-200 bg-red-50 px-4 py-3">
           <AlertTriangle className="h-4 w-4 flex-shrink-0 text-red-500" />
           <p className="text-sm text-red-700">{extractionError}</p>
           <button
             onClick={() => setExtractionError(null)}
-            className="ml-auto text-red-400 hover:text-red-600"
+            className="ml-auto rounded-lg p-1 text-red-400 hover:bg-red-100 hover:text-red-600"
           >
             <X className="h-4 w-4" />
           </button>
@@ -263,46 +284,51 @@ export default function PlayLabPage() {
 
       {/* Extracted result review */}
       {extractedResult && (
-        <div className="max-h-[55vh] flex-shrink-0 overflow-y-auto border-b border-play/10 bg-play-muted/30 px-4 py-4 md:px-6 lg:px-8">
-          <div className="mb-4 flex items-start gap-3">
-            <Sparkles className="mt-0.5 h-5 w-5 flex-shrink-0 text-play" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">AI Activity Plan</p>
-              <div className="mt-1 flex items-center gap-2">
-                <CategoryBadge category={extractedResult.category} />
-                <DifficultyBadge difficulty={extractedResult.difficulty} />
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" /> {extractedResult.durationMinutes} min
-                </span>
-              </div>
+        <div className="animate-slide-fade-in mb-6 rounded-xl border-[0.5px] border-play/20 bg-play-muted p-5">
+          <div className="mb-4 flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-play" />
+              <span className="text-[11px] font-medium uppercase tracking-wider text-play">
+                AI activity plan
+              </span>
+              <CategoryBadge category={extractedResult.category} />
+              <DifficultyBadge difficulty={extractedResult.difficulty} />
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <Clock className="h-3 w-3" /> {extractedResult.durationMinutes} min
+              </span>
             </div>
             <button
-              className="rounded p-1 hover:bg-background/50"
+              className="rounded-lg p-1 text-muted-foreground hover:bg-background-secondary"
               onClick={() => setExtractedResult(null)}
             >
-              <X className="h-4 w-4 text-muted-foreground" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="mb-3 rounded-xl border bg-card p-4 shadow-sm">
+          <div className="mb-4 rounded-xl border-[0.5px] border-border bg-card p-4">
             <h3 className="mb-1 text-base font-semibold text-foreground">
               {extractedResult.title}
             </h3>
-            <p className="text-sm text-muted-foreground">{extractedResult.description}</p>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {extractedResult.description}
+            </p>
+            <p className="mt-2 text-[11px] text-muted-foreground">
               Ages: {formatAgeRange(extractedResult.ageRangeMin, extractedResult.ageRangeMax)}
             </p>
           </div>
 
           {/* Steps */}
-          <div className="mb-3">
-            <p className="mb-2 flex items-center gap-1 text-xs font-medium text-foreground">
-              <ListChecks className="h-3 w-3 text-play" /> Steps
+          <div className="mb-4">
+            <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <ListChecks className="h-3 w-3" /> Steps
             </p>
             <div className="space-y-2">
               {extractedResult.steps.map((step, i) => (
-                <div key={i} className="flex items-start gap-2.5 rounded-lg border bg-card p-3">
-                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-play text-xs font-medium text-white">
+                <div
+                  key={i}
+                  className="flex items-start gap-2.5 rounded-lg border-[0.5px] border-border bg-card p-3"
+                >
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-play text-[10px] font-medium text-white">
                     {i + 1}
                   </span>
                   <span className="text-sm text-foreground">{step}</span>
@@ -313,18 +339,18 @@ export default function PlayLabPage() {
 
           {/* Materials */}
           {extractedResult.materials.length > 0 && (
-            <div className="mb-3">
-              <p className="mb-2 flex items-center gap-1 text-xs font-medium text-foreground">
-                <ShoppingCart className="h-3 w-3 text-play" /> Materials
+            <div className="mb-4">
+              <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                <ShoppingCart className="h-3 w-3" /> Materials
               </p>
               <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                 {extractedResult.materials.map((mat, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2"
+                    className="flex items-center gap-2 rounded-lg border-[0.5px] border-border bg-card px-3 py-2"
                   >
                     <span
-                      className={`h-2 w-2 flex-shrink-0 rounded-full ${mat.required ? "bg-play" : "bg-muted-foreground/30"}`}
+                      className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${mat.required ? "bg-play" : "bg-muted-foreground/30"}`}
                     />
                     <span className="text-sm text-foreground">{mat.name}</span>
                     {mat.quantity && (
@@ -337,15 +363,18 @@ export default function PlayLabPage() {
           )}
 
           {/* Skills & Safety */}
-          <div className="mb-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2">
             {extractedResult.skills.length > 0 && (
-              <div className="rounded-lg border bg-card p-3">
-                <p className="mb-1.5 flex items-center gap-1 text-xs font-medium text-foreground">
-                  <Brain className="h-3 w-3 text-play" /> Skills developed
+              <div className="rounded-xl border-[0.5px] border-border bg-card p-3">
+                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  <Brain className="h-3 w-3" /> Skills developed
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {extractedResult.skills.map((skill, i) => (
-                    <span key={i} className="rounded bg-play-muted px-2 py-0.5 text-xs text-play">
+                    <span
+                      key={i}
+                      className="rounded-full border-[0.5px] border-play/20 bg-play-muted px-2 py-0.5 text-[10px] text-play"
+                    >
                       {skill}
                     </span>
                   ))}
@@ -353,14 +382,14 @@ export default function PlayLabPage() {
               </div>
             )}
             {extractedResult.safetyNotes.length > 0 && (
-              <div className="rounded-lg border bg-card p-3">
-                <p className="mb-1.5 flex items-center gap-1 text-xs font-medium text-foreground">
-                  <Shield className="h-3 w-3 text-yellow-500" /> Safety notes
+              <div className="rounded-xl border-[0.5px] border-border bg-card p-3">
+                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  <Shield className="h-3 w-3" /> Safety notes
                 </p>
                 <ul className="space-y-1">
                   {extractedResult.safetyNotes.map((note, i) => (
                     <li key={i} className="text-xs text-muted-foreground">
-                      • {note}
+                      {note}
                     </li>
                   ))}
                 </ul>
@@ -368,44 +397,39 @@ export default function PlayLabPage() {
             )}
           </div>
 
-          <button
-            onClick={handleSaveExtracted}
-            disabled={saving}
-            className="inline-flex items-center gap-2 rounded-lg bg-play px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-          >
+          <Button onClick={handleSaveExtracted} disabled={saving}>
             {saving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Saving...
               </>
             ) : (
               <>
-                <Star className="h-4 w-4" /> Save to library
+                <Star className="mr-1.5 h-3.5 w-3.5" /> Save to library
               </>
             )}
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Activity library */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6 lg:px-8">
+      <div>
         {activitiesLoading ? (
-          <div className="py-12 text-center">
-            <Loader2 className="mx-auto mb-2 h-6 w-6 animate-spin text-play" />
-            <p className="text-sm text-muted-foreground">Loading activities...</p>
-          </div>
+          <LibrarySkeleton />
         ) : activities.length > 0 ? (
-          <div className="max-w-2xl space-y-4">
-            <h2 className="text-sm font-semibold text-foreground">Activity Library</h2>
+          <div className="max-w-2xl space-y-3">
+            <h2 className="mb-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Activity library
+            </h2>
             {activities.map((activity) => {
               const isExpanded = expandedActivityId === activity.id;
               return (
-                <div key={activity.id} className="rounded-xl border bg-card shadow-sm">
+                <div key={activity.id} className="rounded-xl border-[0.5px] border-border bg-card">
                   <button
                     onClick={() => setExpandedActivityId(isExpanded ? null : activity.id)}
-                    className="flex w-full items-center gap-3 p-4 text-left"
+                    className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-background-secondary"
                   >
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-play-muted">
-                      <Gamepad2 className="h-4 w-4 text-play" />
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-play-muted">
+                      <Gamepad2 className="h-3.5 w-3.5 text-play" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate text-sm font-medium text-foreground">
@@ -415,7 +439,7 @@ export default function PlayLabPage() {
                         <CategoryBadge category={activity.category} />
                         <DifficultyBadge difficulty={activity.difficulty} />
                         {activity.duration_minutes && (
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-[11px] text-muted-foreground">
                             {activity.duration_minutes} min
                           </span>
                         )}
@@ -429,15 +453,19 @@ export default function PlayLabPage() {
                   </button>
 
                   {isExpanded && (
-                    <div className="space-y-3 px-4 pb-4">
+                    <div className="animate-slide-fade-in space-y-3 border-t-[0.5px] border-border px-4 py-4">
                       {activity.description && (
-                        <p className="text-sm text-muted-foreground">{activity.description}</p>
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          {activity.description}
+                        </p>
                       )}
 
                       {/* Steps */}
                       {(activity.steps as string[])?.length > 0 && (
                         <div>
-                          <p className="mb-1.5 text-xs font-medium text-foreground">Steps</p>
+                          <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                            Steps
+                          </p>
                           <ol className="space-y-1">
                             {(activity.steps as string[]).map((step, i) => (
                               <li key={i} className="flex gap-2 text-xs text-muted-foreground">
@@ -458,7 +486,9 @@ export default function PlayLabPage() {
                         }>
                       )?.length > 0 && (
                         <div>
-                          <p className="mb-1.5 text-xs font-medium text-foreground">Materials</p>
+                          <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                            Materials
+                          </p>
                           <div className="flex flex-wrap gap-1.5">
                             {(
                               activity.materials as Array<{
@@ -467,7 +497,10 @@ export default function PlayLabPage() {
                                 required: boolean;
                               }>
                             ).map((mat, i) => (
-                              <span key={i} className="rounded bg-muted/50 px-2 py-1 text-xs">
+                              <span
+                                key={i}
+                                className="rounded-lg bg-background-secondary px-2 py-1 text-xs"
+                              >
                                 {mat.name}
                                 {mat.quantity && ` (${mat.quantity})`}
                               </span>
@@ -482,7 +515,7 @@ export default function PlayLabPage() {
                           {(activity.skills as string[]).map((skill, i) => (
                             <span
                               key={i}
-                              className="rounded bg-play-muted px-2 py-0.5 text-xs text-play"
+                              className="rounded-full border-[0.5px] border-play/20 bg-play-muted px-2 py-0.5 text-[10px] text-play"
                             >
                               {skill}
                             </span>
@@ -496,32 +529,27 @@ export default function PlayLabPage() {
             })}
           </div>
         ) : (
-          <div className="py-12 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-play-muted">
-              <Gamepad2 className="h-6 w-6 text-play" />
-            </div>
-            <p className="mb-1 text-sm font-medium text-foreground">No activities yet</p>
-            <p className="mb-4 text-xs text-muted-foreground">
-              Paste a link or describe an activity to get a structured plan
-            </p>
-            <button
-              onClick={() => setShowInputDialog(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-play px-4 py-2 text-xs font-medium text-white hover:opacity-90"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              New activity
-            </button>
-          </div>
+          <EmptyState
+            icon={Gamepad2}
+            title="No activities yet"
+            description="Paste a link or describe an activity to get a structured plan"
+            actionLabel="New activity"
+            onAction={() => setShowInputDialog(true)}
+            accentColor="play"
+          />
         )}
       </div>
 
       {/* Input Dialog */}
       {showInputDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowInputDialog(false)} />
-          <div className="relative mx-4 w-full max-w-lg rounded-xl bg-card p-6 shadow-xl">
-            <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold">
-              <Gamepad2 className="h-5 w-5 text-play" />
+        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => setShowInputDialog(false)}
+          />
+          <div className="relative mx-4 w-full max-w-lg rounded-2xl border-[0.5px] border-border bg-card p-6">
+            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
+              <Gamepad2 className="h-4 w-4 text-play" />
               New activity
             </h2>
             <p className="mb-4 text-sm text-muted-foreground">
@@ -530,7 +558,7 @@ export default function PlayLabPage() {
 
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-foreground">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   URL (optional)
                 </label>
                 <div className="relative">
@@ -540,13 +568,13 @@ export default function PlayLabPage() {
                     value={inputUrl}
                     onChange={(e) => setInputUrl(e.target.value)}
                     placeholder="https://youtube.com/watch?v=..."
-                    className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-play/50"
+                    className="w-full rounded-xl border-[0.5px] border-border bg-background py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-play/30"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-foreground">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   Description / transcript
                 </label>
                 <textarea
@@ -554,33 +582,29 @@ export default function PlayLabPage() {
                   onChange={(e) => setInputContent(e.target.value)}
                   placeholder="Paste the video transcript, blog post, or describe the activity..."
                   rows={8}
-                  className="w-full resize-none rounded-lg border bg-background p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-play/50"
+                  className="w-full resize-none rounded-xl border-[0.5px] border-border bg-background p-4 text-sm focus:outline-none focus:ring-2 focus:ring-play/30"
                 />
               </div>
             </div>
 
             <div className="mt-4 flex justify-end gap-2">
-              <button
-                onClick={() => setShowInputDialog(false)}
-                className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent/50"
-              >
+              <Button variant="ghost" onClick={() => setShowInputDialog(false)}>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleExtract}
                 disabled={extracting || (!inputContent.trim() && !inputUrl.trim())}
-                className="inline-flex items-center gap-2 rounded-lg bg-play px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
                 {extracting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Extracting...
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Extracting...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4" /> Extract with AI
+                    <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Extract with AI
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

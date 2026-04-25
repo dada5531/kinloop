@@ -4,98 +4,62 @@
 
 @layer base {
   :root {
-    --background: 40 33% 98%;
-    --foreground: 240 10% 15%;
+    /* Page & surface */
+    --background: 40 20% 96%;
+    --background-secondary: 40 15% 93%;
+    --background-tertiary: 40 10% 90%;
+    --foreground: 0 0% 13%;
 
+    /* Cards */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 15%;
+    --card-foreground: 0 0% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 15%;
+    --popover-foreground: 0 0% 13%;
 
-    --primary: 262 47% 55%;
+    /* Primary — dark charcoal for pill buttons */
+    --primary: 50 4% 17%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 40 20% 94%;
-    --secondary-foreground: 240 10% 15%;
+    /* Secondary */
+    --secondary: 40 15% 93%;
+    --secondary-foreground: 0 0% 13%;
 
-    --muted: 40 20% 94%;
-    --muted-foreground: 240 5% 46%;
+    /* Muted */
+    --muted: 40 12% 93%;
+    --muted-foreground: 0 0% 46%;
 
-    --accent: 40 20% 94%;
-    --accent-foreground: 240 10% 15%;
+    /* Accent */
+    --accent: 40 15% 93%;
+    --accent-foreground: 0 0% 13%;
 
+    /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 15% 90%;
-    --input: 30 15% 90%;
+    /* Borders — thin, subtle */
+    --border: 30 10% 88%;
+    --input: 30 10% 88%;
     --ring: 262 47% 55%;
 
     --radius: 0.75rem;
 
-    /* KINLOOP Quadrant Colors — Warm Scandinavian palette */
+    /* KINLOOP Quadrant accent colors — used as subtle bars and indicators */
     --scheduler: 262 47% 55%;
     --scheduler-foreground: 0 0% 100%;
-    --scheduler-muted: 262 30% 95%;
+    --scheduler-muted: 262 25% 96%;
 
     --development: 168 40% 45%;
     --development-foreground: 0 0% 100%;
-    --development-muted: 168 25% 94%;
+    --development-muted: 168 20% 96%;
 
     --play: 15 70% 60%;
     --play-foreground: 0 0% 100%;
-    --play-muted: 15 50% 95%;
+    --play-muted: 15 40% 96%;
 
     --coach: 340 45% 60%;
     --coach-foreground: 0 0% 100%;
-    --coach-muted: 340 30% 95%;
-  }
-
-  .dark {
-    --background: 240 10% 8%;
-    --foreground: 40 20% 95%;
-
-    --card: 240 10% 10%;
-    --card-foreground: 40 20% 95%;
-
-    --popover: 240 10% 10%;
-    --popover-foreground: 40 20% 95%;
-
-    --primary: 262 47% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 240 5% 18%;
-    --secondary-foreground: 40 20% 95%;
-
-    --muted: 240 5% 18%;
-    --muted-foreground: 240 5% 55%;
-
-    --accent: 240 5% 18%;
-    --accent-foreground: 40 20% 95%;
-
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 240 5% 20%;
-    --input: 240 5% 20%;
-    --ring: 262 47% 60%;
-
-    --scheduler: 262 47% 60%;
-    --scheduler-foreground: 0 0% 100%;
-    --scheduler-muted: 262 30% 15%;
-
-    --development: 168 40% 50%;
-    --development-foreground: 0 0% 100%;
-    --development-muted: 168 25% 15%;
-
-    --play: 15 70% 55%;
-    --play-foreground: 0 0% 100%;
-    --play-muted: 15 50% 15%;
-
-    --coach: 340 45% 55%;
-    --coach-foreground: 0 0% 100%;
-    --coach-muted: 340 30% 15%;
+    --coach-muted: 340 25% 96%;
   }
 }
 
@@ -103,8 +67,88 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Typography — tightened letter-spacing */
+  h1,
+  h2 {
+    letter-spacing: -0.01em;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    letter-spacing: -0.005em;
+  }
+
+  body,
+  p,
+  span,
+  a,
+  li {
+    letter-spacing: -0.005em;
+  }
+}
+
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--background-secondary)) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* Fade-in animation for page transitions and new items */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 300ms ease-out forwards;
+}
+
+/* Slide-fade for new items */
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-fade-in {
+  animation: slideFadeIn 250ms ease-out forwards;
 }

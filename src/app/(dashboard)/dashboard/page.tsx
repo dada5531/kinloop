@@ -1,20 +1,12 @@
 "use client";
 
-import {
-  Calendar,
-  BarChart3,
-  Gamepad2,
-  MessageCircle,
-  ChevronRight,
-  Clock,
-  MapPin,
-  Loader2,
-  Plus,
-} from "lucide-react";
-import Link from "next/link";
+import { Calendar, BarChart3, Palette, MessageCircle, Clock } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
 import { useChild } from "@/components/providers/ChildProvider";
+import { EmptyState } from "@/components/ui/empty-state";
+import { QuadrantCard, PreviewRow } from "@/components/ui/quadrant-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardData {
   events: Array<{
@@ -29,6 +21,30 @@ interface DashboardData {
   eventsCount: number;
   healthCount: number;
   activitiesCount: number;
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="animate-fade-in">
+      <div className="mb-8">
+        <Skeleton className="mb-2 h-7 w-48" />
+        <Skeleton className="h-4 w-64" />
+      </div>
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-xl border-[0.5px] border-border bg-card p-6">
+            <Skeleton className="mb-3 h-4 w-20" />
+            <Skeleton className="mb-4 h-5 w-40" />
+            <div className="space-y-2.5">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-4/5" />
+              <Skeleton className="h-3 w-3/5" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function DashboardPage() {
@@ -74,190 +90,152 @@ export default function DashboardPage() {
   }, [fetchDashboard]);
 
   if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center pt-14 lg:pt-0">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
+  const greeting = getTimeOfDayGreeting();
+
   return (
-    <div className="min-h-screen pt-14 lg:pt-0">
-      <div className="px-4 py-6 md:px-6 md:py-8 lg:px-8">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-foreground md:text-2xl">
-            {selectedChild ? `${selectedChild.name}'s Dashboard` : "Dashboard"}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your 2×2 overview of everything happening
+    <div className="animate-fade-in">
+      {/* Page header */}
+      <div className="mb-8">
+        <h1 className="text-xl font-semibold text-foreground md:text-2xl">
+          {selectedChild ? `${greeting}, ${selectedChild.name.split(" ")[0]}` : greeting}
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {selectedChild
+            ? `Here's what's happening for ${selectedChild.name}`
+            : "Select a child to see their dashboard"}
+        </p>
+      </div>
+
+      {/* 2x2 Quadrant Grid */}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {/* Scheduler */}
+        <QuadrantCard
+          href="/scheduler"
+          label="Scheduler"
+          headline={
+            data?.eventsCount
+              ? `${data.eventsCount} event${data.eventsCount !== 1 ? "s" : ""} tracked`
+              : "No events yet"
+          }
+          accentColor="scheduler"
+          icon={Calendar}
+        >
+          {data?.events && data.events.length > 0 ? (
+            data.events.map((evt) => (
+              <PreviewRow
+                key={evt.id}
+                dot={evt.status === "approved" ? "bg-green-500" : "bg-scheduler"}
+                label={evt.title}
+                meta={
+                  evt.start_time
+                    ? new Date(evt.start_time).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })
+                    : undefined
+                }
+              />
+            ))
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Paste an email to extract events automatically.
+            </p>
+          )}
+        </QuadrantCard>
+
+        {/* Development */}
+        <QuadrantCard
+          href="/development"
+          label="Development"
+          headline={
+            data?.healthCount
+              ? `${data.healthCount} record${data.healthCount !== 1 ? "s" : ""}`
+              : "No records yet"
+          }
+          accentColor="development"
+          icon={BarChart3}
+        >
+          {data?.healthRecords && data.healthRecords.length > 0 ? (
+            data.healthRecords.map((rec) => (
+              <PreviewRow
+                key={rec.id}
+                dot="bg-development"
+                label={`${rec.type.replace("_", " ")}${rec.summary ? ` — ${rec.summary.slice(0, 35)}` : ""}`}
+                meta={new Date(rec.visit_date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+              />
+            ))
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Paste pediatrician notes to track growth and milestones.
+            </p>
+          )}
+        </QuadrantCard>
+
+        {/* Play Lab */}
+        <QuadrantCard
+          href="/play"
+          label="Play Lab"
+          headline={
+            data?.activitiesCount
+              ? `${data.activitiesCount} activit${data.activitiesCount !== 1 ? "ies" : "y"} saved`
+              : "No activities yet"
+          }
+          accentColor="play"
+          icon={Palette}
+        >
+          {data?.activities && data.activities.length > 0 ? (
+            data.activities.map((act) => (
+              <PreviewRow
+                key={act.id}
+                dot="bg-play"
+                label={act.title}
+                meta={act.category || act.difficulty}
+              />
+            ))
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Paste a link to extract an activity plan.
+            </p>
+          )}
+        </QuadrantCard>
+
+        {/* Coach */}
+        <QuadrantCard
+          href="/coach"
+          label="Coach"
+          headline="AI parenting guidance"
+          accentColor="coach"
+          icon={MessageCircle}
+        >
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Ask about sleep, nutrition, tantrums, milestones — personalized to{" "}
+            {selectedChild ? selectedChild.name : "your child"}.
           </p>
-        </div>
-
-        {/* 2x2 Grid */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-          {/* Scheduler Quadrant */}
-          <Link href="/scheduler" className="group">
-            <div className="h-full rounded-xl border bg-card p-5 transition-shadow hover:shadow-md">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-scheduler-muted">
-                    <Calendar className="h-4 w-4 text-scheduler" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-semibold text-foreground">Scheduler</h2>
-                    <p className="text-xs text-muted-foreground">{data?.eventsCount || 0} events</p>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-scheduler" />
-              </div>
-
-              {data?.events && data.events.length > 0 ? (
-                <div className="space-y-2">
-                  {data.events.map((evt) => (
-                    <div key={evt.id} className="flex items-center gap-2 text-xs">
-                      <span
-                        className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${
-                          evt.status === "approved" ? "bg-green-500" : "bg-scheduler"
-                        }`}
-                      />
-                      <span className="flex-1 truncate text-foreground">{evt.title}</span>
-                      {evt.start_time && (
-                        <span className="flex items-center gap-0.5 whitespace-nowrap text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {new Date(evt.start_time).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  No events yet. Paste an email to get started.
-                </p>
-              )}
-            </div>
-          </Link>
-
-          {/* Development Quadrant */}
-          <Link href="/development" className="group">
-            <div className="h-full rounded-xl border bg-card p-5 transition-shadow hover:shadow-md">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-development-muted">
-                    <BarChart3 className="h-4 w-4 text-development" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-semibold text-foreground">Development</h2>
-                    <p className="text-xs text-muted-foreground">
-                      {data?.healthCount || 0} records
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-development" />
-              </div>
-
-              {data?.healthRecords && data.healthRecords.length > 0 ? (
-                <div className="space-y-2">
-                  {data.healthRecords.map((rec) => (
-                    <div key={rec.id} className="flex items-center gap-2 text-xs">
-                      <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-development" />
-                      <span className="flex-1 truncate text-foreground">
-                        {rec.type.replace("_", " ")}{" "}
-                        {rec.summary ? `— ${rec.summary.slice(0, 40)}...` : ""}
-                      </span>
-                      <span className="whitespace-nowrap text-muted-foreground">
-                        {new Date(rec.visit_date).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  No health records yet. Paste pediatrician notes to start.
-                </p>
-              )}
-            </div>
-          </Link>
-
-          {/* Play Lab Quadrant */}
-          <Link href="/play" className="group">
-            <div className="h-full rounded-xl border bg-card p-5 transition-shadow hover:shadow-md">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-play-muted">
-                    <Gamepad2 className="h-4 w-4 text-play" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-semibold text-foreground">Play Lab</h2>
-                    <p className="text-xs text-muted-foreground">
-                      {data?.activitiesCount || 0} activities
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-play" />
-              </div>
-
-              {data?.activities && data.activities.length > 0 ? (
-                <div className="space-y-2">
-                  {data.activities.map((act) => (
-                    <div key={act.id} className="flex items-center gap-2 text-xs">
-                      <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-play" />
-                      <span className="flex-1 truncate text-foreground">{act.title}</span>
-                      <span className="text-muted-foreground">{act.category}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  No activities yet. Paste a link to extract an activity plan.
-                </p>
-              )}
-            </div>
-          </Link>
-
-          {/* Coach Quadrant */}
-          <Link href="/coach" className="group">
-            <div className="h-full rounded-xl border bg-card p-5 transition-shadow hover:shadow-md">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-coach-muted">
-                    <MessageCircle className="h-4 w-4 text-coach" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-semibold text-foreground">Coach</h2>
-                    <p className="text-xs text-muted-foreground">AI parenting guidance</p>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-coach" />
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">
-                  Ask about sleep, nutrition, tantrums, milestones, and more — personalized to{" "}
-                  {selectedChild ? selectedChild.name : "your child"}.
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {["Sleep", "Tantrums", "Nutrition", "Milestones"].map((topic) => (
-                    <span
-                      key={topic}
-                      className="rounded bg-coach-muted px-2 py-0.5 text-xs text-coach"
-                    >
-                      {topic}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Link>
-        </div>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {["Sleep", "Tantrums", "Nutrition", "Milestones"].map((topic) => (
+              <span
+                key={topic}
+                className="rounded-full bg-coach-muted px-2.5 py-0.5 text-[11px] font-medium text-coach"
+              >
+                {topic}
+              </span>
+            ))}
+          </div>
+        </QuadrantCard>
       </div>
     </div>
   );
+}
+
+function getTimeOfDayGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
