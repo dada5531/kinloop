@@ -1,7 +1,24 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
+import { DM_Sans, Inter } from "next/font/google";
+
+import { AuthProvider } from "@/components/providers/AuthProvider";
 
 import "./globals.css";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+// Force dynamic rendering to avoid SSG issues with auth providers
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "KINLOOP — AI Parenting Dashboard",
@@ -11,18 +28,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <head>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link
-            href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:wght@300..700&display=swap"
-            rel="stylesheet"
-          />
-        </head>
-        <body className="min-h-screen font-sans antialiased">{children}</body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${dmSans.variable} ${inter.variable} min-h-screen font-sans antialiased`}>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
+    </html>
   );
 }
