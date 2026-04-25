@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+import { CLAUDE_MODEL } from "@/lib/anthropic";
+
 /**
  * GET /api/health
  *
@@ -55,7 +57,7 @@ export async function GET() {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: CLAUDE_MODEL,
           max_tokens: 1,
           messages: [{ role: "user", content: "ping" }],
         }),

@@ -15,24 +15,28 @@ KINLOOP solves this with four specialized AI quadrants, all sharing a single chi
 Each quadrant follows the same pattern: **unstructured input → Claude extraction → structured output → downstream integration**.
 
 ### Quadrant 1: Scheduler (`/scheduler`)
+
 - **Input**: School emails (forwarded via Resend or pasted), permission slip PDFs, photos of flyers
 - **Claude extraction**: Events, action items, amounts due, suggested reply
 - **Output**: Structured events in the `events` table
 - **Integration**: Google Calendar write with reminders
 
 ### Quadrant 2: Development Hub (`/development`)
+
 - **Input**: Pediatrician after-visit summaries, school developmental reports (PDF/photo upload)
 - **Claude extraction**: Visit type, growth data, milestones, immunizations, concerns
 - **Output**: Structured records in `health_records` table, growth data points
 - **Integration**: Growth chart with WHO percentile overlay (Recharts)
 
 ### Quadrant 3: Play Lab (`/play`)
+
 - **Input**: YouTube URLs, social media links, pasted activity descriptions
 - **Claude extraction**: Activity plan with title, steps, materials, skills, safety notes
 - **Output**: Structured activities in `activities` table
 - **Integration**: Amazon search links for materials, Google Calendar scheduling
 
 ### Quadrant 4: Coach (`/coach`)
+
 - **Input**: Free-text parenting questions
 - **RAG pipeline**: Embed question → pgvector similarity search → retrieve relevant parenting knowledge chunks
 - **Claude response**: Evidence-based answer with source citations, personalized to child's age and context
@@ -48,6 +52,7 @@ This is the moat. Every Claude call in every quadrant includes the child's full 
 - The Development Hub knows upcoming events when summarizing health context
 
 The context service aggregates:
+
 ```json
 {
   "child": { "name": "Mia", "dob": "2022-02-15", "allergies": ["peanuts"], "notes": "..." },
@@ -63,16 +68,21 @@ The context service aggregates:
 ## 4. Code Conventions
 
 ### Server actions over API routes
+
 Prefer Next.js Server Actions for mutations. Use API routes (`/api/*`) only for:
+
 - Webhook endpoints (Resend, Stripe)
 - Long-running extractions that need streaming
 - Endpoints called by external services
 
 ### Zod schemas for every Claude output
+
 Every Claude extraction must have a corresponding Zod schema in `/src/lib/extractors/`. The schema validates the structured output before it touches the database. See `scheduler-extractor.ts` for the pattern.
 
 ### Prompts live in `/prompts/` as markdown
+
 Never inline Claude prompts in TypeScript files. Every prompt is a versioned markdown file in `/prompts/`. Import it in your extractor:
+
 ```ts
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -81,9 +91,11 @@ const PROMPT = readFileSync(join(process.cwd(), "prompts", "scheduler-extraction
 ```
 
 ### Type-first development
+
 Define types in `/src/types/` before writing implementation. The type definitions serve as the contract between the extraction layer, the database layer, and the UI layer.
 
 ### Server components by default
+
 Components are React Server Components unless they need interactivity. Add `"use client"` only when the component uses hooks, event handlers, or browser APIs.
 
 ## 5. Anthropic SDK Usage Pattern
@@ -98,11 +110,13 @@ const client = new Anthropic();
 
 // 1. Define the Zod schema
 const extractionSchema = z.object({
-  events: z.array(z.object({
-    title: z.string(),
-    date: z.string(),
-    location: z.string().nullable(),
-  })),
+  events: z.array(
+    z.object({
+      title: z.string(),
+      date: z.string(),
+      location: z.string().nullable(),
+    }),
+  ),
   confidence: z.number().min(0).max(1),
 });
 
@@ -133,7 +147,7 @@ const tool = {
 
 // 3. Call Claude with tool_use for reliable structured output
 const response = await client.messages.create({
-  model: "claude-sonnet-4-5-20250514",
+  model: CLAUDE_MODEL, // imported from @/lib/anthropic
   max_tokens: 4096,
   system: systemPrompt, // Loaded from /prompts/
   messages: [{ role: "user", content: emailText }],
@@ -146,7 +160,25 @@ const toolBlock = response.content.find((b) => b.type === "tool_use");
 const parsed = extractionSchema.parse(toolBlock?.input);
 ```
 
-**Model**: Always use `claude-sonnet-4-5-20250514`. Do not change the model without team discussion.
+**Model**: Always import `CLAUDE_MODEL` from `@/lib/anthropic`. Never hardcode a model string. See Section 5a below for the upgrade procedure.
+
+## 5a. Model Upgrade Procedure
+
+The Claude model identifier is defined in **one place**: `src/lib/anthropic.ts` as the `CLAUDE_MODEL` constant. Every extractor, the coach chat route, and the health endpoint import this constant. To upgrade the model:
+
+1. Open `src/lib/anthropic.ts`
+2. Change the `CLAUDE_MODEL` value (e.g., from `"claude-sonnet-4-6"` to `"claude-sonnet-4-7"`)
+3. Run `pnpm typecheck` to confirm no hardcoded model strings remain
+4. Run `pnpm test` to verify extractors still pass
+5. Push to `develop`, verify on preview deployment, then merge to `main`
+
+To audit for any hardcoded model strings that bypass the constant:
+
+```bash
+grep -r "claude-" src/ --include="*.ts" --include="*.tsx" | grep -v CLAUDE_MODEL | grep -v node_modules
+```
+
+Current model: `claude-sonnet-4-6` (as of April 2026)
 
 ## 6. Database Conventions
 
@@ -163,6 +195,7 @@ const parsed = extractionSchema.parse(toolBlock?.input);
 See [ROADMAP.md](./ROADMAP.md) for the full timeline. Check the [GitHub Issues](https://github.com/dada5531/kinloop/issues) for the v1 milestone backlog.
 
 Suggested build order:
+
 1. Issue #1: Connect Supabase and run migration
 2. Issue #2: Configure Clerk auth
 3. Issue #3: Build dashboard grid

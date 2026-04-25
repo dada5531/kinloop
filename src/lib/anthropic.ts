@@ -8,7 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
  *   import { claude } from "@/lib/anthropic";
  *   const response = await claude.messages.create({ ... });
  *
- * Model: claude-sonnet-4-5 (locked — do not change without team discussion)
+ * Model: claude-sonnet-4-6 (single source of truth — update CLAUDE_MODEL below to change everywhere)
  */
 
 let _client: Anthropic | null = null;
@@ -16,9 +16,7 @@ let _client: Anthropic | null = null;
 export function getAnthropicClient(): Anthropic {
   if (!_client) {
     if (!process.env.ANTHROPIC_API_KEY) {
-      throw new Error(
-        "ANTHROPIC_API_KEY is not set. Get one at https://console.anthropic.com",
-      );
+      throw new Error("ANTHROPIC_API_KEY is not set. Get one at https://console.anthropic.com");
     }
     _client = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
@@ -37,7 +35,7 @@ export const claude = new Proxy({} as Anthropic, {
  * Default model for all KINLOOP Claude calls.
  * Centralized here so we can change it in one place.
  */
-export const CLAUDE_MODEL = "claude-sonnet-4-5-20250514" as const;
+export const CLAUDE_MODEL = "claude-sonnet-4-6" as const;
 
 /**
  * Canonical example of calling Claude with structured extraction.
