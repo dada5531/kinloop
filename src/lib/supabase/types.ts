@@ -533,6 +533,90 @@ export interface Database {
         };
         Relationships: [];
       };
+      measurements: {
+        Row: {
+          id: string;
+          child_id: string;
+          user_id: string;
+          date: string;
+          type: string;
+          value: number;
+          unit: string;
+          notes: string | null;
+          source: string;
+          health_record_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          child_id: string;
+          user_id: string;
+          date: string;
+          type: string;
+          value: number;
+          unit?: string;
+          notes?: string | null;
+          source?: string;
+          health_record_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          child_id?: string;
+          user_id?: string;
+          date?: string;
+          type?: string;
+          value?: number;
+          unit?: string;
+          notes?: string | null;
+          source?: string;
+          health_record_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      milestones: {
+        Row: {
+          id: string;
+          child_id: string;
+          user_id: string;
+          category: string;
+          title: string;
+          description: string | null;
+          age_months_expected: number;
+          status: string;
+          achieved_date: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          child_id: string;
+          user_id: string;
+          category: string;
+          title: string;
+          description?: string | null;
+          age_months_expected?: number;
+          status?: string;
+          achieved_date?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          child_id?: string;
+          user_id?: string;
+          category?: string;
+          title?: string;
+          description?: string | null;
+          age_months_expected?: number;
+          status?: string;
+          achieved_date?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       daily_recommendations: {
         Row: {
           id: string;
