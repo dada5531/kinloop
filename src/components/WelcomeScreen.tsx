@@ -1,66 +1,80 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 import { useChild } from "@/components/providers/ChildProvider";
 
 /**
  * WelcomeScreen — Full-screen overlay shown once per session when
- * the user first lands on the dashboard. Displays the child's photo,
- * a time-of-day greeting ("Good morning, Jenn"), and the child's name + age.
+ * the user first lands on the dashboard.
  *
- * Dismisses on click/tap or automatically after 4 seconds.
- * Uses sessionStorage to show only once per browser session.
+ * Hierarchy: Photo (dominant) → Greeting line → Child name + age (tertiary)
+ * Duration: 7 seconds with progress bar, tap/click/Escape to dismiss early.
+ * Transitions: 400ms ease-out fade-in, 500ms ease-out fade-out (cinematic).
  */
 
-function getTimeOfDayGreeting(): string {
+function getTimeOfDayGreeting(parentName?: string): string {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  const timeWord = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  return parentName ? `${timeWord}, ${parentName}.` : `${timeWord}.`;
 }
 
 export function WelcomeScreen() {
   const { selectedChild, getAgeDisplay, isLoading } = useChild();
   const [visible, setVisible] = useState(false);
+  const [fadeIn, setFadeIn] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
+  const [progressActive, setProgressActive] = useState(false);
+  const dismissedRef = useRef(false);
 
   // Check if we should show the welcome screen
   useEffect(() => {
     if (isLoading) return;
     if (!selectedChild) return;
 
-    // Only show once per session
     const key = "kinloop_welcome_shown";
     if (sessionStorage.getItem(key)) return;
 
-    // Show the overlay
     setVisible(true);
     sessionStorage.setItem(key, "true");
+
+    // Trigger fade-in after mount (next frame)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setFadeIn(true);
+        setProgressActive(true);
+      });
+    });
   }, [isLoading, selectedChild]);
 
-  // Auto-dismiss after 4 seconds
+  // Auto-dismiss after 7 seconds
   useEffect(() => {
     if (!visible) return;
-    const timer = setTimeout(() => dismiss(), 4000);
+    const timer = setTimeout(() => dismiss(), 7000);
     return () => clearTimeout(timer);
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dismiss = useCallback(() => {
+    if (dismissedRef.current) return;
+    dismissedRef.current = true;
     setFadeOut(true);
     setTimeout(() => setVisible(false), 500);
   }, []);
 
   if (!visible || !selectedChild) return null;
 
-  const greeting = getTimeOfDayGreeting();
+  const greeting = getTimeOfDayGreeting("Jenn");
   const ageDisplay = getAgeDisplay(selectedChild.dob);
   const hasPhoto = !!selectedChild.photo_url;
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center transition-opacity duration-500 ${
-        fadeOut ? "opacity-0" : "opacity-100"
+      className={`fixed inset-0 z-[100] flex items-center justify-center transition-opacity ease-out ${
+        fadeOut
+          ? "opacity-0 duration-500"
+          : fadeIn
+            ? "duration-400 opacity-100"
+            : "duration-400 opacity-0"
       }`}
       onClick={dismiss}
       role="button"
@@ -72,13 +86,21 @@ export function WelcomeScreen() {
       {/* Background — warm gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background-secondary" />
 
-      {/* Content */}
+      {/* Content — photo-dominant layout */}
       <div className="relative flex flex-col items-center px-6 text-center">
-        {/* Photo or initial circle */}
+        {/* Photo or initial circle — DOMINANT */}
         <div
-          className={`mb-8 overflow-hidden rounded-3xl shadow-lg transition-transform duration-700 ${
-            fadeOut ? "scale-95" : "scale-100"
-          } ${hasPhoto ? "h-56 w-56 md:h-64 md:w-64" : "h-32 w-32"}`}
+          className={`mb-10 overflow-hidden rounded-3xl shadow-xl transition-transform ease-out ${
+            fadeOut
+              ? "scale-95 duration-500"
+              : fadeIn
+                ? "scale-100 duration-700"
+                : "scale-90 duration-700"
+          } ${
+            hasPhoto
+              ? "h-60 w-60 sm:h-72 sm:w-72 md:h-80 md:w-80"
+              : "h-40 w-40 sm:h-48 sm:w-48 md:h-56 md:w-56"
+          }`}
         >
           {hasPhoto ? (
             <img
@@ -88,28 +110,50 @@ export function WelcomeScreen() {
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-scheduler/10">
-              <span className="text-5xl font-semibold text-scheduler">
+              <span className="text-6xl font-semibold text-scheduler sm:text-7xl md:text-8xl">
                 {selectedChild.name.charAt(0)}
               </span>
             </div>
           )}
         </div>
 
-        {/* Greeting */}
-        <p className="mb-2 text-sm font-medium uppercase tracking-widest text-muted-foreground">
+        {/* Greeting line — 28-32px, weight 400, sentence case */}
+        <p
+          className={`mb-3 text-[28px] font-normal tracking-tight text-foreground transition-all ease-out sm:text-[30px] md:text-[32px] ${
+            fadeOut
+              ? "translate-y-2 opacity-0 duration-500"
+              : fadeIn
+                ? "translate-y-0 opacity-100 delay-200 duration-700"
+                : "translate-y-4 opacity-0 duration-700"
+          }`}
+        >
           {greeting}
         </p>
 
-        {/* Child name — large */}
-        <h1 className="mb-2 text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-          {selectedChild.name}
-        </h1>
+        {/* Child name + age — tertiary, 16px, muted */}
+        <p
+          className={`text-base font-normal text-muted-foreground transition-all ease-out ${
+            fadeOut
+              ? "translate-y-2 opacity-0 duration-500"
+              : fadeIn
+                ? "delay-400 translate-y-0 opacity-100 duration-700"
+                : "translate-y-4 opacity-0 duration-700"
+          }`}
+        >
+          {selectedChild.name}, {ageDisplay}
+        </p>
+      </div>
 
-        {/* Age */}
-        <p className="mb-8 text-base text-muted-foreground">{ageDisplay}</p>
-
-        {/* Tap to continue hint */}
-        <p className="animate-pulse text-xs text-muted-foreground/50">Tap anywhere to continue</p>
+      {/* Progress bar — 2px, full-width, bottom of screen */}
+      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-transparent">
+        <div
+          className={`h-full bg-development transition-all ease-linear ${
+            progressActive ? "w-full" : "w-0"
+          }`}
+          style={{
+            transitionDuration: progressActive ? "7000ms" : "0ms",
+          }}
+        />
       </div>
     </div>
   );
