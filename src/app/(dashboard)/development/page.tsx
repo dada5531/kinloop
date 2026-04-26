@@ -105,10 +105,10 @@ type Tab = "overview" | "growth" | "milestones" | "timeline";
 
 // ─── Helpers ────────────────────────────────────────────────────
 
-function getAgeMonths(dob: string): number {
-  const now = new Date();
+function getAgeMonths(dob: string, atDate?: string): number {
+  const ref = atDate ? new Date(atDate) : new Date();
   const d = new Date(dob);
-  return (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+  return (ref.getFullYear() - d.getFullYear()) * 12 + (ref.getMonth() - d.getMonth());
 }
 
 function formatDate(dateStr: string): string {
@@ -166,11 +166,18 @@ function VitalCard({
         <span className="text-sm text-muted-foreground">{unit}</span>
       </div>
       {percentile !== null && (
-        <p className="mt-1 text-[11px] text-development">{percentile}th percentile</p>
+        <p className="mt-1 text-[11px] text-muted-foreground">{percentile}th percentile</p>
       )}
     </div>
   );
 }
+
+const RING_COLORS: Record<string, string> = {
+  cognitive: "#3b82f6",
+  motor: "#10b981",
+  language: "#f59e0b",
+  social: "#8b5cf6",
+};
 
 function MilestoneProgressRing({
   category,
@@ -184,44 +191,51 @@ function MilestoneProgressRing({
   const meta = CATEGORY_META[category] || CATEGORY_META.cognitive;
   const Icon = meta.icon;
   const pct = total > 0 ? (hit / total) * 100 : 0;
-  const circumference = 2 * Math.PI * 20;
+  const radius = 20;
+  const circumference = 2 * Math.PI * radius;
   const offset = circumference - (pct / 100) * circumference;
+  const ringColor = RING_COLORS[category] || "#10b981";
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="relative h-14 w-14">
-        <svg className="h-14 w-14 -rotate-90" viewBox="0 0 48 48">
+      <div className="relative h-16 w-16">
+        <svg className="h-16 w-16 -rotate-90" viewBox="0 0 48 48">
           <circle
             cx="24"
             cy="24"
-            r="20"
+            r={radius}
             fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            className="text-border"
+            stroke="hsl(var(--border))"
+            strokeWidth="3.5"
+            opacity="0.4"
           />
           <circle
             cx="24"
             cy="24"
-            r="20"
+            r={radius}
             fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
+            stroke={ringColor}
+            strokeWidth="3.5"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
-            className="text-development transition-all duration-700"
+            style={{
+              transition: "stroke-dashoffset 1s ease-out",
+            }}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <Icon className="h-4 w-4 text-development" />
+          <span className="text-sm font-semibold tabular-nums" style={{ color: ringColor }}>
+            {hit}/{total}
+          </span>
         </div>
       </div>
       <div className="text-center">
-        <p className="text-xs font-medium text-foreground">{meta.label}</p>
-        <p className="text-[11px] text-muted-foreground">
-          {hit}/{total}
-        </p>
+        <div className="flex items-center justify-center gap-1">
+          <Icon className="h-3 w-3" style={{ color: ringColor }} />
+          <p className="text-xs font-medium text-foreground">{meta.label}</p>
+        </div>
+        <p className="text-[11px] text-muted-foreground">{Math.round(pct)}%</p>
       </div>
     </div>
   );
@@ -412,6 +426,40 @@ function GrowthChart({
         {unit}
       </text>
 
+      {/* Current age marker */}
+      {(() => {
+        const now = new Date();
+        const b = new Date(dob);
+        const currentMonth =
+          (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
+        if (currentMonth > 0 && currentMonth <= xMax) {
+          const cx = scaleX(currentMonth);
+          return (
+            <>
+              <line
+                x1={cx}
+                x2={cx}
+                y1={PAD.top}
+                y2={PAD.top + plotH}
+                stroke="hsl(var(--muted-foreground))"
+                strokeWidth="0.5"
+                strokeDasharray="3,2"
+                opacity="0.5"
+              />
+              <text
+                x={cx}
+                y={PAD.top - 4}
+                textAnchor="middle"
+                className="fill-muted-foreground text-[7px]"
+              >
+                now
+              </text>
+            </>
+          );
+        }
+        return null;
+      })()}
+
       {/* Percentile labels */}
       {whoFiltered.length > 0 && (
         <>
@@ -524,12 +572,22 @@ export default function DevelopmentPage() {
     [measurements],
   );
 
-  const heightPercentile = latestHeight
-    ? computePercentile(WHO_HEIGHT_GIRLS, ageMonths, latestHeight.value)
-    : null;
-  const weightPercentile = latestWeight
-    ? computePercentile(WHO_WEIGHT_GIRLS, ageMonths, latestWeight.value)
-    : null;
+  const heightPercentile =
+    latestHeight && selectedChild
+      ? computePercentile(
+          WHO_HEIGHT_GIRLS,
+          getAgeMonths(selectedChild.dob, latestHeight.date),
+          latestHeight.value,
+        )
+      : null;
+  const weightPercentile =
+    latestWeight && selectedChild
+      ? computePercentile(
+          WHO_WEIGHT_GIRLS,
+          getAgeMonths(selectedChild.dob, latestWeight.date),
+          latestWeight.value,
+        )
+      : null;
 
   const milestonesByCategory = useMemo(() => {
     const grouped: Record<string, { hit: number; total: number; items: Milestone[] }> = {};
@@ -943,14 +1001,16 @@ export default function DevelopmentPage() {
               <div className="mb-2 flex items-center gap-1.5">
                 <FileText className="h-3.5 w-3.5 text-development" />
                 <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  Records
+                  Health Visits
                 </span>
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-semibold tabular-nums text-foreground">
                   {records.length}
                 </span>
-                <span className="text-sm text-muted-foreground">visits</span>
+                <span className="text-sm text-muted-foreground">
+                  {records.length === 1 ? "visit" : "visits"}
+                </span>
               </div>
               {records[0] && (
                 <p className="mt-1 text-[11px] text-muted-foreground">
@@ -1019,7 +1079,7 @@ export default function DevelopmentPage() {
                     >
                       <div className="flex items-center gap-3">
                         <span
-                          className={`inline-flex items-center rounded-full border-[0.5px] px-2 py-0.5 text-[10px] font-medium ${meta.color}`}
+                          className={`inline-flex items-center rounded-full border-[0.5px] px-2 py-0.5 text-[10px] font-medium leading-tight ${meta.color}`}
                         >
                           {meta.label}
                         </span>
@@ -1101,19 +1161,12 @@ export default function DevelopmentPage() {
                   {[...measurements]
                     .sort((a, b) => b.date.localeCompare(a.date))
                     .map((m) => {
+                      const measAgeMonths = getAgeMonths(selectedChild?.dob || "", m.date);
                       const pct =
                         m.type === "height"
-                          ? computePercentile(
-                              WHO_HEIGHT_GIRLS,
-                              getAgeMonths(selectedChild?.dob || ""),
-                              m.value,
-                            )
+                          ? computePercentile(WHO_HEIGHT_GIRLS, measAgeMonths, m.value)
                           : m.type === "weight"
-                            ? computePercentile(
-                                WHO_WEIGHT_GIRLS,
-                                getAgeMonths(selectedChild?.dob || ""),
-                                m.value,
-                              )
+                            ? computePercentile(WHO_WEIGHT_GIRLS, measAgeMonths, m.value)
                             : null;
                       return (
                         <tr key={m.id} className="border-b border-border/50 last:border-0">
@@ -1192,7 +1245,7 @@ export default function DevelopmentPage() {
                         </p>
                         <div className="flex items-center gap-2">
                           <span
-                            className={`inline-flex items-center rounded-full border-[0.5px] px-1.5 py-0.5 text-[9px] font-medium ${meta.color}`}
+                            className={`inline-flex items-center rounded-full border-[0.5px] px-2 py-0.5 text-[10px] font-medium leading-tight ${meta.color}`}
                           >
                             {meta.label}
                           </span>
