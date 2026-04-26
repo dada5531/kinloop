@@ -1,3 +1,4 @@
+import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { TopBar } from "@/components/dashboard/TopBar";
 import { ChildProvider } from "@/components/providers/ChildProvider";
 
@@ -9,6 +10,7 @@ import { ChildProvider } from "@/components/providers/ChildProvider";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <ChildProvider>
+      <WelcomeScreen />
       <div className="min-h-screen bg-background">
         <TopBar />
         {/* Main content — max-width centered with padding */}

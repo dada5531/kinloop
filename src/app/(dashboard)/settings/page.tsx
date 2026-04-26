@@ -1,8 +1,10 @@
 "use client";
 
-import { Check, Loader2, Mail, Bell, Shield, ChevronRight } from "lucide-react";
+import { Check, Loader2, Mail, Bell, Shield, ChevronRight, ImageIcon } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
+import { WelcomePhotoUploader } from "@/components/WelcomePhotoUploader";
+import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -15,6 +17,8 @@ interface Settings {
 
 // ─── Main Component ─────────────────────────────────────────────
 export default function SettingsPage() {
+  const { selectedChild, isLoading: childLoading, refetch } = useChild();
+
   const [settings, setSettings] = useState<Settings>({
     notification_email: null,
     email_calendar_invites: "true",
@@ -79,6 +83,43 @@ export default function SettingsPage() {
       </div>
 
       <div className="max-w-2xl space-y-6">
+        {/* Welcome Photo */}
+        <div className="rounded-xl border-[0.5px] border-border bg-card">
+          <div className="border-b-[0.5px] border-border p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-play-muted">
+                <ImageIcon className="h-4 w-4 text-play" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">Welcome photo</h2>
+                <p className="text-xs text-muted-foreground">
+                  {selectedChild
+                    ? `Photo shown on ${selectedChild.name}'s welcome screen`
+                    : "Upload a photo for the welcome screen"}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="p-5">
+            {childLoading ? (
+              <div className="flex justify-center py-8">
+                <Skeleton className="h-48 w-48 rounded-2xl" />
+              </div>
+            ) : selectedChild ? (
+              <WelcomePhotoUploader
+                childId={selectedChild.id}
+                childName={selectedChild.name}
+                currentPhotoUrl={selectedChild.photo_url}
+                onPhotoUpdated={refetch}
+              />
+            ) : (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                No child profile found. Add a child first.
+              </p>
+            )}
+          </div>
+        </div>
+
         {/* Email Configuration */}
         <div className="rounded-xl border-[0.5px] border-border bg-card">
           <div className="border-b-[0.5px] border-border p-5">

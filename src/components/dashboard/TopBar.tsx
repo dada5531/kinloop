@@ -129,9 +129,17 @@ export function TopBar() {
             {/* Child avatar + name */}
             {!isLoading && selectedChild && (
               <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-scheduler/10 text-xs font-semibold text-scheduler">
-                  {selectedChild.name.charAt(0)}
-                </div>
+                {selectedChild.photo_url ? (
+                  <img
+                    src={selectedChild.photo_url}
+                    alt={selectedChild.name}
+                    className="h-7 w-7 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-scheduler/10 text-xs font-semibold text-scheduler">
+                    {selectedChild.name.charAt(0)}
+                  </div>
+                )}
                 <div className="hidden sm:block">
                   <p className="text-[13px] font-medium leading-none text-foreground">
                     {selectedChild.name}
