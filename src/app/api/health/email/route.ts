@@ -27,12 +27,16 @@ export async function GET() {
     checks.user_email = user?.email || null;
 
     // Check 2: notification_email in user_settings
-    const { data: emailSetting } = await supabase
+    const { data: emailSetting, error: emailError } = await supabase
       .from("user_settings")
       .select("setting_value, updated_at")
       .eq("user_id", DEMO_USER_ID)
       .eq("setting_key", "notification_email")
-      .single();
+      .maybeSingle();
+
+    if (emailError) {
+      checks.notification_email_query_error = emailError.message;
+    }
 
     checks.notification_email_saved = !!emailSetting?.setting_value;
     checks.notification_email_value = emailSetting?.setting_value || null;
