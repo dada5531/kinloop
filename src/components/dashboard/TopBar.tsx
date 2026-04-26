@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Menu, X, LogOut, CheckCircle2 } from "lucide-react";
+import { LayoutDashboard, Menu, X, LogOut, CheckCircle2, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
@@ -20,6 +20,7 @@ const navItems = [
   { href: "/development", label: "Development", icon: DevelopmentIcon, custom: true },
   { href: "/play", label: "Play Lab", icon: PlayLabIcon, custom: true },
   { href: "/coach", label: "Coach", icon: CoachIcon, custom: true },
+  { href: "/settings", label: "Settings", icon: Settings, custom: false },
 ];
 
 interface MetricChips {
