@@ -61,6 +61,19 @@ export async function GET() {
     checks.effective_recipient =
       emailSetting?.setting_value || user?.email || "NONE — emails will fail";
 
+    // Check 6: Domain verification warning
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "";
+    const isDefaultOnboarding =
+      !fromEmail || fromEmail.includes("onboarding@resend.dev");
+    checks.from_domain_verified = !isDefaultOnboarding;
+    if (isDefaultOnboarding) {
+      checks.from_domain_warning =
+        "RESEND_FROM_EMAIL is still using onboarding@resend.dev (Resend sandbox). " +
+        "Emails may be rate-limited and show 'via resend.dev' in recipients' inboxes. " +
+        "For production, configure a custom domain in Resend dashboard and update " +
+        "RESEND_FROM_EMAIL to your verified domain (see ROADMAP.md v1.8).";
+    }
+
     // Overall status
     const allGood =
       checks.user_exists &&
@@ -73,6 +86,10 @@ export async function GET() {
     if (!checks.resend_api_key_set) blockers.push("RESEND_API_KEY not set");
     if (!checks.notification_email_saved && !checks.user_email)
       blockers.push("No notification email and no fallback user email");
+    if (isDefaultOnboarding)
+      blockers.push(
+        "RESEND_FROM_EMAIL not set to a custom domain — production-blocker for reliable email delivery",
+      );
     checks.blockers = blockers;
 
     return NextResponse.json(checks);

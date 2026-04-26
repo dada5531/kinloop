@@ -48,11 +48,13 @@
 - Note: Full email delivery requires Resend API key + notification_email in user_settings. The code path is verified; email delivery is gated on credentials.
 
 ## v1.5-cleanup PR
-- [ ] Curl test: /api/coach/daily?childId=... returns in-range activity for Mia (50mo), NOT Water Pouring (age_max: 48)
-- [ ] Welcome screen polish confirmation: 7s duration, 320px+ photo, progress bar, fade transitions
-- [ ] Amazon button test: confirm "Shop materials on Amazon" opens working Amazon search URL with kinloop-20 tag
-- [ ] Update CLAUDE.md, ARCHITECTURE.md, ROADMAP.md for v1.5 final state
-- [ ] Move deferred items (FHIR, HealthKit, Instacart, multi-user auth, Clerk) to ROADMAP.md as Series A milestones
+- [x] Curl test: /api/coach/daily?childId=... returns in-range activity for Mia (50mo), NOT Water Pouring (age_max: 48)
+- [x] Welcome screen polish confirmation: 7s duration, 320px+ photo, progress bar, fade transitions
+- [x] Amazon button test: confirm "Shop materials on Amazon" opens working Amazon search URL with kinloop-20 tag
+- [x] Update CLAUDE.md, ARCHITECTURE.md, ROADMAP.md for v1.5 final state
+- [x] Move deferred items (FHIR, HealthKit, Instacart, multi-user auth, Clerk) to ROADMAP.md as Series A milestones
+- [x] Add domain-verification status check to /api/health/email (warn when RESEND_FROM_EMAIL is onboarding@resend.dev)
+- [x] Document custom-domain Resend setup as v1.8 task in CLAUDE.md and ROADMAP.md (DNS records, Resend dashboard config checklist)
 - [ ] Tag v1.5.0 release on GitHub
 
 ## v1.6 Stage A — Color and Typography Token Changes
@@ -79,9 +81,10 @@
 ## PR-C Pre-Merge — Real Email Delivery Verification
 - [x] Update demo user notification_email to dlim@mba2027.hbs.edu via Supabase SQL
 - [x] Confirm via Supabase SQL: setting_value = "dlim@mba2027.hbs.edu" (row id: d2b8e434-78fb-40b7-8836-5c3c0118ff23)
-- [ ] Trigger full scheduling flow on preview deployment (schedule dinosaur activity for tomorrow 10am)
-- [ ] Check Resend dashboard (resend.com/emails) for delivery status
-- [ ] Confirm .ics attachment was included in the Resend payload
-- [ ] Confirm delivery status is "delivered" (not bounced/deferred)
-- [ ] Screenshot Resend log entry showing delivery status
-- [ ] Merge PR-C only after real delivery confirmed
+- [x] Trigger full scheduling flow → POST /api/play/send-calendar → 200 OK → sent to dlim@mba2027.hbs.edu
+- [x] Resend API confirms: last_event = "delivered" (email ID: dd3245f2-3512-4992-ba61-aeb90b60fbd2)
+- [x] .ics attachment included (code-level proof: resend.ts lines 62-68, base64-encoded text/calendar)
+- [x] Delivery status: "delivered" — confirmed via Resend GET /emails/{id} API
+- [x] Full Resend API response saved to resend-delivery-proof.txt
+- [x] User confirmed: email arrived in inbox, .ics opens correctly, adds event at right date/time
+- [x] PR-C merged (#30)
