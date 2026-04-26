@@ -184,7 +184,10 @@ export default function CoachPage() {
   useEffect(() => {
     const fetchDaily = async () => {
       try {
-        const res = await fetch("/api/coach/daily");
+        const url = selectedChildId
+          ? `/api/coach/daily?childId=${selectedChildId}`
+          : "/api/coach/daily";
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           setDailyTip(data.tip);
@@ -197,7 +200,7 @@ export default function CoachPage() {
       }
     };
     fetchDaily();
-  }, []);
+  }, [selectedChildId]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -247,7 +247,12 @@ export const ACTIVITIES_CORPUS: ActivityCorpusItem[] = [
     age_min: 12,
     age_max: 30,
     duration_minutes: 10,
-    materials: ["Ripe banana", "Fork", "Small bowl", "Toast (optional)"],
+    materials: [
+      "Ripe banana",
+      "Fork",
+      "Small bowl",
+      "Toast strips (optional — cut thin, no crusts, supervise closely)",
+    ],
     steps: [
       "Peel the banana together (let them help pull)",
       "Break into pieces in a bowl",
@@ -324,6 +329,99 @@ export const ACTIVITIES_CORPUS: ActivityCorpusItem[] = [
       "Let the paint dry completely",
       "Put all stones in a bag",
       "Take turns drawing a stone and adding to the story",
+    ],
+  },
+
+  // --- 3-5 year activities (added for age-appropriate variety) ---
+  {
+    title: "Simple Cooking: Measure & Mix Trail Mix",
+    description:
+      "Let your child measure ingredients with real measuring cups — cereal, raisins, pretzels, dried fruit. They pour, level, and mix in a big bowl. Builds math concepts (counting, fractions, volume), fine motor control, and independence. The best part: they eat what they made.",
+    source: "Hands On As We Grow",
+    source_url: "https://handsonaswegrow.com",
+    category: "practical-life",
+    age_min: 36,
+    age_max: 72,
+    duration_minutes: 15,
+    materials: [
+      "Measuring cups (1/4, 1/2, 1 cup)",
+      "Large mixing bowl",
+      "3-4 dry ingredients (cereal, raisins, pretzels, dried cranberries)",
+      "Small bags or cups for serving",
+    ],
+    steps: [
+      "Set out ingredients in separate bowls",
+      "Show your child how to scoop and level a measuring cup",
+      "Let them measure each ingredient into the big bowl",
+      "Count scoops together as they go",
+      "Stir everything together and divide into serving cups",
+    ],
+  },
+  {
+    title: "Scissor Practice: Construction Paper Collage",
+    description:
+      "Give your child safety scissors and colored construction paper. They cut freely — strips, shapes, zigzags — then glue pieces onto a base sheet to create a collage. Develops bilateral coordination (one hand holds, one cuts), hand strength, and creative expression.",
+    source: "The Artful Parent by Jean Van't Hul",
+    source_url: "https://artfulparent.com",
+    category: "creative",
+    age_min: 36,
+    age_max: 72,
+    duration_minutes: 25,
+    materials: [
+      "Safety scissors",
+      "Colored construction paper (multiple colors)",
+      "Glue stick",
+      "One large base sheet (white or black)",
+    ],
+    steps: [
+      "Demonstrate cutting a straight line, then let them try",
+      "Encourage cutting different shapes — no wrong answers",
+      "Spread out the cut pieces and pick favorites",
+      "Arrange pieces on the base sheet before gluing",
+      "Glue down the collage and display it proudly",
+    ],
+  },
+  {
+    title: "Beginner Board Game: Spot It Junior",
+    description:
+      "Play a round of Spot It Junior (or similar matching game). Each card has one symbol in common with every other card — the first to spot it wins the round. Builds visual discrimination, processing speed, turn-taking, and graceful losing. Short rounds keep it engaging.",
+    source: "Days With Grey",
+    source_url: "https://dayswithgrey.com",
+    category: "cognitive",
+    age_min: 42,
+    age_max: 72,
+    duration_minutes: 15,
+    materials: ["Spot It Junior (or any simple matching card game)"],
+    steps: [
+      "Explain the rules: find the one matching symbol between two cards",
+      "Play a practice round together slowly",
+      "Speed up gradually as they get the hang of it",
+      "Celebrate their wins and model good sportsmanship when you lose",
+      "Play 3-5 rounds, then stop while it's still fun",
+    ],
+  },
+  {
+    title: "Nature Collage From a Walk",
+    description:
+      "Take a walk and collect natural materials: leaves, petals, small sticks, seed pods, pebbles. Back home, arrange them on cardstock and glue them down. Combines outdoor exploration with art, builds classification skills (sorting by color, size, texture), and creates a keepsake.",
+    source: "Big Life Journal",
+    source_url: "https://biglifejournal.com",
+    category: "creative",
+    age_min: 36,
+    age_max: 72,
+    duration_minutes: 40,
+    materials: [
+      "Small bag for collecting",
+      "Cardstock or thick paper",
+      "White glue (PVA)",
+      "Optional: magnifying glass for examining finds",
+    ],
+    steps: [
+      "Walk together and collect interesting natural items",
+      "Back home, sort items by color, size, or type",
+      "Arrange them on cardstock — try different layouts",
+      "Glue everything down (white glue works best for 3D items)",
+      "Label the collage together: name the items, where you found them",
     ],
   },
 ];
