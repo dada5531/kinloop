@@ -61,3 +61,17 @@
 - [ ] Fraunces serif for editorial moments (headings, greeting, section titles)
 - [ ] Take screenshots of dashboard + Coach page
 - [ ] Wait for user approval before Stage B
+
+## Notification Email Settings Bug — BLOCKING PR-C
+- [x] DIAGNOSE: Settings page exists, email field visible, typed test@kinloop.com, clicked Save → 500 error, no toast shown
+- [x] DIAGNOSE: user_settings table empty for demo user (0 rows). Table schema correct. RLS disabled.
+- [x] DIAGNOSE: POST /api/settings → upsert with user_id '00000000...' → FK violation (user doesn't exist in users table)
+- [x] DIAGNOSE: send-invite.ts reads user_settings.notification_email → falls back to users.email → calls resend.ts → RESEND_API_KEY empty
+- [x] FIX: Added error toast + success confirmation to settings page
+- [x] FIX: Already uses getAdminClient() (service role key). Root cause was wrong user ID, not RLS.
+- [x] FIX: send-invite.ts reads user_settings.notification_email with correct user ID now
+- [ ] FIX: Add /api/health smoke test returning notification email status for demo user
+- [ ] VERIFY: RESEND_API_KEY is EMPTY in .env.local — user needs to set it in Vercel env vars
+- [ ] VERIFY: RESEND_FROM_EMAIL not set — falls back to onboarding@resend.dev (Resend test domain)
+- [ ] VERIFY: Send test email "Kinloop · setup verification" to user's notification email
+- [ ] VERIFY: Confirm test email arrived

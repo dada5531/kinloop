@@ -11,7 +11,7 @@ import { generateIcs } from "./ics-generator";
 import { sendCalendarEmail } from "@/lib/integrations/resend";
 import { getAdminClient } from "@/lib/supabase/admin";
 
-const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
+const DEMO_USER_ID = "11111111-1111-1111-1111-111111111111";
 
 export interface CalendarInviteEvent {
   title: string;

@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Get the user's configured email from user_settings
     // For demo, fall back to the user's profile email
-    const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
+    const DEMO_USER_ID = "11111111-1111-1111-1111-111111111111";
 
     // Try user_settings first
     const { data: emailSetting } = await supabase
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
     // Log failed attempt
     try {
       const supabase = getAdminClient();
-      const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
+      const DEMO_USER_ID = "11111111-1111-1111-1111-111111111111";
       await supabase.from("sent_emails").insert({
         user_id: DEMO_USER_ID,
         recipient_email: "unknown",
