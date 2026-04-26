@@ -11,8 +11,25 @@
 - [x] Push branch, open PR (#29), take Vercel preview screenshots, send to user for approval
 
 ## Section 3 PR-B v2 — Amazon CTA Redesign
-- [ ] Prominent bulk CTA: dark pill button (#2C2C2A bg, white text, 14px), Amazon icon, estimated cost, affiliate disclosure
-- [ ] Per-material links: external-link arrow icon inside each chip, underline-on-hover, tooltip "Find on Amazon"
-- [ ] Total price estimate line above bulk CTA: "Estimated total: $XX on Amazon · X items eligible for Prime"
-- [ ] Layout order: Description → Steps → Materials header → Material chips (with icons) → Price estimate → Dark bulk CTA → Affiliate disclosure → Skills → Safety
-- [ ] Take mobile (375px) and desktop (1440px) screenshots from Vercel preview
+- [x] Prominent bulk CTA: dark pill button (#2C2C2A bg, white text, 14px), Amazon icon, estimated cost, affiliate disclosure
+- [x] Per-material links: external-link arrow icon inside each chip, underline-on-hover, tooltip "Find on Amazon"
+- [x] Total price estimate line above bulk CTA: "Estimated total: $XX on Amazon · X items eligible for Prime"
+- [x] Layout order: Description → Steps → Materials header → Material chips (with icons) → Price estimate → Dark bulk CTA → Affiliate disclosure → Skills → Safety
+- [x] Take mobile (375px) and desktop (1440px) screenshots from Vercel preview
+
+## PR-B Bug Fix — Add to Cart button not working
+- [ ] Diagnose: test the dark CTA button click on Vercel preview, capture actual URL opened
+- [ ] Fix: ensure bulk CTA opens Amazon search URL with all materials + affiliate tag (search-link fallback)
+- [ ] Fix: ensure per-material chip clicks open Amazon search for that single item with partner tag
+- [ ] Verify both flows work end-to-end on Vercel preview, report exact URLs opened
+
+## Section 3 PR-C — Scheduler Integration + Saved Activities List
+- [ ] Schedule modal: date picker, time picker, duration auto-fill, notes textarea, reminder toggle (15/30/60 min), Cancel/Save
+- [ ] On Save: insert into events table (same as Quadrant 1 Scheduler), source = "play_lab"
+- [ ] Success toast: "Scheduled for [day], [time]"
+- [ ] Dashboard "This week" event counter increments
+- [ ] Scheduler quadrant shows the event in its list
+- [ ] After scheduling: green "Scheduled for [day], [time]" badge replaces button, with "Edit" link
+- [ ] Saved activities list at top of Play Lab: upcoming activities with date/time/Open button
+- [ ] Past activities collapse into "Done" section
+- [ ] Take screenshots: schedule modal, success state, saved activities list

@@ -262,19 +262,29 @@ function LibrarySkeleton() {
   );
 }
 
+function cleanMaterialName(name: string): string {
+  // Strip parenthetical descriptions like "(optional, for fizzing reaction)"
+  return name.replace(/\s*\([^)]*\)\s*/g, " ").trim();
+}
+
 function buildShopAllUrl(
   materials: Array<{ name: string; quantity: string | null; required: boolean }>,
   activityTitle: string,
 ): string {
-  const requiredMats = materials.filter((m) => m.required);
-  const matsToUse = requiredMats.length >= 2 ? requiredMats : materials;
-  const names = matsToUse.slice(0, 5).map((m) => m.name);
-  const query = [...names, "kids activity"].join(" ");
+  // Strategy: Use the 2 most distinctive materials + "kids" for a focused search
+  // that actually returns results on Amazon
+  const purchasable = materials.filter((m) => {
+    const price = estimateMaterialPrice(m.name);
+    return price > 0; // Skip free items like water
+  });
+  const topMats = purchasable.slice(0, 2).map((m) => cleanMaterialName(m.name));
+  const query = [...topMats, "kids activity supplies"].join(" ");
   return `https://www.amazon.com/s?k=${encodeURIComponent(query)}&tag=kinloop-20`;
 }
 
 function buildMaterialSearchUrl(materialName: string): string {
-  return `https://www.amazon.com/s?k=${encodeURIComponent(materialName.trim())}&tag=kinloop-20`;
+  const cleaned = cleanMaterialName(materialName);
+  return `https://www.amazon.com/s?k=${encodeURIComponent(cleaned)}&tag=kinloop-20`;
 }
 
 // Estimated prices for common kids activity materials (V1 heuristic)
@@ -750,7 +760,7 @@ export default function PlayLabPage() {
                         rel="noopener noreferrer"
                       >
                         <ShoppingBag className="mr-2 h-4 w-4" />
-                        Add {est.itemCount} item{est.itemCount !== 1 ? "s" : ""} to Amazon cart &middot; ~${est.total}
+                        Shop {est.itemCount} material{est.itemCount !== 1 ? "s" : ""} on Amazon &middot; ~${est.total}
                       </a>
                     </Button>
                     <p className="mt-1.5 text-[10px] text-muted-foreground/60">
@@ -967,7 +977,7 @@ export default function PlayLabPage() {
                                     rel="noopener noreferrer"
                                   >
                                     <ShoppingBag className="mr-2 h-4 w-4" />
-                                    Add {est.itemCount} item{est.itemCount !== 1 ? "s" : ""} to Amazon cart &middot; ~${est.total}
+                                    Shop {est.itemCount} material{est.itemCount !== 1 ? "s" : ""} on Amazon &middot; ~${est.total}
                                   </a>
                                 </Button>
                                 <p className="mt-1.5 text-[10px] text-muted-foreground/60">
