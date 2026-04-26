@@ -17,6 +17,12 @@ import {
   Plus,
   Link as LinkIcon,
   Star,
+  Youtube,
+  Globe,
+  ExternalLink,
+  FileText,
+  CalendarPlus,
+  Baby,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
@@ -43,6 +49,13 @@ interface ActivityExtractionResult {
   }>;
   skills: string[];
   safetyNotes: string[];
+  _meta?: {
+    platform: string;
+    extractionSource: string;
+    fetchedTitle: string;
+    sourceUrl: string | null;
+    contentLength: number;
+  };
 }
 
 interface SavedActivity {
@@ -60,7 +73,57 @@ interface SavedActivity {
   materials: Array<{ name: string; quantity: string | null; required: boolean }>;
   skills: string[];
   safety_notes: string[];
+  scheduled_for: string | null;
   created_at: string;
+}
+
+// ─── Platform Helpers ───────────────────────────────────────────
+
+const PLATFORM_CONFIG: Record<
+  string,
+  { icon: React.ReactNode; label: string; color: string; bgColor: string }
+> = {
+  youtube: {
+    icon: <Youtube className="h-3.5 w-3.5" />,
+    label: "YouTube",
+    color: "text-red-600",
+    bgColor: "bg-red-50",
+  },
+  tiktok: {
+    icon: <span className="text-[11px] font-bold">TT</span>,
+    label: "TikTok",
+    color: "text-foreground",
+    bgColor: "bg-gray-100",
+  },
+  instagram: {
+    icon: <span className="text-[11px] font-bold">IG</span>,
+    label: "Instagram",
+    color: "text-pink-600",
+    bgColor: "bg-pink-50",
+  },
+  pinterest: {
+    icon: <span className="text-[11px] font-bold">P</span>,
+    label: "Pinterest",
+    color: "text-red-700",
+    bgColor: "bg-red-50",
+  },
+  other: {
+    icon: <Globe className="h-3.5 w-3.5" />,
+    label: "Web",
+    color: "text-muted-foreground",
+    bgColor: "bg-muted",
+  },
+};
+
+function PlatformBadge({ platform }: { platform: string }) {
+  const config = PLATFORM_CONFIG[platform] || PLATFORM_CONFIG.other;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border-[0.5px] border-border px-2 py-0.5 text-[10px] font-medium ${config.color} ${config.bgColor}`}
+    >
+      {config.icon} {config.label}
+    </span>
+  );
 }
 
 function DifficultyBadge({ difficulty }: { difficulty: string }) {
@@ -96,22 +159,84 @@ function CategoryBadge({ category }: { category: string }) {
   );
 }
 
+// Fix 4: Skill tag with color differentiation by category
+function SkillTag({ skill }: { skill: string }) {
+  const lower = skill.toLowerCase();
+  let colorClass = "border-slate-200 bg-slate-50 text-slate-600"; // default
+  if (
+    lower.includes("motor") ||
+    lower.includes("coordination") ||
+    lower.includes("physical") ||
+    lower.includes("movement")
+  ) {
+    colorClass = "border-emerald-200 bg-emerald-50 text-emerald-700";
+  } else if (
+    lower.includes("cognitive") ||
+    lower.includes("science") ||
+    lower.includes("math") ||
+    lower.includes("problem") ||
+    lower.includes("logic") ||
+    lower.includes("counting")
+  ) {
+    colorClass = "border-blue-200 bg-blue-50 text-blue-700";
+  } else if (
+    lower.includes("language") ||
+    lower.includes("vocabulary") ||
+    lower.includes("communication") ||
+    lower.includes("reading") ||
+    lower.includes("literacy")
+  ) {
+    colorClass = "border-violet-200 bg-violet-50 text-violet-700";
+  } else if (
+    lower.includes("social") ||
+    lower.includes("emotional") ||
+    lower.includes("patience") ||
+    lower.includes("sharing") ||
+    lower.includes("empathy") ||
+    lower.includes("imaginat") ||
+    lower.includes("pretend") ||
+    lower.includes("creative")
+  ) {
+    colorClass = "border-amber-200 bg-amber-50 text-amber-700";
+  } else if (
+    lower.includes("sensory") ||
+    lower.includes("tactile") ||
+    lower.includes("texture") ||
+    lower.includes("exploration")
+  ) {
+    colorClass = "border-rose-200 bg-rose-50 text-rose-700";
+  }
+  return (
+    <span
+      className={`rounded-full border-[0.5px] px-2 py-0.5 text-[10px] font-medium ${colorClass}`}
+    >
+      {skill}
+    </span>
+  );
+}
+
+// Fix 3: Age range chip component
+function AgeRangeBadge({ min, max }: { min: number | null; max: number | null }) {
+  const label = formatAgeRange(min, max);
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border-[0.5px] border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+      <Baby className="h-2.5 w-2.5" /> {label}
+    </span>
+  );
+}
+
 function formatAgeRange(min: number | null, max: number | null): string {
   if (!min && !max) return "All ages";
-  const minYears = min ? Math.floor(min / 12) : 0;
-  const maxYears = max ? Math.floor(max / 12) : 0;
-  const minMonths = min ? min % 12 : 0;
-  const maxMonths = max ? max % 12 : 0;
-
-  const formatAge = (years: number, months: number) => {
-    if (years === 0) return `${months}mo`;
-    if (months === 0) return `${years}y`;
-    return `${years}y ${months}mo`;
+  const formatAge = (months: number) => {
+    const y = Math.floor(months / 12);
+    const m = months % 12;
+    if (y === 0) return `${m}mo`;
+    if (m === 0) return `${y}y`;
+    return `${y}y ${m}mo`;
   };
-
-  if (min && max) return `${formatAge(minYears, minMonths)} – ${formatAge(maxYears, maxMonths)}`;
-  if (min) return `${formatAge(minYears, minMonths)}+`;
-  return `Up to ${formatAge(maxYears, maxMonths)}`;
+  if (min && max) return `${formatAge(min)} – ${formatAge(max)}`;
+  if (min) return `${formatAge(min)}+`;
+  return `Up to ${formatAge(max!)}`;
 }
 
 function LibrarySkeleton() {
@@ -136,6 +261,26 @@ function LibrarySkeleton() {
   );
 }
 
+function detectPlatform(url: string): string {
+  if (!url) return "other";
+  if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
+  if (url.includes("instagram.com")) return "instagram";
+  if (url.includes("tiktok.com")) return "tiktok";
+  if (url.includes("pinterest.com") || url.includes("pin.it")) return "pinterest";
+  return "other";
+}
+
+// ─── Extraction Status Messages ─────────────────────────────────
+
+const EXTRACTION_STEPS = [
+  "Detecting platform...",
+  "Fetching content...",
+  "Analyzing with AI...",
+  "Building activity plan...",
+];
+
+// ─── Main Component ─────────────────────────────────────────────
+
 export default function PlayLabPage() {
   const { selectedChild, selectedChildId } = useChild();
 
@@ -148,9 +293,17 @@ export default function PlayLabPage() {
   const [inputContent, setInputContent] = useState("");
   const [inputUrl, setInputUrl] = useState("");
   const [extracting, setExtracting] = useState(false);
+  const [extractionStep, setExtractionStep] = useState(0);
   const [extractedResult, setExtractedResult] = useState<ActivityExtractionResult | null>(null);
   const [extractionError, setExtractionError] = useState<string | null>(null);
+  const [canRetryManual, setCanRetryManual] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Fix 6: Schedule CTA state
+  const [schedulingActivityId, setSchedulingActivityId] = useState<string | null>(null);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+  const [scheduleSuccess, setScheduleSuccess] = useState<string | null>(null);
 
   // Fetch activities
   const fetchActivities = useCallback(async () => {
@@ -173,11 +326,24 @@ export default function PlayLabPage() {
     fetchActivities();
   }, [fetchActivities]);
 
+  // Animated extraction steps
+  useEffect(() => {
+    if (!extracting) {
+      setExtractionStep(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setExtractionStep((prev) => Math.min(prev + 1, EXTRACTION_STEPS.length - 1));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [extracting]);
+
   // Extract handler
   const handleExtract = async () => {
     if (!inputContent.trim() && !inputUrl.trim()) return;
     setExtracting(true);
     setExtractionError(null);
+    setCanRetryManual(false);
 
     try {
       const res = await fetch("/api/extract/activity", {
@@ -192,6 +358,9 @@ export default function PlayLabPage() {
 
       if (!res.ok) {
         const err = await res.json();
+        if (err.canRetryManual) {
+          setCanRetryManual(true);
+        }
         throw new Error(err.error || "Extraction failed");
       }
 
@@ -205,12 +374,22 @@ export default function PlayLabPage() {
     }
   };
 
+  // Manual paste escape hatch — open dialog with URL preserved
+  const handleRetryManual = () => {
+    setExtractionError(null);
+    setCanRetryManual(false);
+    setShowInputDialog(true);
+  };
+
   // Save extracted activity
   const handleSaveExtracted = async () => {
     if (!extractedResult || !selectedChildId) return;
     setSaving(true);
 
     try {
+      const sourceUrl = extractedResult._meta?.sourceUrl || inputUrl || null;
+      const platform = extractedResult._meta?.platform || detectPlatform(inputUrl);
+
       const res = await fetch("/api/activities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -218,8 +397,8 @@ export default function PlayLabPage() {
           childId: selectedChildId,
           title: extractedResult.title,
           description: extractedResult.description,
-          sourceUrl: inputUrl || null,
-          sourcePlatform: detectPlatform(inputUrl),
+          sourceUrl,
+          sourcePlatform: platform,
           ageRangeMin: extractedResult.ageRangeMin,
           ageRangeMax: extractedResult.ageRangeMax,
           durationMinutes: extractedResult.durationMinutes,
@@ -229,7 +408,6 @@ export default function PlayLabPage() {
           materials: extractedResult.materials,
           skills: extractedResult.skills,
           safetyNotes: extractedResult.safetyNotes,
-          sourceContent: inputContent || null,
         }),
       });
 
@@ -246,39 +424,109 @@ export default function PlayLabPage() {
     }
   };
 
+  // Fix 6: Schedule activity handler
+  const handleScheduleActivity = async (activityId: string, activityTitle: string) => {
+    if (!scheduleDate || !selectedChildId) return;
+    setScheduleSaving(true);
+
+    try {
+      // Create an event in the scheduler
+      const res = await fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          childId: selectedChildId,
+          title: `🎨 ${activityTitle}`,
+          startTime: `${scheduleDate}T10:00:00`,
+          source: "play_lab",
+          sourceLabel: "Play Lab",
+          status: "approved",
+        }),
+      });
+
+      if (res.ok) {
+        // Also update the activity's scheduled_for field
+        await fetch(`/api/activities?activityId=${activityId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scheduledFor: scheduleDate }),
+        });
+
+        setScheduleSuccess(activityId);
+        setSchedulingActivityId(null);
+        setScheduleDate("");
+        setTimeout(() => setScheduleSuccess(null), 3000);
+        fetchActivities();
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setScheduleSaving(false);
+    }
+  };
+
   return (
     <div className="animate-fade-in">
-      {/* Page header */}
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <div className="mb-1 flex items-center gap-2">
-            <PlayLabIcon size={16} className="text-play" />
-            <span className="text-[11px] font-medium uppercase tracking-wider text-play">
-              Play Lab
-            </span>
+      {/* Fix 2: Page header — responsive layout */}
+      <div className="mb-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="mb-1 flex items-center gap-2">
+              <PlayLabIcon size={16} className="text-play" />
+              <span className="text-[11px] font-medium uppercase tracking-wider text-play">
+                Play Lab
+              </span>
+            </div>
+            <h1 className="text-xl font-semibold text-foreground">Activity library</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Paste a link from YouTube, TikTok, Instagram, Pinterest, or any blog — AI extracts a
+              structured activity plan
+            </p>
           </div>
-          <h1 className="text-xl font-semibold text-foreground">Activity library</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Paste a link or describe an activity — AI creates a structured plan with materials
-          </p>
+          <Button
+            size="sm"
+            className="w-full flex-shrink-0 sm:w-auto"
+            onClick={() => setShowInputDialog(true)}
+          >
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            New activity
+          </Button>
         </div>
-        <Button size="sm" onClick={() => setShowInputDialog(true)}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
-          New activity
-        </Button>
       </div>
 
-      {/* Extraction error */}
+      {/* Extraction error with manual-paste escape hatch */}
       {extractionError && (
-        <div className="animate-slide-fade-in mb-4 flex items-center gap-2 rounded-xl border-[0.5px] border-red-200 bg-red-50 px-4 py-3">
-          <AlertTriangle className="h-4 w-4 flex-shrink-0 text-red-500" />
-          <p className="text-sm text-red-700">{extractionError}</p>
-          <button
-            onClick={() => setExtractionError(null)}
-            className="ml-auto rounded-lg p-1 text-red-400 hover:bg-red-100 hover:text-red-600"
-          >
-            <X className="h-4 w-4" />
-          </button>
+        <div className="animate-slide-fade-in mb-4 rounded-xl border-[0.5px] border-red-200 bg-red-50 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0 text-red-500" />
+            <p className="text-sm text-red-700">{extractionError}</p>
+            <button
+              onClick={() => {
+                setExtractionError(null);
+                setCanRetryManual(false);
+              }}
+              className="ml-auto rounded-lg p-1 text-red-400 hover:bg-red-100 hover:text-red-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          {canRetryManual && (
+            <div className="mt-2 flex items-center gap-2 border-t border-red-100 pt-2">
+              <ClipboardPaste className="h-3.5 w-3.5 text-red-500" />
+              <span className="text-xs text-red-600">
+                Tip: Copy the text from the page and paste it manually.
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto h-7 border-red-200 text-xs text-red-700 hover:bg-red-100"
+                onClick={handleRetryManual}
+              >
+                <FileText className="mr-1 h-3 w-3" />
+                Paste manually
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -286,13 +534,18 @@ export default function PlayLabPage() {
       {extractedResult && (
         <div className="animate-slide-fade-in mb-6 rounded-xl border-[0.5px] border-play/20 bg-play-muted p-5">
           <div className="mb-4 flex items-start justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Sparkles className="h-4 w-4 text-play" />
               <span className="text-[11px] font-medium uppercase tracking-wider text-play">
                 AI activity plan
               </span>
+              {extractedResult._meta?.platform && (
+                <PlatformBadge platform={extractedResult._meta.platform} />
+              )}
               <CategoryBadge category={extractedResult.category} />
               <DifficultyBadge difficulty={extractedResult.difficulty} />
+              {/* Fix 3: Age range chip in extraction review */}
+              <AgeRangeBadge min={extractedResult.ageRangeMin} max={extractedResult.ageRangeMax} />
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                 <Clock className="h-3 w-3" /> {extractedResult.durationMinutes} min
               </span>
@@ -312,9 +565,18 @@ export default function PlayLabPage() {
             <p className="text-sm leading-relaxed text-muted-foreground">
               {extractedResult.description}
             </p>
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              Ages: {formatAgeRange(extractedResult.ageRangeMin, extractedResult.ageRangeMax)}
-            </p>
+            <div className="mt-2 flex items-center gap-3">
+              {extractedResult._meta?.sourceUrl && (
+                <a
+                  href={extractedResult._meta.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[11px] text-play hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" /> Source
+                </a>
+              )}
+            </div>
           </div>
 
           {/* Steps */}
@@ -369,14 +631,10 @@ export default function PlayLabPage() {
                 <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   <Brain className="h-3 w-3" /> Skills developed
                 </p>
+                {/* Fix 4: Skill tags with color differentiation */}
                 <div className="flex flex-wrap gap-1.5">
                   {extractedResult.skills.map((skill, i) => (
-                    <span
-                      key={i}
-                      className="rounded-full border-[0.5px] border-play/20 bg-play-muted px-2 py-0.5 text-[10px] text-play"
-                    >
-                      {skill}
-                    </span>
+                    <SkillTag key={i} skill={skill} />
                   ))}
                 </div>
               </div>
@@ -418,7 +676,7 @@ export default function PlayLabPage() {
         ) : activities.length > 0 ? (
           <div className="max-w-2xl space-y-3">
             <h2 className="mb-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Activity library
+              Activity library · {activities.length} saved
             </h2>
             {activities.map((activity) => {
               const isExpanded = expandedActivityId === activity.id;
@@ -435,12 +693,23 @@ export default function PlayLabPage() {
                       <h3 className="truncate text-sm font-medium text-foreground">
                         {activity.title}
                       </h3>
-                      <div className="mt-1 flex items-center gap-2">
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        {activity.platform && activity.platform !== "other" && (
+                          <PlatformBadge platform={activity.platform} />
+                        )}
                         <CategoryBadge category={activity.category} />
                         <DifficultyBadge difficulty={activity.difficulty} />
+                        {/* Fix 3: Age range chip on collapsed card */}
+                        <AgeRangeBadge min={activity.age_min} max={activity.age_max} />
                         {activity.duration_minutes && (
                           <span className="text-[11px] text-muted-foreground">
                             {activity.duration_minutes} min
+                          </span>
+                        )}
+                        {activity.scheduled_for && (
+                          <span className="inline-flex items-center gap-1 rounded-full border-[0.5px] border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                            <CalendarPlus className="h-2.5 w-2.5" />
+                            Scheduled
                           </span>
                         )}
                       </div>
@@ -459,6 +728,24 @@ export default function PlayLabPage() {
                           {activity.description}
                         </p>
                       )}
+
+                      {/* Source link + age range in expanded view */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        {activity.source_url && (
+                          <a
+                            href={activity.source_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs text-play hover:underline"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            View original on {PLATFORM_CONFIG[activity.platform]?.label || "web"}
+                          </a>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          Ages: {formatAgeRange(activity.age_min, activity.age_max)}
+                        </span>
+                      </div>
 
                       {/* Steps */}
                       {(activity.steps as string[])?.length > 0 && (
@@ -509,19 +796,88 @@ export default function PlayLabPage() {
                         </div>
                       )}
 
-                      {/* Skills */}
+                      {/* Fix 4: Skills — muted gray tags, not coral */}
                       {(activity.skills as string[])?.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {(activity.skills as string[]).map((skill, i) => (
-                            <span
-                              key={i}
-                              className="rounded-full border-[0.5px] border-play/20 bg-play-muted px-2 py-0.5 text-[10px] text-play"
-                            >
-                              {skill}
-                            </span>
-                          ))}
+                        <div>
+                          <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                            Skills developed
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {(activity.skills as string[]).map((skill, i) => (
+                              <SkillTag key={i} skill={skill} />
+                            ))}
+                          </div>
                         </div>
                       )}
+
+                      {/* Safety notes */}
+                      {(activity.safety_notes as string[])?.length > 0 && (
+                        <div className="rounded-lg border-[0.5px] border-amber-200 bg-amber-50 p-2.5">
+                          <p className="mb-1 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-amber-700">
+                            <Shield className="h-3 w-3" /> Safety
+                          </p>
+                          <ul className="space-y-0.5">
+                            {(activity.safety_notes as string[]).map((note, i) => (
+                              <li key={i} className="text-[11px] text-amber-700">
+                                {note}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Fix 6: Schedule CTA */}
+                      <div className="border-t-[0.5px] border-border pt-3">
+                        {scheduleSuccess === activity.id ? (
+                          <div className="flex items-center gap-2 text-sm text-green-600">
+                            <Check className="h-4 w-4" />
+                            Scheduled! Check your calendar.
+                          </div>
+                        ) : schedulingActivityId === activity.id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="date"
+                              value={scheduleDate}
+                              onChange={(e) => setScheduleDate(e.target.value)}
+                              min={new Date().toISOString().split("T")[0]}
+                              className="rounded-lg border-[0.5px] border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-play/30"
+                            />
+                            <Button
+                              size="sm"
+                              className="h-8"
+                              onClick={() => handleScheduleActivity(activity.id, activity.title)}
+                              disabled={!scheduleDate || scheduleSaving}
+                            >
+                              {scheduleSaving ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                "Save"
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8"
+                              onClick={() => {
+                                setSchedulingActivityId(null);
+                                setScheduleDate("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() => setSchedulingActivityId(activity.id)}
+                          >
+                            <CalendarPlus className="mr-1.5 h-3.5 w-3.5" />
+                            Schedule for...
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -529,11 +885,12 @@ export default function PlayLabPage() {
             })}
           </div>
         ) : (
+          /* Fix 7: Improved empty state with better copy */
           <EmptyState
             icon={PlayLabIcon}
-            title="No activities yet"
-            description="Paste a link or describe an activity to get a structured plan"
-            actionLabel="New activity"
+            title="Your activity library is empty"
+            description="Drop a TikTok, YouTube, or Pinterest link to extract your first activity — AI builds a step-by-step plan with materials, safety notes, and age-appropriate guidance"
+            actionLabel="Add your first activity"
             onAction={() => setShowInputDialog(true)}
             accentColor="play"
           />
@@ -545,7 +902,7 @@ export default function PlayLabPage() {
         <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center">
           <div
             className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-            onClick={() => setShowInputDialog(false)}
+            onClick={() => !extracting && setShowInputDialog(false)}
           />
           <div className="relative mx-4 w-full max-w-lg rounded-2xl border-[0.5px] border-border bg-card p-6">
             <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
@@ -555,6 +912,40 @@ export default function PlayLabPage() {
             <p className="mb-4 text-sm text-muted-foreground">
               Paste a URL or describe an activity — AI will create a structured plan
             </p>
+
+            {/* Platform detection preview */}
+            {inputUrl && !extracting && (
+              <div className="mb-3 flex items-center gap-2 rounded-lg border-[0.5px] border-border bg-background-secondary px-3 py-2">
+                <PlatformBadge platform={detectPlatform(inputUrl)} />
+                <span className="text-xs text-muted-foreground">
+                  {detectPlatform(inputUrl) === "youtube"
+                    ? "Will auto-fetch transcript"
+                    : detectPlatform(inputUrl) === "other"
+                      ? "Will scrape page content"
+                      : `Will fetch ${PLATFORM_CONFIG[detectPlatform(inputUrl)]?.label} metadata`}
+                </span>
+              </div>
+            )}
+
+            {/* Extraction progress */}
+            {extracting && (
+              <div className="mb-3 rounded-lg border-[0.5px] border-play/20 bg-play-muted px-3 py-3">
+                <div className="mb-2 flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-play" />
+                  <span className="text-sm font-medium text-play">
+                    {EXTRACTION_STEPS[extractionStep]}
+                  </span>
+                </div>
+                <div className="h-1 overflow-hidden rounded-full bg-play/10">
+                  <div
+                    className="h-full rounded-full bg-play transition-all duration-1000 ease-out"
+                    style={{
+                      width: `${((extractionStep + 1) / EXTRACTION_STEPS.length) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="space-y-3">
               <div>
@@ -568,27 +959,39 @@ export default function PlayLabPage() {
                     value={inputUrl}
                     onChange={(e) => setInputUrl(e.target.value)}
                     placeholder="https://youtube.com/watch?v=..."
-                    className="w-full rounded-xl border-[0.5px] border-border bg-background py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-play/30"
+                    disabled={extracting}
+                    className="w-full rounded-xl border-[0.5px] border-border bg-background py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-play/30 disabled:opacity-50"
                   />
                 </div>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Supports YouTube, TikTok, Instagram, Pinterest, and any web page
+                </p>
               </div>
 
               <div>
                 <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  Description / transcript
+                  Description / transcript{" "}
+                  <span className="font-normal normal-case text-muted-foreground/60">
+                    (paste manually if auto-fetch fails)
+                  </span>
                 </label>
                 <textarea
                   value={inputContent}
                   onChange={(e) => setInputContent(e.target.value)}
                   placeholder="Paste the video transcript, blog post, or describe the activity..."
                   rows={8}
-                  className="w-full resize-none rounded-xl border-[0.5px] border-border bg-background p-4 text-sm focus:outline-none focus:ring-2 focus:ring-play/30"
+                  disabled={extracting}
+                  className="w-full resize-none rounded-xl border-[0.5px] border-border bg-background p-4 text-sm focus:outline-none focus:ring-2 focus:ring-play/30 disabled:opacity-50"
                 />
               </div>
             </div>
 
             <div className="mt-4 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setShowInputDialog(false)}>
+              <Button
+                variant="ghost"
+                onClick={() => setShowInputDialog(false)}
+                disabled={extracting}
+              >
                 Cancel
               </Button>
               <Button
@@ -611,13 +1014,4 @@ export default function PlayLabPage() {
       )}
     </div>
   );
-}
-
-function detectPlatform(url: string): string {
-  if (!url) return "other";
-  if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
-  if (url.includes("instagram.com")) return "instagram";
-  if (url.includes("tiktok.com")) return "tiktok";
-  if (url.includes("pinterest.com")) return "pinterest";
-  return "other";
 }

@@ -4,6 +4,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/types";
 
 type ActivityInsert = Database["public"]["Tables"]["activities"]["Insert"];
+type ActivityUpdate = Database["public"]["Tables"]["activities"]["Update"];
 
 /**
  * GET /api/activities?childId=xxx
@@ -81,5 +82,44 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[Activities POST] Error:", error);
     return NextResponse.json({ error: "Failed to save activity" }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH /api/activities?activityId=xxx
+ * Update an activity (e.g., schedule it).
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const activityId = searchParams.get("activityId");
+
+    if (!activityId) {
+      return NextResponse.json({ error: "activityId is required" }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const supabase = getAdminClient();
+
+    const updates: ActivityUpdate = {};
+    if (body.scheduledFor !== undefined) updates.scheduled_for = body.scheduledFor;
+    if (body.title !== undefined) updates.title = body.title;
+    if (body.description !== undefined) updates.description = body.description;
+
+    const { data, error } = await supabase
+      .from("activities")
+      .update(updates)
+      .eq("id", activityId)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("[Activities PATCH] Error:", error);
+    return NextResponse.json({ error: "Failed to update activity" }, { status: 500 });
   }
 }
