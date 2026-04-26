@@ -32,4 +32,29 @@
 - [x] After scheduling: green "Scheduled for [day] at [time]" badge replaces button, with "Edit" link
 - [x] Saved activities list at top of Play Lab: upcoming activities with date/time/Open button
 - [x] Past activities collapse into "Done" section
-- [ ] Take screenshots: schedule modal, success state, upcoming/past activities sections
+- [x] Take screenshots: schedule modal, success state, upcoming activities, TopBar counter, Scheduler quadrant — all verified end-to-end
+
+## PR-C Fix — Calendar Invite Email (.ics via Resend)
+- [ ] Create shared utility for calendar invite emails (reusable across all quadrants)
+- [ ] Generate .ics file using existing `ics` package when user clicks Schedule
+- [ ] Send via Resend to user's configured notification email
+- [ ] Subject: "Kinloop · Scheduled: [activity title] · [day] [time]"
+- [ ] Body: brief description, materials list, link back to activity in Play Lab
+- [ ] Attachment: .ics file
+- [ ] If no notification email configured: show toast "Tip: configure your email in Settings to get calendar invites"
+- [ ] Test end-to-end: schedule activity → email arrives with .ics → clicking .ics adds event to calendar
+
+## v1.5-cleanup PR
+- [ ] Curl test: /api/coach/daily?childId=... returns in-range activity for Mia (50mo), NOT Water Pouring (age_max: 48)
+- [ ] Welcome screen polish confirmation: 7s duration, 320px+ photo, progress bar, fade transitions
+- [ ] Amazon button test: confirm "Shop materials on Amazon" opens working Amazon search URL with kinloop-20 tag
+- [ ] Update CLAUDE.md, ARCHITECTURE.md, ROADMAP.md for v1.5 final state
+- [ ] Move deferred items (FHIR, HealthKit, Instacart, multi-user auth, Clerk) to ROADMAP.md as Series A milestones
+- [ ] Tag v1.5.0 release on GitHub
+
+## v1.6 Stage A — Color and Typography Token Changes
+- [ ] Warm cream backgrounds (replace cool grays)
+- [ ] Soft saturated pastel accents (peachy coral, sage, butter, rose)
+- [ ] Fraunces serif for editorial moments (headings, greeting, section titles)
+- [ ] Take screenshots of dashboard + Coach page
+- [ ] Wait for user approval before Stage B

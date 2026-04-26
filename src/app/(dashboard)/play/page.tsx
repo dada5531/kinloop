@@ -420,6 +420,7 @@ export default function PlayLabPage() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleActivityTitle, setScheduleActivityTitle] = useState("");
   const [scheduleActivityDuration, setScheduleActivityDuration] = useState<number | null>(null);
+  const [calendarInviteHint, setCalendarInviteHint] = useState(false);
 
   // Fetch activities
   const fetchActivities = useCallback(async () => {
@@ -584,12 +585,41 @@ export default function PlayLabPage() {
       });
 
       if (res.ok) {
+        const eventData = await res.json().catch(() => null);
+
         // Update the activity's scheduled_for field
         await fetch(`/api/activities?activityId=${schedulingActivityId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ scheduledFor: startISO }),
         });
+
+        // Send calendar invite email (.ics via Resend)
+        // Find the full activity to include materials in the email
+        const fullActivity = activities.find((a) => a.id === schedulingActivityId);
+        try {
+          const calRes = await fetch("/api/play/send-calendar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: scheduleActivityTitle,
+              description: fullActivity?.description || undefined,
+              startDate: startISO,
+              endDate: endISO,
+              materials: fullActivity?.materials || [],
+              childId: selectedChildId,
+              eventId: eventData?.id || undefined,
+            }),
+          });
+          const calData = await calRes.json().catch(() => null);
+          if (calData?.code === "no_email") {
+            // Show a helpful toast — email not configured
+            setCalendarInviteHint(true);
+            setTimeout(() => setCalendarInviteHint(false), 8000);
+          }
+        } catch {
+          // Calendar invite is best-effort — don't block scheduling
+        }
 
         setScheduleSuccess(schedulingActivityId);
         setShowScheduleModal(false);
@@ -1164,11 +1194,23 @@ export default function PlayLabPage() {
                       {/* Schedule CTA (PR-C enhanced) */}
                       <div className="border-t-[0.5px] border-border pt-3">
                         {scheduleSuccess === activity.id ? (
-                          <div className="flex items-center gap-2 rounded-lg border-[0.5px] border-green-200 bg-green-50 px-3 py-2">
-                            <Check className="h-4 w-4 text-green-600" />
-                            <span className="text-sm font-medium text-green-700">
-                              Scheduled for {activity.scheduled_for ? new Date(activity.scheduled_for).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : "soon"}
-                            </span>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 rounded-lg border-[0.5px] border-green-200 bg-green-50 px-3 py-2">
+                              <Check className="h-4 w-4 text-green-600" />
+                              <span className="text-sm font-medium text-green-700">
+                                Scheduled for {activity.scheduled_for ? new Date(activity.scheduled_for).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : "soon"}
+                              </span>
+                            </div>
+                            {calendarInviteHint && (
+                              <div className="flex items-center gap-2 rounded-lg border-[0.5px] border-amber-200 bg-amber-50 px-3 py-2">
+                                <Bell className="h-3.5 w-3.5 text-amber-600" />
+                                <span className="text-xs text-amber-700">
+                                  Tip: configure your email in{" "}
+                                  <a href="/settings" className="font-medium underline">Settings</a>
+                                  {" "}to get calendar invites
+                                </span>
+                              </div>
+                            )}
                           </div>
                         ) : activity.scheduled_for ? (
                           <div className="flex items-center justify-between">
