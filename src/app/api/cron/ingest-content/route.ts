@@ -1,21 +1,25 @@
 /**
- * Cron endpoint — daily corpus ingestion.
+ * Cron endpoint — daily corpus ingestion + daily recommendation picker.
  *
  * Runs once per day via Vercel Cron. Seeds the tips_corpus and activities_corpus
- * tables with embeddings from the curated seed data, and picks the daily
- * tip and activity recommendations.
+ * tables from the curated seed data, then picks today's daily tip and activity.
  *
- * POST /api/cron/ingest-content
+ * GET /api/cron/ingest-content
  * Authorization: Bearer CRON_SECRET (or manual trigger without auth for dev)
+ *
+ * DB schema (daily_recommendations):
+ *   id, child_id, recommendation_date (date), tip_id (uuid FK), activity_id (uuid FK), created_at
+ *
+ * Note: Embedding generation requires VOYAGE_API_KEY. If not set, corpus is
+ * seeded without embeddings (RAG search won't work, but daily cards will).
  */
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { generateEmbeddings } from "@/lib/rag/embed";
 import { TIPS_CORPUS, ACTIVITIES_CORPUS } from "@/lib/rag/seed-corpus";
 import { getAdminClient } from "@/lib/supabase/admin";
 
-export const maxDuration = 60; // Allow up to 60s for embedding generation
+export const maxDuration = 60;
 
 /**
  * GET handler — triggered by Vercel Cron or manual curl.
@@ -33,6 +37,8 @@ export async function GET(req: NextRequest) {
     const results = {
       tips_seeded: 0,
       activities_seeded: 0,
+      tips_errors: [] as string[],
+      activities_errors: [] as string[],
       daily_tip: false,
       daily_activity: false,
     };
@@ -43,9 +49,20 @@ export async function GET(req: NextRequest) {
       .select("*", { count: "exact", head: true });
 
     if ((tipsCount ?? 0) < TIPS_CORPUS.length) {
-      // Generate embeddings for all tips
-      const tipsTexts = TIPS_CORPUS.map((t) => t.content);
-      const tipsEmbeddings = await generateEmbeddings(tipsTexts);
+      // Try to generate embeddings, but fall back to null if VOYAGE_API_KEY is missing
+      let tipsEmbeddings: (number[] | null)[] = TIPS_CORPUS.map(() => null);
+
+      if (process.env.VOYAGE_API_KEY) {
+        try {
+          const { generateEmbeddings } = await import("@/lib/rag/embed");
+          const tipsTexts = TIPS_CORPUS.map((t) => t.content);
+          tipsEmbeddings = await generateEmbeddings(tipsTexts);
+        } catch (embErr) {
+          console.error("[Cron] Embedding generation failed, seeding without embeddings:", embErr);
+        }
+      } else {
+        console.log("[Cron] VOYAGE_API_KEY not set, seeding corpus without embeddings");
+      }
 
       for (let i = 0; i < TIPS_CORPUS.length; i++) {
         const tip = TIPS_CORPUS[i];
@@ -65,10 +82,15 @@ export async function GET(req: NextRequest) {
           source_url: tip.source_url,
           category: tip.category,
           age_bucket: tip.age_bucket,
-          embedding: JSON.stringify(tipsEmbeddings[i]),
+          ...(tipsEmbeddings[i] ? { embedding: JSON.stringify(tipsEmbeddings[i]) } : {}),
         });
 
-        if (!error) results.tips_seeded++;
+        if (error) {
+          results.tips_errors.push(`Tip ${i}: ${error.message}`);
+          console.error(`[Cron] Tip insert error (${i}):`, error.message);
+        } else {
+          results.tips_seeded++;
+        }
       }
     }
 
@@ -78,8 +100,17 @@ export async function GET(req: NextRequest) {
       .select("*", { count: "exact", head: true });
 
     if ((activitiesCount ?? 0) < ACTIVITIES_CORPUS.length) {
-      const activitiesTexts = ACTIVITIES_CORPUS.map((a) => `${a.title}: ${a.description}`);
-      const activitiesEmbeddings = await generateEmbeddings(activitiesTexts);
+      let activitiesEmbeddings: (number[] | null)[] = ACTIVITIES_CORPUS.map(() => null);
+
+      if (process.env.VOYAGE_API_KEY) {
+        try {
+          const { generateEmbeddings } = await import("@/lib/rag/embed");
+          const activitiesTexts = ACTIVITIES_CORPUS.map((a) => `${a.title}: ${a.description}`);
+          activitiesEmbeddings = await generateEmbeddings(activitiesTexts);
+        } catch (embErr) {
+          console.error("[Cron] Activity embedding generation failed:", embErr);
+        }
+      }
 
       for (let i = 0; i < ACTIVITIES_CORPUS.length; i++) {
         const activity = ACTIVITIES_CORPUS[i];
@@ -104,77 +135,64 @@ export async function GET(req: NextRequest) {
           duration_minutes: activity.duration_minutes,
           materials: activity.materials,
           steps: activity.steps,
-          embedding: JSON.stringify(activitiesEmbeddings[i]),
+          ...(activitiesEmbeddings[i]
+            ? { embedding: JSON.stringify(activitiesEmbeddings[i]) }
+            : {}),
         });
 
-        if (!error) results.activities_seeded++;
+        if (error) {
+          results.activities_errors.push(`Activity ${i}: ${error.message}`);
+          console.error(`[Cron] Activity insert error (${i}):`, error.message);
+        } else {
+          results.activities_seeded++;
+        }
       }
     }
 
     // --- 3. Pick daily recommendations ---
+    // Uses the actual DB schema: recommendation_date, tip_id, activity_id
     const today = new Date().toISOString().split("T")[0];
 
-    // Check if today's recommendations already exist
     const { data: existingRec } = await supabase
       .from("daily_recommendations")
       .select("id")
-      .eq("date", today)
+      .eq("recommendation_date", today)
       .limit(1);
 
     if (!existingRec || existingRec.length === 0) {
       // Pick a random tip
-      const { data: allTips } = await supabase
-        .from("tips_corpus")
-        .select("id, content, source, source_url, category");
-
-      if (allTips && allTips.length > 0) {
-        const tipIndex = Math.floor(Math.random() * allTips.length);
-        const dailyTip = allTips[tipIndex];
-
-        await supabase.from("daily_recommendations").insert({
-          date: today,
-          type: "tip",
-          content_id: dailyTip.id,
-          content_snapshot: {
-            content: dailyTip.content,
-            source: dailyTip.source,
-            source_url: dailyTip.source_url,
-            category: dailyTip.category,
-          },
-        });
-        results.daily_tip = true;
-      }
+      const { data: allTips } = await supabase.from("tips_corpus").select("id");
 
       // Pick a random activity
-      const { data: allActivities } = await supabase
-        .from("activities_corpus")
-        .select(
-          "id, title, description, source, source_url, category, age_min, age_max, duration_minutes, materials, steps",
-        );
+      const { data: allActivities } = await supabase.from("activities_corpus").select("id");
 
-      if (allActivities && allActivities.length > 0) {
-        const actIndex = Math.floor(Math.random() * allActivities.length);
-        const dailyActivity = allActivities[actIndex];
+      const tipId =
+        allTips && allTips.length > 0
+          ? allTips[Math.floor(Math.random() * allTips.length)].id
+          : null;
 
-        await supabase.from("daily_recommendations").insert({
-          date: today,
-          type: "activity",
-          content_id: dailyActivity.id,
-          content_snapshot: {
-            title: dailyActivity.title,
-            description: dailyActivity.description,
-            source: dailyActivity.source,
-            source_url: dailyActivity.source_url,
-            category: dailyActivity.category,
-            age_min: dailyActivity.age_min,
-            age_max: dailyActivity.age_max,
-            duration_minutes: dailyActivity.duration_minutes,
-            materials: dailyActivity.materials,
-            steps: dailyActivity.steps,
-          },
+      const activityId =
+        allActivities && allActivities.length > 0
+          ? allActivities[Math.floor(Math.random() * allActivities.length)].id
+          : null;
+
+      if (tipId || activityId) {
+        const { error: recError } = await supabase.from("daily_recommendations").insert({
+          recommendation_date: today,
+          tip_id: tipId,
+          activity_id: activityId,
         });
-        results.daily_activity = true;
+
+        if (recError) {
+          console.error("[Cron] Daily recommendation insert error:", recError.message);
+        } else {
+          results.daily_tip = !!tipId;
+          results.daily_activity = !!activityId;
+        }
       }
+    } else {
+      results.daily_tip = true;
+      results.daily_activity = true;
     }
 
     return NextResponse.json({

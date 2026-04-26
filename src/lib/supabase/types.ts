@@ -536,26 +536,26 @@ export interface Database {
       daily_recommendations: {
         Row: {
           id: string;
-          date: string;
-          type: string;
-          content_id: string | null;
-          content_snapshot: Record<string, unknown> | null;
+          child_id: string | null;
+          recommendation_date: string;
+          tip_id: string | null;
+          activity_id: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
-          date: string;
-          type: string;
-          content_id?: string | null;
-          content_snapshot?: Record<string, unknown> | null;
+          child_id?: string | null;
+          recommendation_date: string;
+          tip_id?: string | null;
+          activity_id?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
-          date?: string;
-          type?: string;
-          content_id?: string | null;
-          content_snapshot?: Record<string, unknown> | null;
+          child_id?: string | null;
+          recommendation_date?: string;
+          tip_id?: string | null;
+          activity_id?: string | null;
           created_at?: string;
         };
         Relationships: [];
