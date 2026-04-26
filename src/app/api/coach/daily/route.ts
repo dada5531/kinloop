@@ -6,7 +6,7 @@
  *
  * Tips are universal (no age filtering).
  * Activities are filtered by the child's current age in months.
- * If the pre-picked daily activity is out of range, a random age-appropriate one is substituted.
+ * Picks are deterministic per day+child — same inputs always return same outputs.
  *
  * DB schema (daily_recommendations):
  *   id, child_id, recommendation_date (date), tip_id (uuid FK), activity_id (uuid FK), created_at
@@ -23,6 +23,21 @@ function getAgeMonths(dob: string): number {
   const now = new Date();
   const dobDate = new Date(dob);
   return (now.getFullYear() - dobDate.getFullYear()) * 12 + (now.getMonth() - dobDate.getMonth());
+}
+
+/**
+ * Deterministic hash for picking an index from a list.
+ * Uses a simple string hash of date+childId to produce a stable index.
+ */
+function deterministicIndex(seed: string, length: number): number {
+  if (length <= 0) return 0;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32-bit integer
+  }
+  return Math.abs(hash) % length;
 }
 
 export async function GET(request: NextRequest) {
@@ -43,159 +58,95 @@ export async function GET(request: NextRequest) {
 
       if (child?.dob) {
         ageMonths = getAgeMonths(child.dob);
+        console.log(`[Daily] childId=${childId}, dob=${child.dob}, ageMonths=${ageMonths}`);
+      } else {
+        console.log(`[Daily] childId=${childId}, no DOB found`);
       }
     }
 
-    // Get today's recommendation row
-    const { data: recs } = await supabase
-      .from("daily_recommendations")
-      .select("id, recommendation_date, tip_id, activity_id")
-      .eq("recommendation_date", today)
-      .limit(1);
+    // Seed for deterministic picks: date + childId (or just date if no child)
+    const pickSeed = childId ? `${today}:${childId}` : today;
 
-    let tipData = null;
-    let activityData = null;
-    let isFallback = false;
+    // --- Fetch all tips (universal, no age filtering) ---
+    const { data: allTips } = await supabase
+      .from("tips_corpus")
+      .select("id, content, source, source_url, category")
+      .order("id");
 
-    if (recs && recs.length > 0) {
-      const rec = recs[0];
-
-      // Fetch the tip by ID (tips are universal, no age filtering)
-      if (rec.tip_id) {
-        const { data: tip } = await supabase
-          .from("tips_corpus")
-          .select("id, content, source, source_url, category")
-          .eq("id", rec.tip_id)
-          .single();
-
-        if (tip) {
-          tipData = {
-            content: tip.content,
-            source: tip.source,
-            source_url: tip.source_url,
-            category: tip.category,
-          };
-        }
-      }
-
-      // Fetch the activity by ID, then check age appropriateness
-      if (rec.activity_id) {
-        const { data: activity } = await supabase
-          .from("activities_corpus")
-          .select(
-            "id, title, description, source, source_url, category, age_min, age_max, duration_minutes, materials, steps",
-          )
-          .eq("id", rec.activity_id)
-          .single();
-
-        if (activity) {
-          // Check if the activity is age-appropriate for this child
-          const isAgeAppropriate =
-            ageMonths === null ||
-            (activity.age_min !== null &&
-              activity.age_max !== null &&
-              ageMonths >= activity.age_min &&
-              ageMonths <= activity.age_max);
-
-          if (isAgeAppropriate) {
-            activityData = formatActivity(activity);
-          }
-        }
-      }
-
-      // If no age-appropriate activity was found, pick a random one that fits
-      if (!activityData && ageMonths !== null) {
-        activityData = await pickAgeAppropriateActivity(supabase, ageMonths);
-      } else if (!activityData) {
-        // No childId provided and no activity from daily rec — just pick any
-        activityData = await pickRandomActivity(supabase);
-      }
-    } else {
-      // No recommendations for today — fall back to random picks
-      isFallback = true;
-
-      const { data: randomTip } = await supabase
-        .from("tips_corpus")
-        .select("id, content, source, source_url, category")
-        .limit(1)
+    // --- Fetch age-appropriate activities ---
+    let eligibleActivities;
+    if (ageMonths !== null) {
+      const { data } = await supabase
+        .from("activities_corpus")
+        .select(
+          "id, title, description, source, source_url, category, age_min, age_max, duration_minutes, materials, steps",
+        )
+        .lte("age_min", ageMonths)
+        .gte("age_max", ageMonths)
         .order("id");
 
-      if (randomTip?.[0]) {
-        tipData = {
-          content: randomTip[0].content,
-          source: randomTip[0].source,
-          source_url: randomTip[0].source_url,
-          category: randomTip[0].category,
-        };
-      }
+      eligibleActivities = data;
+      console.log(
+        `[Daily] ageMonths=${ageMonths}, eligible activities: ${data?.length ?? 0}`,
+        data?.map((a) => `${a.title} (${a.age_min}-${a.age_max})`),
+      );
+    } else {
+      // No child context — return all activities
+      const { data } = await supabase
+        .from("activities_corpus")
+        .select(
+          "id, title, description, source, source_url, category, age_min, age_max, duration_minutes, materials, steps",
+        )
+        .order("id");
 
-      // Pick an age-appropriate activity if we know the child's age
-      if (ageMonths !== null) {
-        activityData = await pickAgeAppropriateActivity(supabase, ageMonths);
-      } else {
-        activityData = await pickRandomActivity(supabase);
-      }
+      eligibleActivities = data;
+    }
+
+    // --- Deterministic picks ---
+    let tipData = null;
+    let activityData = null;
+
+    if (allTips && allTips.length > 0) {
+      const tipIndex = deterministicIndex(`tip:${pickSeed}`, allTips.length);
+      const tip = allTips[tipIndex];
+      tipData = {
+        content: tip.content,
+        source: tip.source,
+        source_url: tip.source_url,
+        category: tip.category,
+      };
+      console.log(`[Daily] Picked tip index=${tipIndex}: ${tip.category}`);
+    }
+
+    if (eligibleActivities && eligibleActivities.length > 0) {
+      const actIndex = deterministicIndex(`activity:${pickSeed}`, eligibleActivities.length);
+      const activity = eligibleActivities[actIndex];
+      activityData = {
+        title: activity.title,
+        description: activity.description,
+        source: activity.source,
+        source_url: activity.source_url,
+        category: activity.category,
+        age_min: activity.age_min,
+        age_max: activity.age_max,
+        duration_minutes: activity.duration_minutes,
+        materials: activity.materials,
+        steps: activity.steps,
+      };
+      console.log(
+        `[Daily] Picked activity index=${actIndex}: "${activity.title}" (${activity.age_min}-${activity.age_max}mo)`,
+      );
     }
 
     return NextResponse.json({
       tip: tipData,
       activity: activityData,
       date: today,
-      fallback: isFallback,
+      ageMonths,
+      eligibleCount: eligibleActivities?.length ?? 0,
     });
   } catch (error) {
     console.error("[Daily] Error:", error);
     return NextResponse.json({ error: "Failed to load daily recommendations" }, { status: 500 });
   }
-}
-
-function formatActivity(activity: Record<string, unknown>) {
-  return {
-    title: activity.title,
-    description: activity.description,
-    source: activity.source,
-    source_url: activity.source_url,
-    category: activity.category,
-    age_min: activity.age_min,
-    age_max: activity.age_max,
-    duration_minutes: activity.duration_minutes,
-    materials: activity.materials,
-    steps: activity.steps,
-  };
-}
-
-async function pickAgeAppropriateActivity(
-  supabase: ReturnType<typeof getAdminClient>,
-  ageMonths: number,
-) {
-  const { data: activities } = await supabase
-    .from("activities_corpus")
-    .select(
-      "id, title, description, source, source_url, category, age_min, age_max, duration_minutes, materials, steps",
-    )
-    .lte("age_min", ageMonths)
-    .gte("age_max", ageMonths);
-
-  if (activities && activities.length > 0) {
-    const pick = activities[Math.floor(Math.random() * activities.length)];
-    return formatActivity(pick);
-  }
-
-  // If no age-appropriate activities exist, fall back to any activity
-  return pickRandomActivity(supabase);
-}
-
-async function pickRandomActivity(supabase: ReturnType<typeof getAdminClient>) {
-  const { data: activities } = await supabase
-    .from("activities_corpus")
-    .select(
-      "id, title, description, source, source_url, category, age_min, age_max, duration_minutes, materials, steps",
-    );
-
-  if (activities && activities.length > 0) {
-    const pick = activities[Math.floor(Math.random() * activities.length)];
-    return formatActivity(pick);
-  }
-
-  return null;
 }
