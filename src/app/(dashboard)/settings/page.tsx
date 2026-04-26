@@ -28,6 +28,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState("");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Fetch settings
   const fetchSettings = useCallback(async () => {
@@ -55,6 +56,7 @@ export default function SettingsPage() {
   // Save a setting
   const saveSetting = async (key: string, value: string) => {
     setSaving(key);
+    setSaveError(null);
     try {
       const res = await fetch("/api/settings", {
         method: "POST",
@@ -65,9 +67,14 @@ export default function SettingsPage() {
         setSettings((prev) => ({ ...prev, [key]: value }));
         setSaved(key);
         setTimeout(() => setSaved(null), 2000);
+      } else {
+        const data = await res.json().catch(() => null);
+        setSaveError(data?.error || "Failed to save. Please try again.");
+        setTimeout(() => setSaveError(null), 4000);
       }
     } catch {
-      // silently fail
+      setSaveError("Network error. Please try again.");
+      setTimeout(() => setSaveError(null), 4000);
     } finally {
       setSaving(null);
     }
@@ -139,31 +146,41 @@ export default function SettingsPage() {
             {loading ? (
               <Skeleton className="h-10 w-full" />
             ) : (
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="you@example.com"
-                  className="flex-1 rounded-lg border-[0.5px] border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-scheduler/30"
-                />
-                <Button
-                  size="sm"
-                  onClick={() => saveSetting("notification_email", emailInput)}
-                  disabled={
-                    saving === "notification_email" ||
-                    !emailInput.includes("@") ||
-                    emailInput === settings.notification_email
-                  }
-                >
-                  {saving === "notification_email" ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : saved === "notification_email" ? (
-                    <Check className="h-3.5 w-3.5" />
-                  ) : (
-                    "Save"
-                  )}
-                </Button>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    placeholder="you@example.com"
+                    className="flex-1 rounded-lg border-[0.5px] border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-scheduler/30"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => saveSetting("notification_email", emailInput)}
+                    disabled={
+                      saving === "notification_email" ||
+                      !emailInput.includes("@") ||
+                      emailInput === settings.notification_email
+                    }
+                  >
+                    {saving === "notification_email" ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : saved === "notification_email" ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      "Save"
+                    )}
+                  </Button>
+                </div>
+                {saved === "notification_email" && (
+                  <p className="text-xs text-emerald-600 flex items-center gap-1">
+                    <Check className="h-3 w-3" /> Email saved. Calendar invites will be sent here.
+                  </p>
+                )}
+                {saveError && (
+                  <p className="text-xs text-red-500">{saveError}</p>
+                )}
               </div>
             )}
           </div>
