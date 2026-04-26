@@ -1,22 +1,64 @@
 /**
  * RAG search — similarity search over the parenting knowledge corpus.
  *
- * Uses pgvector's cosine similarity to find relevant chunks.
+ * Uses pgvector's cosine similarity via the match_corpus RPC.
  * Results are injected into the Coach system prompt as context.
- *
- * TODO: Implement vector search.
- * See GitHub Issue #11.
  */
+
+import { getAdminClient } from "@/lib/supabase/admin";
+
+import { generateEmbedding } from "./embed";
 
 export interface SearchResult {
   id: string;
   content: string;
   source: string;
-  category: string;
+  source_url: string | null;
+  category: string | null;
   similarity: number;
 }
 
-export async function searchCorpus(
+/**
+ * Search the tips corpus for relevant parenting knowledge.
+ */
+export async function searchTipsCorpus(
+  query: string,
+  options?: {
+    limit?: number;
+    category?: string;
+    ageBucket?: string;
+    minSimilarity?: number;
+  },
+): Promise<SearchResult[]> {
+  try {
+    const embedding = await generateEmbedding(query);
+    const supabase = getAdminClient();
+
+    const { data, error } = await supabase.rpc("match_corpus", {
+      query_embedding: JSON.stringify(embedding),
+      match_threshold: options?.minSimilarity ?? 0.5,
+      match_count: options?.limit ?? 5,
+      filter_category: options?.category ?? null,
+      filter_age_bucket: options?.ageBucket ?? null,
+      corpus_table: "tips",
+    });
+
+    if (error) {
+      console.error("[RAG Search] Tips corpus error:", error);
+      return [];
+    }
+
+    return (data as SearchResult[]) || [];
+  } catch (err) {
+    console.error("[RAG Search] Failed:", err);
+    return [];
+  }
+}
+
+/**
+ * Search the activities corpus for relevant activity ideas.
+ */
+export async function searchActivitiesCorpus(
   query: string,
   options?: {
     limit?: number;
@@ -24,12 +66,53 @@ export async function searchCorpus(
     minSimilarity?: number;
   },
 ): Promise<SearchResult[]> {
-  // TODO: Generate embedding for query, then search pgvector
-  // const embedding = await generateEmbedding(query);
-  // const { data } = await supabase.rpc("match_embeddings", {
-  //   query_embedding: embedding,
-  //   match_threshold: options?.minSimilarity ?? 0.7,
-  //   match_count: options?.limit ?? 5,
-  // });
-  throw new Error("Not implemented — see GitHub Issue #11");
+  try {
+    const embedding = await generateEmbedding(query);
+    const supabase = getAdminClient();
+
+    const { data, error } = await supabase.rpc("match_corpus", {
+      query_embedding: JSON.stringify(embedding),
+      match_threshold: options?.minSimilarity ?? 0.5,
+      match_count: options?.limit ?? 5,
+      filter_category: options?.category ?? null,
+      filter_age_bucket: null,
+      corpus_table: "activities",
+    });
+
+    if (error) {
+      console.error("[RAG Search] Activities corpus error:", error);
+      return [];
+    }
+
+    return (data as SearchResult[]) || [];
+  } catch (err) {
+    console.error("[RAG Search] Failed:", err);
+    return [];
+  }
+}
+
+/**
+ * Combined search across both corpora — used by the Coach chat for context injection.
+ */
+export async function searchAllCorpora(
+  query: string,
+  options?: {
+    limit?: number;
+    ageBucket?: string;
+    minSimilarity?: number;
+  },
+): Promise<{ tips: SearchResult[]; activities: SearchResult[] }> {
+  const [tips, activities] = await Promise.all([
+    searchTipsCorpus(query, {
+      limit: options?.limit ?? 3,
+      ageBucket: options?.ageBucket,
+      minSimilarity: options?.minSimilarity,
+    }),
+    searchActivitiesCorpus(query, {
+      limit: options?.limit ?? 2,
+      minSimilarity: options?.minSimilarity,
+    }),
+  ]);
+
+  return { tips, activities };
 }

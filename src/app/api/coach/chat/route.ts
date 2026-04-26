@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { claude, CLAUDE_MODEL } from "@/lib/anthropic";
 import { readPrompt, buildChildContextString } from "@/lib/prompts";
+import { searchTipsCorpus, searchActivitiesCorpus } from "@/lib/rag/search";
 import { getAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/types";
 
@@ -14,13 +15,14 @@ type ChildRow = Database["public"]["Tables"]["children"]["Row"];
  * POST /api/coach/chat
  *
  * Accepts: { messages: Array<{role, content}>, childId: string }
- * Returns: Streaming text response from Claude with child context.
+ * Returns: Streaming text response from Claude with child context + RAG citations.
  *
  * Pipeline:
  *   1. Fetch child context from Supabase
  *   2. Fetch cross-quadrant context (recent events, health records, activities)
- *   3. Build system prompt with context injection
- *   4. Stream Claude response
+ *   3. RAG: embed the latest user message → vector search tips + activities corpus
+ *   4. Build system prompt with context injection + retrieved sources
+ *   5. Stream Claude response with inline source citations
  */
 export async function POST(request: NextRequest) {
   try {
@@ -40,7 +42,6 @@ export async function POST(request: NextRequest) {
       try {
         const supabase = getAdminClient();
 
-        // Fetch child info
         const { data: child } = await supabase
           .from("children")
           .select("name, dob, allergies, notes")
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
             childContextBlock += "\nRecent activities:\n";
             (activities as Pick<ActivityRow, "title" | "category" | "difficulty">[]).forEach(
               (a) => {
-                childContextBlock += `- ${a.title} (${a.category}, ${a.difficulty})\n`;
+                childContextBlock += `- ${a.title} (${a.category || "general"}, ${a.difficulty || "any"})\n`;
               },
             );
           }
@@ -119,7 +120,41 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const systemPrompt = `${coachPrompt}\n\n## Current Child Context\n${childContextBlock}`;
+    // --- RAG: Search for relevant tips and activities ---
+    let ragContext = "";
+    const latestUserMessage = messages.filter((m: { role: string }) => m.role === "user").pop();
+
+    if (latestUserMessage) {
+      try {
+        const [tipResults, activityResults] = await Promise.all([
+          searchTipsCorpus(latestUserMessage.content, { limit: 3, minSimilarity: 0.65 }),
+          searchActivitiesCorpus(latestUserMessage.content, { limit: 2, minSimilarity: 0.65 }),
+        ]);
+
+        if (tipResults.length > 0) {
+          ragContext += "\n\n## Relevant Parenting Knowledge\n";
+          ragContext +=
+            "Use these sources to inform your response. Cite them inline as [Source Name].\n\n";
+          tipResults.forEach((tip, i) => {
+            ragContext += `[Source ${i + 1}: ${tip.source}${tip.source_url ? ` — ${tip.source_url}` : ""}]\n`;
+            ragContext += `${tip.content}\n\n`;
+          });
+        }
+
+        if (activityResults.length > 0) {
+          ragContext += "\n## Relevant Activities from Corpus\n";
+          activityResults.forEach((act, i) => {
+            ragContext += `[Activity ${i + 1}: ${act.source}${act.source_url ? ` — ${act.source_url}` : ""}]\n`;
+            ragContext += `${act.content}\n\n`;
+          });
+        }
+      } catch (ragError) {
+        console.warn("[Coach Chat] RAG search failed, continuing without:", ragError);
+        // Continue without RAG — graceful degradation
+      }
+    }
+
+    const systemPrompt = `${coachPrompt}\n\n## Current Child Context\n${childContextBlock}${ragContext}\n\n## Citation Instructions\nWhen you reference information from the sources above, cite them naturally inline, e.g. "According to the AAP..." or "Research from Zero to Three suggests...". Do not use numbered footnotes. Keep the tone warm and conversational.`;
 
     // Format messages for Claude
     const claudeMessages = messages.map((m: { role: string; content: string }) => ({

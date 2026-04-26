@@ -452,9 +452,136 @@ export interface Database {
         };
         Relationships: [];
       };
+      tips_corpus: {
+        Row: {
+          id: string;
+          content: string;
+          source: string;
+          source_url: string | null;
+          category: string | null;
+          age_bucket: string | null;
+          embedding: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          content: string;
+          source: string;
+          source_url?: string | null;
+          category?: string | null;
+          age_bucket?: string | null;
+          embedding?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          content?: string;
+          source?: string;
+          source_url?: string | null;
+          category?: string | null;
+          age_bucket?: string | null;
+          embedding?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      activities_corpus: {
+        Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          source: string;
+          source_url: string | null;
+          category: string | null;
+          age_min: number | null;
+          age_max: number | null;
+          duration_minutes: number | null;
+          materials: string[] | null;
+          steps: string[] | null;
+          embedding: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string | null;
+          source: string;
+          source_url?: string | null;
+          category?: string | null;
+          age_min?: number | null;
+          age_max?: number | null;
+          duration_minutes?: number | null;
+          materials?: string[] | null;
+          steps?: string[] | null;
+          embedding?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string | null;
+          source?: string;
+          source_url?: string | null;
+          category?: string | null;
+          age_min?: number | null;
+          age_max?: number | null;
+          duration_minutes?: number | null;
+          materials?: string[] | null;
+          steps?: string[] | null;
+          embedding?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      daily_recommendations: {
+        Row: {
+          id: string;
+          date: string;
+          type: string;
+          content_id: string | null;
+          content_snapshot: Record<string, unknown> | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          date: string;
+          type: string;
+          content_id?: string | null;
+          content_snapshot?: Record<string, unknown> | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          date?: string;
+          type?: string;
+          content_id?: string | null;
+          content_snapshot?: Record<string, unknown> | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      match_corpus: {
+        Args: {
+          query_embedding: string;
+          match_threshold?: number;
+          match_count?: number;
+          filter_category?: string | null;
+          filter_age_bucket?: string | null;
+          corpus_table?: string;
+        };
+        Returns: Array<{
+          id: string;
+          content: string;
+          source: string;
+          source_url: string | null;
+          category: string | null;
+          similarity: number;
+        }>;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
