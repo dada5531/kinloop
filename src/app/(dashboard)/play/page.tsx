@@ -273,6 +273,91 @@ function buildShopAllUrl(
   return `https://www.amazon.com/s?k=${encodeURIComponent(query)}&tag=kinloop-20`;
 }
 
+function buildMaterialSearchUrl(materialName: string): string {
+  return `https://www.amazon.com/s?k=${encodeURIComponent(materialName.trim())}&tag=kinloop-20`;
+}
+
+// Estimated prices for common kids activity materials (V1 heuristic)
+// V2: Replace with PA-API real prices when configured
+const MATERIAL_PRICE_ESTIMATES: Record<string, number> = {
+  "baking soda": 3,
+  "vinegar": 3,
+  "white vinegar": 3,
+  "food coloring": 5,
+  "water": 0,
+  "plastic dinosaurs": 8,
+  "plastic dinosaur figures": 8,
+  "small plastic dinosaur figures": 8,
+  "spray bottle": 4,
+  "paintbrush": 3,
+  "small paintbrush or pastry brush": 4,
+  "plastic bin": 6,
+  "plastic bin or tray": 6,
+  "plastic bin or tray (for mess containment)": 6,
+  "spoon": 2,
+  "small spoon or plastic chisel/tool": 3,
+  "sand": 5,
+  "sand or dirt": 5,
+  "sand or dirt (optional, for texture)": 5,
+  "paint": 6,
+  "paper": 3,
+  "crayons": 4,
+  "glue": 3,
+  "glue stick": 3,
+  "scissors": 4,
+  "tape": 3,
+  "markers": 5,
+  "stickers": 4,
+  "playdough": 5,
+  "play dough": 5,
+  "clay": 6,
+  "beads": 5,
+  "string": 3,
+  "yarn": 4,
+  "fabric": 5,
+  "felt": 4,
+  "pipe cleaners": 4,
+  "pom poms": 4,
+  "googly eyes": 3,
+  "construction paper": 4,
+  "cardboard": 0,
+  "box": 0,
+  "cardboard box": 0,
+  "cups": 3,
+  "plastic cups": 3,
+  "bowls": 4,
+  "measuring cups": 5,
+};
+
+function estimateMaterialPrice(name: string): number {
+  const lower = name.toLowerCase().trim();
+  // Exact match
+  if (MATERIAL_PRICE_ESTIMATES[lower] !== undefined) return MATERIAL_PRICE_ESTIMATES[lower];
+  // Partial match
+  for (const [key, price] of Object.entries(MATERIAL_PRICE_ESTIMATES)) {
+    if (lower.includes(key) || key.includes(lower)) return price;
+  }
+  // Default estimate for unknown materials
+  return 4;
+}
+
+function estimateTotalPrice(
+  materials: Array<{ name: string; quantity: string | null; required: boolean }>,
+): { total: number; primeEligible: number; itemCount: number } {
+  let total = 0;
+  let primeEligible = 0;
+  const purchasable = materials.filter((m) => {
+    const price = estimateMaterialPrice(m.name);
+    return price > 0; // Skip free items like water, cardboard
+  });
+  for (const mat of purchasable) {
+    const price = estimateMaterialPrice(mat.name);
+    total += price;
+    if (price >= 3) primeEligible++; // Items $3+ typically Prime eligible
+  }
+  return { total, primeEligible, itemCount: purchasable.length };
+}
+
 function detectPlatform(url: string): string {
   if (!url) return "other";
   if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
@@ -617,48 +702,63 @@ export default function PlayLabPage() {
               <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 <ShoppingCart className="h-3 w-3" /> Materials
               </p>
+              {/* Per-material chips — each tappable to Amazon */}
               <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                 {extractedResult.materials.map((mat, i) => (
-                  <div
+                  <a
                     key={i}
-                    className="flex items-center gap-2 rounded-lg border-[0.5px] border-border bg-card px-3 py-2"
+                    href={buildMaterialSearchUrl(mat.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Find on Amazon"
+                    className="group flex items-center gap-2 rounded-lg border-[0.5px] border-border bg-card px-3 py-2 transition-colors hover:bg-amber-50 hover:border-amber-200 hover:underline hover:decoration-amber-300"
                   >
                     <span
                       className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${mat.required ? "bg-play" : "bg-muted-foreground/30"}`}
                     />
                     <span className="text-sm text-foreground">{mat.name}</span>
                     {mat.quantity && (
-                      <span className="ml-auto text-xs text-muted-foreground">{mat.quantity}</span>
+                      <span className="text-xs text-muted-foreground">{mat.quantity}</span>
                     )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Amazon shopping CTA — preview before save */}
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                {extractedResult.materials.map((mat, i) => (
-                  <a
-                    key={i}
-                    href={`https://www.amazon.com/s?k=${encodeURIComponent(mat.name)}&tag=kinloop-20`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border-[0.5px] border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-800 transition-colors hover:bg-amber-100 hover:border-amber-300"
-                  >
-                    <ShoppingBag className="h-3 w-3" />
-                    {mat.name}
+                    <ExternalLink className="ml-auto h-3 w-3 flex-shrink-0 text-muted-foreground/30 transition-colors group-hover:text-amber-600" />
                   </a>
                 ))}
               </div>
-              <a
-                href={buildShopAllUrl(extractedResult.materials, extractedResult.title)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1.5 rounded-xl border-[0.5px] border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-100"
-              >
-                <ShoppingBag className="h-3.5 w-3.5" />
-                Shop all materials on Amazon
-                <ExternalLink className="h-3 w-3 opacity-50" />
-              </a>
+
+              {/* Price estimate line */}
+              {(() => {
+                const est = estimateTotalPrice(extractedResult.materials);
+                return est.itemCount > 0 ? (
+                  <p className="mt-3 text-[11px] text-muted-foreground">
+                    Estimated total: <span className="font-medium text-foreground">${est.total}</span> on Amazon
+                    {est.primeEligible > 0 && (
+                      <> &middot; {est.primeEligible} item{est.primeEligible !== 1 ? "s" : ""} eligible for Prime</>
+                    )}
+                  </p>
+                ) : null;
+              })()}
+
+              {/* Prominent bulk CTA — dark pill button */}
+              {(() => {
+                const est = estimateTotalPrice(extractedResult.materials);
+                return (
+                  <div className="mt-2">
+                    <Button asChild className="text-[14px] px-6 h-10">
+                      <a
+                        href={buildShopAllUrl(extractedResult.materials, extractedResult.title)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ShoppingBag className="mr-2 h-4 w-4" />
+                        Add {est.itemCount} item{est.itemCount !== 1 ? "s" : ""} to Amazon cart &middot; ~${est.total}
+                      </a>
+                    </Button>
+                    <p className="mt-1.5 text-[10px] text-muted-foreground/60">
+                      We earn from qualifying purchases.
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -814,26 +914,8 @@ export default function PlayLabPage() {
                           <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                             Materials
                           </p>
+                          {/* Per-material chips — each tappable to Amazon */}
                           <div className="flex flex-wrap gap-1.5">
-                            {(
-                              activity.materials as Array<{
-                                name: string;
-                                quantity: string | null;
-                                required: boolean;
-                              }>
-                            ).map((mat, i) => (
-                              <span
-                                key={i}
-                                className="rounded-lg bg-background-secondary px-2 py-1 text-xs"
-                              >
-                                {mat.name}
-                                {mat.quantity && ` (${mat.quantity})`}
-                              </span>
-                            ))}
-                          </div>
-
-                          {/* Amazon shopping CTA — individual material links */}
-                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
                             {(
                               activity.materials as Array<{
                                 name: string;
@@ -843,31 +925,57 @@ export default function PlayLabPage() {
                             ).map((mat, i) => (
                               <a
                                 key={i}
-                                href={`https://www.amazon.com/s?k=${encodeURIComponent(mat.name)}&tag=kinloop-20`}
+                                href={buildMaterialSearchUrl(mat.name)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 rounded-lg border-[0.5px] border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-800 transition-colors hover:bg-amber-100 hover:border-amber-300"
+                                title="Find on Amazon"
+                                className="group inline-flex items-center gap-1 rounded-lg bg-background-secondary px-2 py-1 text-xs transition-colors hover:bg-amber-50 hover:underline hover:decoration-amber-300"
                               >
-                                <ShoppingBag className="h-3 w-3" />
-                                {mat.name}
+                                <span>
+                                  {mat.name}
+                                  {mat.quantity && ` (${mat.quantity})`}
+                                </span>
+                                <ExternalLink className="h-2.5 w-2.5 flex-shrink-0 text-muted-foreground/40 transition-colors group-hover:text-amber-600" />
                               </a>
                             ))}
                           </div>
 
-                          {/* Shop all materials button */}
-                          <a
-                            href={buildShopAllUrl(
-                              activity.materials as Array<{ name: string; quantity: string | null; required: boolean }>,
-                              activity.title
-                            )}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-2 inline-flex items-center gap-1.5 rounded-xl border-[0.5px] border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-100"
-                          >
-                            <ShoppingBag className="h-3.5 w-3.5" />
-                            Shop all materials on Amazon
-                            <ExternalLink className="h-3 w-3 opacity-50" />
-                          </a>
+                          {/* Price estimate line */}
+                          {(() => {
+                            const mats = activity.materials as Array<{ name: string; quantity: string | null; required: boolean }>;
+                            const est = estimateTotalPrice(mats);
+                            return est.itemCount > 0 ? (
+                              <p className="mt-3 text-[11px] text-muted-foreground">
+                                Estimated total: <span className="font-medium text-foreground">${est.total}</span> on Amazon
+                                {est.primeEligible > 0 && (
+                                  <> &middot; {est.primeEligible} item{est.primeEligible !== 1 ? "s" : ""} eligible for Prime</>
+                                )}
+                              </p>
+                            ) : null;
+                          })()}
+
+                          {/* Prominent bulk CTA — dark pill button */}
+                          {(() => {
+                            const mats = activity.materials as Array<{ name: string; quantity: string | null; required: boolean }>;
+                            const est = estimateTotalPrice(mats);
+                            return (
+                              <div className="mt-2">
+                                <Button asChild className="text-[14px] px-6 h-10">
+                                  <a
+                                    href={buildShopAllUrl(mats, activity.title)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <ShoppingBag className="mr-2 h-4 w-4" />
+                                    Add {est.itemCount} item{est.itemCount !== 1 ? "s" : ""} to Amazon cart &middot; ~${est.total}
+                                  </a>
+                                </Button>
+                                <p className="mt-1.5 text-[10px] text-muted-foreground/60">
+                                  We earn from qualifying purchases.
+                                </p>
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
 
