@@ -380,6 +380,78 @@ export interface Database {
         };
         Relationships: [];
       };
+      user_settings: {
+        Row: {
+          id: string;
+          user_id: string;
+          setting_key: string;
+          setting_value: string | null;
+          created_at: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          setting_key: string;
+          setting_value?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          setting_key?: string;
+          setting_value?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      sent_emails: {
+        Row: {
+          id: string;
+          user_id: string;
+          child_id: string | null;
+          event_id: string | null;
+          recipient_email: string;
+          subject: string;
+          email_type: string;
+          ics_content: string | null;
+          resend_message_id: string | null;
+          status: string;
+          error_message: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          child_id?: string | null;
+          event_id?: string | null;
+          recipient_email: string;
+          subject: string;
+          email_type?: string;
+          ics_content?: string | null;
+          resend_message_id?: string | null;
+          status?: string;
+          error_message?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          child_id?: string | null;
+          event_id?: string | null;
+          recipient_email?: string;
+          subject?: string;
+          email_type?: string;
+          ics_content?: string | null;
+          resend_message_id?: string | null;
+          status?: string;
+          error_message?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
