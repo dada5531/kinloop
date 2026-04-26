@@ -17,7 +17,7 @@ interface QuadrantCardProps {
   className?: string;
 }
 
-const accentClasses = {
+const accentBarClasses = {
   scheduler: "bg-scheduler",
   development: "bg-development",
   play: "bg-play",
@@ -29,6 +29,14 @@ const labelClasses = {
   development: "text-development",
   play: "text-play",
   coach: "text-coach",
+} as const;
+
+/* 4% accent wash per quadrant — subtle background tint */
+const washClasses = {
+  scheduler: "bg-scheduler/[0.04] hover:bg-scheduler/[0.08]",
+  development: "bg-development/[0.04] hover:bg-development/[0.08]",
+  play: "bg-play/[0.04] hover:bg-play/[0.08]",
+  coach: "bg-coach/[0.04] hover:bg-coach/[0.08]",
 } as const;
 
 export function QuadrantCard({
@@ -44,12 +52,15 @@ export function QuadrantCard({
     <Link href={href} className="group block">
       <div
         className={cn(
-          "relative overflow-hidden rounded-xl border-[0.5px] border-border bg-card p-6 transition-colors duration-150 ease-out hover:bg-background-secondary",
+          "relative overflow-hidden rounded-xl border border-[#E8E2D5] p-6",
+          "transition-all duration-200 ease-out",
+          "hover:scale-[1.005] hover:shadow-[0_4px_12px_rgba(0,0,0,0.04)]",
+          washClasses[accentColor],
           className,
         )}
       >
         {/* Colored left-edge bar */}
-        <div className={cn("absolute bottom-0 left-0 top-0 w-1", accentClasses[accentColor])} />
+        <div className={cn("absolute bottom-0 left-0 top-0 w-1", accentBarClasses[accentColor])} />
 
         {/* Header row */}
         <div className="mb-3 flex items-start justify-between">

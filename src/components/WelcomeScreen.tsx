@@ -8,7 +8,7 @@ import { useChild } from "@/components/providers/ChildProvider";
  * WelcomeScreen — Full-screen overlay shown once per session when
  * the user first lands on the dashboard.
  *
- * Hierarchy: Photo (dominant) → Greeting line → Child name + age (tertiary)
+ * Hierarchy: Photo (dominant, 480px desktop / 320px mobile) → Greeting → Child name + age
  * Duration: 7 seconds with progress bar, tap/click/Escape to dismiss early.
  * Transitions: 400ms ease-out fade-in, 500ms ease-out fade-out (cinematic).
  */
@@ -86,36 +86,40 @@ export function WelcomeScreen() {
       {/* Background — warm gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background-secondary" />
 
-      {/* Content — photo-dominant layout */}
-      <div className="relative flex flex-col items-center px-6 text-center">
-        {/* Photo or initial circle — DOMINANT */}
+      {/* Content — photo-dominant layout, pushed slightly above center */}
+      <div className="relative flex flex-col items-center px-6 text-center" style={{ marginTop: "-5vh" }}>
+        {/* Photo — DOMINANT: 480px desktop, 320px mobile */}
         <div
-          className={`mb-10 overflow-hidden rounded-3xl shadow-xl transition-transform ease-out ${
+          className={`overflow-hidden rounded-2xl shadow-xl transition-transform ease-out ${
             fadeOut
               ? "scale-95 duration-500"
               : fadeIn
                 ? "scale-100 duration-700"
                 : "scale-90 duration-700"
-          } ${
-            hasPhoto
-              ? "h-60 w-60 sm:h-72 sm:w-72 md:h-80 md:w-80"
-              : "h-40 w-40 sm:h-48 sm:w-48 md:h-56 md:w-56"
           }`}
+          style={{ borderRadius: "16px" }}
         >
           {hasPhoto ? (
             <img
               src={selectedChild.photo_url!}
               alt={selectedChild.name}
-              className="h-full w-full object-cover"
+              className="h-[320px] w-auto max-w-[90vw] object-cover sm:h-[400px] md:h-[480px]"
+              style={{ minWidth: "280px" }}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-scheduler/10">
-              <span className="text-6xl font-semibold text-scheduler sm:text-7xl md:text-8xl">
+            <div
+              className="flex items-center justify-center bg-scheduler/10"
+              style={{ width: "320px", height: "320px" }}
+            >
+              <span className="text-7xl font-semibold text-scheduler sm:text-8xl md:text-9xl">
                 {selectedChild.name.charAt(0)}
               </span>
             </div>
           )}
         </div>
+
+        {/* 32px gap between photo and greeting */}
+        <div style={{ height: "32px" }} />
 
         {/* Greeting line — 28-32px, weight 400, sentence case */}
         <p

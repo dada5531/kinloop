@@ -88,3 +88,44 @@
 - [x] Full Resend API response saved to resend-delivery-proof.txt
 - [x] User confirmed: email arrived in inbox, .ics opens correctly, adds event at right date/time
 - [x] PR-C merged (#30)
+
+## v1.6 Stage B — Design Warmth (illustrations, microinteractions, card warmth)
+
+### Ask 1 — Welcome Screen: Bigger Photo
+- [ ] Desktop: photo at least 480px tall, occupying upper 50-55% of viewport
+- [ ] Mobile: photo at least 320px tall, dominating upper 60% of viewport
+- [ ] Keep rounded corners (16px) and soft shadow
+- [ ] Increase vertical whitespace between photo and greeting to ~32px
+
+### Ask 2 — Landing Page: Abeto-Inspired Redesign
+- [ ] Massive Fraunces headline (64-80px desktop, 36-44px mobile): "Less chaos. More childhood."
+- [ ] Single supporting line in Inter, ~18px, muted, max 80 chars
+- [ ] Two CTAs: primary "Get started" (dark pill) + secondary "Sign in" (ghost link with arrow)
+- [ ] Remove 4 quadrant cards from above-fold (or push below fold as secondary section)
+- [ ] Headline letters fade in with 30ms stagger, total <600ms
+- [ ] Single small decorative element (botanical sprig or similar)
+
+### Ask 3 — Hand-Drawn Illustrations
+- [ ] Illustration style: hand-drawn, toddler-life themed, soft pastel fills, 1.5-2px stroke, SVG
+- [ ] All illustrations in /src/components/illustrations/ as React SVG components
+- [ ] 1. Welcome screen: soft botanical/object motif framing photo at 20% opacity
+- [ ] 2. Landing page: single subtle decorative element
+- [ ] 3. Dashboard header: time-of-day illustration (~80px) with subtle drift animation
+- [ ] 4. Empty states: custom illustration per quadrant (~180px tall)
+- [ ] 5. Achievement moments: micro-illustrations that animate in for ~1.5s
+- [ ] 6. Play Lab activity cards: small themed illustration (~40px) per category
+- [ ] 7. Coach tip cards: small thematic illustration in card corner
+- [ ] 8. Development Hub milestones: themed illustration replacing checkmark when achieved
+
+### Ask 4 — Card Warmth
+- [ ] Each quadrant card gets 4% opacity wash of its accent color
+- [ ] Border color shifts to warm-gray #E8E2D5
+- [ ] Hover: wash deepens to 8%, card lifts with soft shadow (0 4px 12px rgba(0,0,0,0.04))
+- [ ] Selected/active states: 2px border in quadrant accent at full opacity
+
+### Ask 5 — Microinteractions
+- [ ] Card hover: scale 1.005 + warmth wash, 200ms ease-out
+- [ ] Button press: scale 0.98 + brief color deepening, 100ms
+- [ ] Save/schedule actions: success icon grows in + accent flush + achievement micro-illustration
+- [ ] Tab switches: 250ms ease-out cross-fade
+- [ ] Timeline entries: fade-in on load with 50ms stagger
