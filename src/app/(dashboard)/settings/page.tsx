@@ -85,7 +85,7 @@ export default function SettingsPage() {
     <div className="animate-fade-in">
       {/* Page header */}
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-foreground">Settings</h1>
+        <h1 className="font-serif-display text-xl font-semibold text-foreground">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">Configure your Kinloop preferences</p>
       </div>
 

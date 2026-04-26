@@ -55,7 +55,7 @@
 - [x] Move deferred items (FHIR, HealthKit, Instacart, multi-user auth, Clerk) to ROADMAP.md as Series A milestones
 - [x] Add domain-verification status check to /api/health/email (warn when RESEND_FROM_EMAIL is onboarding@resend.dev)
 - [x] Document custom-domain Resend setup as v1.8 task in CLAUDE.md and ROADMAP.md (DNS records, Resend dashboard config checklist)
-- [ ] Tag v1.5.0 release on GitHub
+- [x] Tag v1.5.0 release on GitHub
 
 ## v1.6 Stage A — Color and Typography Token Changes
 - [ ] Warm cream backgrounds (replace cool grays)

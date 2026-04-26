@@ -589,7 +589,7 @@ export default function SchedulerPage() {
               Scheduler
             </span>
           </div>
-          <h1 className="text-xl font-semibold text-foreground">Events &amp; deadlines</h1>
+          <h1 className="font-serif-display text-xl font-semibold text-foreground">Events &amp; deadlines</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Paste emails, upload .msg/.eml files, or drag documents — AI extracts events, deadlines
             &amp; action items

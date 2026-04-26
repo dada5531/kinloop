@@ -84,6 +84,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "Inter", "system-ui", "-apple-system", "sans-serif"],
+        "serif-display": ["var(--font-serif)", "Fraunces", "Georgia", "Times New Roman", "serif"],
       },
       keyframes: {
         "accordion-down": {

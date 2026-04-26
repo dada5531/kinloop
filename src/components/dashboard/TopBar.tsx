@@ -91,7 +91,7 @@ export function TopBar() {
           <div className="flex items-center gap-8">
             <Link
               href="/dashboard"
-              className="text-base font-semibold tracking-tight text-foreground"
+              className="font-serif-display text-base font-semibold tracking-tight text-foreground"
             >
               kin<span className="font-normal text-muted-foreground">loop</span>
             </Link>

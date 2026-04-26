@@ -7,7 +7,7 @@ export default function LandingPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="mx-auto max-w-2xl text-center">
-        <h1 className="text-4xl font-semibold tracking-tight text-foreground">
+        <h1 className="font-serif-display text-4xl font-semibold tracking-tight text-foreground">
           kin<span className="font-normal text-muted-foreground">loop</span>
         </h1>
         <p className="mx-auto mt-6 max-w-lg text-base leading-relaxed text-muted-foreground">

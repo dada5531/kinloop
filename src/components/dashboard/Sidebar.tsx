@@ -48,7 +48,7 @@ export function Sidebar() {
 
   const sidebarContent = (
     <>
-      <Link href="/dashboard" className="text-base font-semibold tracking-tight text-foreground">
+      <Link href="/dashboard" className="font-serif-display text-base font-semibold tracking-tight text-foreground">
         kin<span className="font-normal text-muted-foreground">loop</span>
       </Link>
 
@@ -154,7 +154,7 @@ export function Sidebar() {
 
       {/* Mobile header */}
       <div className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between border-b-[0.5px] border-border bg-card px-4 py-3 lg:hidden">
-        <Link href="/dashboard" className="text-base font-semibold tracking-tight text-foreground">
+        <Link href="/dashboard" className="font-serif-display text-base font-semibold tracking-tight text-foreground">
           kin<span className="font-normal text-muted-foreground">loop</span>
         </Link>
         <div className="flex items-center gap-2">

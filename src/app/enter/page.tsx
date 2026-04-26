@@ -44,7 +44,7 @@ function EnterForm() {
       <div className="animate-fade-in w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+          <h1 className="font-serif-display text-3xl font-semibold tracking-tight text-foreground">
             kin<span className="font-normal text-muted-foreground">loop</span>
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">Demo access for HBS preview</p>

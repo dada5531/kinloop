@@ -104,7 +104,7 @@ export default function DashboardPage() {
     <div className="animate-fade-in">
       {/* Page header */}
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-foreground md:text-2xl">
+        <h1 className="font-serif-display text-xl font-semibold text-foreground md:text-2xl">
           {selectedChild ? `${greeting}, ${selectedChild.name.split(" ")[0]}` : greeting}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">

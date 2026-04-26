@@ -119,7 +119,7 @@ export function WelcomeScreen() {
 
         {/* Greeting line — 28-32px, weight 400, sentence case */}
         <p
-          className={`mb-3 text-[28px] font-normal tracking-tight text-foreground transition-all ease-out sm:text-[30px] md:text-[32px] ${
+          className={`font-serif-display mb-3 text-[28px] font-normal tracking-tight text-foreground transition-all ease-out sm:text-[30px] md:text-[32px] ${
             fadeOut
               ? "translate-y-2 opacity-0 duration-500"
               : fadeIn

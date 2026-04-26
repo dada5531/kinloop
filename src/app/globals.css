@@ -4,62 +4,62 @@
 
 @layer base {
   :root {
-    /* Page & surface */
-    --background: 40 20% 96%;
-    --background-secondary: 40 15% 93%;
-    --background-tertiary: 40 10% 90%;
-    --foreground: 0 0% 13%;
+    /* Page & surface — warm cream tones */
+    --background: 38 35% 96%;
+    --background-secondary: 36 28% 93%;
+    --background-tertiary: 34 22% 90%;
+    --foreground: 30 8% 15%;
 
-    /* Cards */
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 13%;
+    /* Cards — warm white */
+    --card: 40 30% 99%;
+    --card-foreground: 30 8% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 13%;
+    --popover: 40 30% 99%;
+    --popover-foreground: 30 8% 15%;
 
-    /* Primary — dark charcoal for pill buttons */
-    --primary: 50 4% 17%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary — warm charcoal (slightly brown-tinted) */
+    --primary: 30 6% 20%;
+    --primary-foreground: 40 30% 99%;
 
     /* Secondary */
-    --secondary: 40 15% 93%;
-    --secondary-foreground: 0 0% 13%;
+    --secondary: 36 28% 93%;
+    --secondary-foreground: 30 8% 15%;
 
     /* Muted */
-    --muted: 40 12% 93%;
-    --muted-foreground: 0 0% 46%;
+    --muted: 36 22% 92%;
+    --muted-foreground: 25 6% 50%;
 
     /* Accent */
-    --accent: 40 15% 93%;
-    --accent-foreground: 0 0% 13%;
+    --accent: 36 28% 93%;
+    --accent-foreground: 30 8% 15%;
 
     /* Destructive */
-    --destructive: 0 84% 60%;
+    --destructive: 4 72% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders — thin, subtle */
-    --border: 30 10% 88%;
-    --input: 30 10% 88%;
-    --ring: 262 47% 55%;
+    /* Borders — warm, slightly visible */
+    --border: 32 18% 87%;
+    --input: 32 18% 87%;
+    --ring: 262 40% 58%;
 
     --radius: 0.75rem;
 
-    /* KINLOOP Quadrant accent colors — used as subtle bars and indicators */
-    --scheduler: 262 47% 55%;
+    /* KINLOOP Quadrant accent colors — warmer, softer pastels */
+    --scheduler: 262 38% 58%;
     --scheduler-foreground: 0 0% 100%;
-    --scheduler-muted: 262 25% 96%;
+    --scheduler-muted: 262 30% 95%;
 
-    --development: 168 40% 45%;
+    --development: 164 35% 48%;
     --development-foreground: 0 0% 100%;
-    --development-muted: 168 20% 96%;
+    --development-muted: 164 25% 95%;
 
-    --play: 15 70% 60%;
+    --play: 18 65% 62%;
     --play-foreground: 0 0% 100%;
-    --play-muted: 15 40% 96%;
+    --play-muted: 18 45% 95%;
 
-    --coach: 340 45% 60%;
+    --coach: 338 40% 62%;
     --coach-foreground: 0 0% 100%;
-    --coach-muted: 340 25% 96%;
+    --coach-muted: 338 30% 95%;
   }
 }
 
@@ -77,10 +77,10 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Typography — tightened letter-spacing */
+  /* Typography — tightened letter-spacing for body */
   h1,
   h2 {
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
   h3,
@@ -98,6 +98,9 @@
     letter-spacing: -0.005em;
   }
 }
+
+/* Utility class for serif headings (Fraunces) — uses Tailwind config font-serif-display */
+/* The font-serif-display class is defined in tailwind.config.ts fontFamily */
 
 /* Skeleton shimmer animation */
 @keyframes shimmer {

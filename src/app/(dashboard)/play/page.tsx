@@ -649,7 +649,7 @@ export default function PlayLabPage() {
                 Play Lab
               </span>
             </div>
-            <h1 className="text-xl font-semibold text-foreground">Activity library</h1>
+            <h1 className="font-serif-display text-xl font-semibold text-foreground">Activity library</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Paste a link from YouTube, TikTok, Instagram, Pinterest, or any blog — AI extracts a
               structured activity plan

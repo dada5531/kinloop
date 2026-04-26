@@ -867,7 +867,7 @@ export default function DevelopmentPage() {
               Development Hub
             </span>
           </div>
-          <h1 className="text-xl font-semibold text-foreground">
+          <h1 className="font-serif-display text-xl font-semibold text-foreground">
             {selectedChild?.name}&apos;s growth &amp; milestones
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
