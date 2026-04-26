@@ -24,6 +24,9 @@ import {
   CalendarPlus,
   Baby,
   ShoppingBag,
+  Bell,
+  Pencil,
+  Calendar,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
@@ -406,11 +409,17 @@ export default function PlayLabPage() {
   const [canRetryManual, setCanRetryManual] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fix 6: Schedule CTA state
+  // Schedule modal state (PR-C enhanced)
   const [schedulingActivityId, setSchedulingActivityId] = useState<string | null>(null);
   const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("10:00");
+  const [scheduleNotes, setScheduleNotes] = useState("");
+  const [scheduleReminder, setScheduleReminder] = useState<number | null>(15); // minutes before
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [scheduleSuccess, setScheduleSuccess] = useState<string | null>(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleActivityTitle, setScheduleActivityTitle] = useState("");
+  const [scheduleActivityDuration, setScheduleActivityDuration] = useState<number | null>(null);
 
   // Fetch activities
   const fetchActivities = useCallback(async () => {
@@ -531,38 +540,64 @@ export default function PlayLabPage() {
     }
   };
 
-  // Fix 6: Schedule activity handler
-  const handleScheduleActivity = async (activityId: string, activityTitle: string) => {
-    if (!scheduleDate || !selectedChildId) return;
+  // Open schedule modal for an activity
+  const openScheduleModal = (activityId: string, activityTitle: string, durationMin: number | null) => {
+    setSchedulingActivityId(activityId);
+    setScheduleActivityTitle(activityTitle);
+    setScheduleActivityDuration(durationMin);
+    setScheduleDate("");
+    setScheduleTime("10:00");
+    setScheduleNotes("");
+    setScheduleReminder(15);
+    setShowScheduleModal(true);
+  };
+
+  // Enhanced schedule activity handler (PR-C)
+  const handleScheduleActivity = async () => {
+    if (!scheduleDate || !schedulingActivityId || !selectedChildId) return;
     setScheduleSaving(true);
 
     try {
-      // Create an event in the scheduler
+      const startISO = `${scheduleDate}T${scheduleTime}:00`;
+      // Calculate end time from activity duration
+      let endISO: string | null = null;
+      if (scheduleActivityDuration) {
+        const start = new Date(startISO);
+        const end = new Date(start.getTime() + scheduleActivityDuration * 60 * 1000);
+        endISO = end.toISOString();
+      }
+
+      // Create an event in the scheduler (cross-quadrant)
       const res = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           childId: selectedChildId,
-          title: `🎨 ${activityTitle}`,
-          startTime: `${scheduleDate}T10:00:00`,
+          title: `\uD83C\uDFA8 ${scheduleActivityTitle}`,
+          startTime: startISO,
+          endTime: endISO,
           source: "play_lab",
           sourceLabel: "Play Lab",
           status: "approved",
+          rawContent: scheduleNotes || null,
         }),
       });
 
       if (res.ok) {
-        // Also update the activity's scheduled_for field
-        await fetch(`/api/activities?activityId=${activityId}`, {
+        // Update the activity's scheduled_for field
+        await fetch(`/api/activities?activityId=${schedulingActivityId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ scheduledFor: scheduleDate }),
+          body: JSON.stringify({ scheduledFor: startISO }),
         });
 
-        setScheduleSuccess(activityId);
+        setScheduleSuccess(schedulingActivityId);
+        setShowScheduleModal(false);
         setSchedulingActivityId(null);
         setScheduleDate("");
-        setTimeout(() => setScheduleSuccess(null), 3000);
+        setScheduleTime("10:00");
+        setScheduleNotes("");
+        setTimeout(() => setScheduleSuccess(null), 5000);
         fetchActivities();
       }
     } catch {
@@ -600,6 +635,113 @@ export default function PlayLabPage() {
           </Button>
         </div>
       </div>
+
+      {/* ─── Upcoming & Past Scheduled Activities (PR-C) ─── */}
+      {(() => {
+        const now = new Date();
+        const scheduled = activities.filter((a) => a.scheduled_for);
+        const upcoming = scheduled
+          .filter((a) => new Date(a.scheduled_for!) >= now)
+          .sort((a, b) => new Date(a.scheduled_for!).getTime() - new Date(b.scheduled_for!).getTime());
+        const past = scheduled
+          .filter((a) => new Date(a.scheduled_for!) < now)
+          .sort((a, b) => new Date(b.scheduled_for!).getTime() - new Date(a.scheduled_for!).getTime());
+
+        if (scheduled.length === 0) return null;
+
+        return (
+          <div className="mb-6">
+            {/* Upcoming */}
+            {upcoming.length > 0 && (
+              <div className="mb-3">
+                <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  <Calendar className="h-3 w-3" /> Upcoming activities
+                </p>
+                <div className="space-y-2">
+                  {upcoming.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-center gap-3 rounded-xl border-[0.5px] border-green-200 bg-green-50/50 p-3 transition-colors hover:bg-green-50"
+                    >
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-green-100">
+                        <CalendarPlus className="h-3.5 w-3.5 text-green-700" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">{a.title}</p>
+                        <p className="text-xs text-green-700">
+                          {new Date(a.scheduled_for!).toLocaleDateString("en-US", {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                          {" at "}
+                          {new Date(a.scheduled_for!).toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}
+                          {a.duration_minutes && (
+                            <span className="text-green-600"> · {a.duration_minutes} min</span>
+                          )}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 border-green-200 text-xs text-green-700 hover:bg-green-100"
+                        onClick={() => {
+                          setExpandedActivityId(a.id);
+                          // Scroll to the card
+                          document.getElementById(`activity-${a.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }}
+                      >
+                        Open
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Past (collapsed) */}
+            {past.length > 0 && (
+              <details className="group">
+                <summary className="mb-2 flex cursor-pointer items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                  <Check className="h-3 w-3" /> Done ({past.length})
+                  <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="space-y-1.5">
+                  {past.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-center gap-3 rounded-lg border-[0.5px] border-border bg-background-secondary/50 p-2.5 opacity-70"
+                    >
+                      <Check className="h-3.5 w-3.5 flex-shrink-0 text-green-500" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-muted-foreground">{a.title}</p>
+                        <p className="text-[10px] text-muted-foreground/60">
+                          {new Date(a.scheduled_for!).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                      </div>
+                      <button
+                        className="text-[10px] text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          setExpandedActivityId(a.id);
+                          document.getElementById(`activity-${a.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }}
+                      >
+                        View
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Extraction error with manual-paste escape hatch */}
       {extractionError && (
@@ -829,7 +971,7 @@ export default function PlayLabPage() {
             {activities.map((activity) => {
               const isExpanded = expandedActivityId === activity.id;
               return (
-                <div key={activity.id} className="rounded-xl border-[0.5px] border-border bg-card">
+                <div key={activity.id} id={`activity-${activity.id}`} className="rounded-xl border-[0.5px] border-border bg-card">
                   <button
                     onClick={() => setExpandedActivityId(isExpanded ? null : activity.id)}
                     className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-background-secondary"
@@ -1019,52 +1161,46 @@ export default function PlayLabPage() {
                         </div>
                       )}
 
-                      {/* Fix 6: Schedule CTA */}
+                      {/* Schedule CTA (PR-C enhanced) */}
                       <div className="border-t-[0.5px] border-border pt-3">
                         {scheduleSuccess === activity.id ? (
-                          <div className="flex items-center gap-2 text-sm text-green-600">
-                            <Check className="h-4 w-4" />
-                            Scheduled! Check your calendar.
+                          <div className="flex items-center gap-2 rounded-lg border-[0.5px] border-green-200 bg-green-50 px-3 py-2">
+                            <Check className="h-4 w-4 text-green-600" />
+                            <span className="text-sm font-medium text-green-700">
+                              Scheduled for {activity.scheduled_for ? new Date(activity.scheduled_for).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : "soon"}
+                            </span>
                           </div>
-                        ) : schedulingActivityId === activity.id ? (
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="date"
-                              value={scheduleDate}
-                              onChange={(e) => setScheduleDate(e.target.value)}
-                              min={new Date().toISOString().split("T")[0]}
-                              className="rounded-lg border-[0.5px] border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-play/30"
-                            />
-                            <Button
-                              size="sm"
-                              className="h-8"
-                              onClick={() => handleScheduleActivity(activity.id, activity.title)}
-                              disabled={!scheduleDate || scheduleSaving}
+                        ) : activity.scheduled_for ? (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 rounded-lg border-[0.5px] border-green-200 bg-green-50 px-3 py-2">
+                              <Calendar className="h-3.5 w-3.5 text-green-600" />
+                              <span className="text-xs font-medium text-green-700">
+                                Scheduled for{" "}
+                                {new Date(activity.scheduled_for).toLocaleDateString("en-US", {
+                                  weekday: "short",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                                {" at "}
+                                {new Date(activity.scheduled_for).toLocaleTimeString("en-US", {
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => openScheduleModal(activity.id, activity.title, activity.duration_minutes)}
+                              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
                             >
-                              {scheduleSaving ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                "Save"
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8"
-                              onClick={() => {
-                                setSchedulingActivityId(null);
-                                setScheduleDate("");
-                              }}
-                            >
-                              Cancel
-                            </Button>
+                              <Pencil className="h-3 w-3" /> Edit
+                            </button>
                           </div>
                         ) : (
                           <Button
                             variant="outline"
                             size="sm"
                             className="h-8 text-xs"
-                            onClick={() => setSchedulingActivityId(activity.id)}
+                            onClick={() => openScheduleModal(activity.id, activity.title, activity.duration_minutes)}
                           >
                             <CalendarPlus className="mr-1.5 h-3.5 w-3.5" />
                             Schedule for...
@@ -1198,6 +1334,133 @@ export default function PlayLabPage() {
                 ) : (
                   <>
                     <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Extract with AI
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Schedule Modal (PR-C) ─────────────────────────────── */}
+      {showScheduleModal && (
+        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => !scheduleSaving && setShowScheduleModal(false)}
+          />
+          <div className="relative mx-4 w-full max-w-md rounded-2xl border-[0.5px] border-border bg-card p-6">
+            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
+              <CalendarPlus className="h-4 w-4 text-play" />
+              Schedule activity
+            </h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              {scheduleActivityTitle}
+            </p>
+
+            <div className="space-y-3">
+              {/* Date picker */}
+              <div>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full rounded-xl border-[0.5px] border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-play/30"
+                />
+              </div>
+
+              {/* Time picker */}
+              <div>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  Time
+                </label>
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="w-full rounded-xl border-[0.5px] border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-play/30"
+                />
+              </div>
+
+              {/* Duration auto-fill */}
+              {scheduleActivityDuration && (
+                <div className="flex items-center gap-2 rounded-lg border-[0.5px] border-border bg-background-secondary px-3 py-2">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    Duration: <span className="font-medium text-foreground">{scheduleActivityDuration} min</span>
+                    {scheduleDate && scheduleTime && (
+                      <> &middot; Ends at{" "}
+                        {(() => {
+                          const start = new Date(`${scheduleDate}T${scheduleTime}:00`);
+                          const end = new Date(start.getTime() + scheduleActivityDuration * 60 * 1000);
+                          return end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+                        })()}
+                      </>
+                    )}
+                  </span>
+                </div>
+              )}
+
+              {/* Notes */}
+              <div>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  Notes <span className="font-normal normal-case text-muted-foreground/60">(optional)</span>
+                </label>
+                <textarea
+                  value={scheduleNotes}
+                  onChange={(e) => setScheduleNotes(e.target.value)}
+                  placeholder="Any prep notes, who's joining, etc."
+                  rows={3}
+                  className="w-full resize-none rounded-xl border-[0.5px] border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-play/30"
+                />
+              </div>
+
+              {/* Reminder toggle */}
+              <div>
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  <Bell className="mr-1 inline h-3 w-3" /> Reminder
+                </label>
+                <div className="flex gap-2">
+                  {[null, 15, 30, 60].map((mins) => (
+                    <button
+                      key={mins ?? "none"}
+                      onClick={() => setScheduleReminder(mins)}
+                      className={`rounded-lg border-[0.5px] px-3 py-1.5 text-xs font-medium transition-colors ${
+                        scheduleReminder === mins
+                          ? "border-play bg-play-muted text-play"
+                          : "border-border bg-background text-muted-foreground hover:bg-background-secondary"
+                      }`}
+                    >
+                      {mins === null ? "None" : `${mins} min`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setShowScheduleModal(false)}
+                disabled={scheduleSaving}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleScheduleActivity}
+                disabled={!scheduleDate || scheduleSaving}
+              >
+                {scheduleSaving ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Saving...
+                  </>
+                ) : (
+                  <>
+                    <CalendarPlus className="mr-1.5 h-3.5 w-3.5" /> Schedule
                   </>
                 )}
               </Button>

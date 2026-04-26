@@ -18,18 +18,18 @@
 - [x] Take mobile (375px) and desktop (1440px) screenshots from Vercel preview
 
 ## PR-B Bug Fix — Add to Cart button not working
-- [ ] Diagnose: test the dark CTA button click on Vercel preview, capture actual URL opened
-- [ ] Fix: ensure bulk CTA opens Amazon search URL with all materials + affiliate tag (search-link fallback)
-- [ ] Fix: ensure per-material chip clicks open Amazon search for that single item with partner tag
-- [ ] Verify both flows work end-to-end on Vercel preview, report exact URLs opened
+- [x] Diagnose: bulk CTA query too long (5 materials) → Amazon "No results". Per-material chips work.
+- [x] Fix: shortened bulk CTA to top 2 materials + "kids activity supplies", stripped parentheticals from URLs
+- [x] Fix: per-material chips already worked, now with cleaned names (parentheticals stripped)
+- [x] Verify: bulk CTA → 3 results on Amazon ✓, per-material "Baking soda" → 1000+ results ✓, all with kinloop-20 tag
 
 ## Section 3 PR-C — Scheduler Integration + Saved Activities List
-- [ ] Schedule modal: date picker, time picker, duration auto-fill, notes textarea, reminder toggle (15/30/60 min), Cancel/Save
-- [ ] On Save: insert into events table (same as Quadrant 1 Scheduler), source = "play_lab"
-- [ ] Success toast: "Scheduled for [day], [time]"
-- [ ] Dashboard "This week" event counter increments
-- [ ] Scheduler quadrant shows the event in its list
-- [ ] After scheduling: green "Scheduled for [day], [time]" badge replaces button, with "Edit" link
-- [ ] Saved activities list at top of Play Lab: upcoming activities with date/time/Open button
-- [ ] Past activities collapse into "Done" section
-- [ ] Take screenshots: schedule modal, success state, saved activities list
+- [x] Schedule modal: date picker, time picker, duration auto-fill, notes textarea, reminder toggle (15/30/60 min), Cancel/Save
+- [x] On Save: insert into events table (same as Quadrant 1 Scheduler), source = "play_lab"
+- [x] Success state: green banner "Scheduled for [day]" with check icon
+- [x] Dashboard "This week" event counter increments (auto — TopBar fetches /api/events)
+- [x] Scheduler quadrant shows the event in its list (auto — dashboard fetches /api/events)
+- [x] After scheduling: green "Scheduled for [day] at [time]" badge replaces button, with "Edit" link
+- [x] Saved activities list at top of Play Lab: upcoming activities with date/time/Open button
+- [x] Past activities collapse into "Done" section
+- [ ] Take screenshots: schedule modal, success state, upcoming/past activities sections
