@@ -23,6 +23,7 @@ import {
   FileText,
   CalendarPlus,
   Baby,
+  ShoppingBag,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
@@ -259,6 +260,17 @@ function LibrarySkeleton() {
       ))}
     </div>
   );
+}
+
+function buildShopAllUrl(
+  materials: Array<{ name: string; quantity: string | null; required: boolean }>,
+  activityTitle: string,
+): string {
+  const requiredMats = materials.filter((m) => m.required);
+  const matsToUse = requiredMats.length >= 2 ? requiredMats : materials;
+  const names = matsToUse.slice(0, 5).map((m) => m.name);
+  const query = [...names, "kids activity"].join(" ");
+  return `https://www.amazon.com/s?k=${encodeURIComponent(query)}&tag=kinloop-20`;
 }
 
 function detectPlatform(url: string): string {
@@ -621,6 +633,32 @@ export default function PlayLabPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Amazon shopping CTA — preview before save */}
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {extractedResult.materials.map((mat, i) => (
+                  <a
+                    key={i}
+                    href={`https://www.amazon.com/s?k=${encodeURIComponent(mat.name)}&tag=kinloop-20`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-lg border-[0.5px] border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-800 transition-colors hover:bg-amber-100 hover:border-amber-300"
+                  >
+                    <ShoppingBag className="h-3 w-3" />
+                    {mat.name}
+                  </a>
+                ))}
+              </div>
+              <a
+                href={buildShopAllUrl(extractedResult.materials, extractedResult.title)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 rounded-xl border-[0.5px] border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-100"
+              >
+                <ShoppingBag className="h-3.5 w-3.5" />
+                Shop all materials on Amazon
+                <ExternalLink className="h-3 w-3 opacity-50" />
+              </a>
             </div>
           )}
 
@@ -793,6 +831,43 @@ export default function PlayLabPage() {
                               </span>
                             ))}
                           </div>
+
+                          {/* Amazon shopping CTA — individual material links */}
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                            {(
+                              activity.materials as Array<{
+                                name: string;
+                                quantity: string | null;
+                                required: boolean;
+                              }>
+                            ).map((mat, i) => (
+                              <a
+                                key={i}
+                                href={`https://www.amazon.com/s?k=${encodeURIComponent(mat.name)}&tag=kinloop-20`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 rounded-lg border-[0.5px] border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-800 transition-colors hover:bg-amber-100 hover:border-amber-300"
+                              >
+                                <ShoppingBag className="h-3 w-3" />
+                                {mat.name}
+                              </a>
+                            ))}
+                          </div>
+
+                          {/* Shop all materials button */}
+                          <a
+                            href={buildShopAllUrl(
+                              activity.materials as Array<{ name: string; quantity: string | null; required: boolean }>,
+                              activity.title
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-1.5 rounded-xl border-[0.5px] border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-100"
+                          >
+                            <ShoppingBag className="h-3.5 w-3.5" />
+                            Shop all materials on Amazon
+                            <ExternalLink className="h-3 w-3 opacity-50" />
+                          </a>
                         </div>
                       )}
 
