@@ -231,4 +231,4 @@
 - [x] Create ambient SVG illustration components from reference (cloud/blob, plant/stem, diamond/star, small sun with rays)
 - [x] prefers-reduced-motion: centerpiece and drifts disabled, card/dots at final state immediately
 - [x] Mobile: centerpiece 240px, card padding smaller, dashboard drops ambient-3 and ambient-4
-- [ ] Send preview URL for review
+- [x] Send preview URL for review
