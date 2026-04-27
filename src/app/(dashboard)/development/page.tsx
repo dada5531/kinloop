@@ -25,6 +25,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 
 import { DevelopmentIcon } from "@/components/icons/QuadrantIcons";
 import { DevelopmentEmpty } from "@/components/illustrations/DevelopmentEmpty";
+import { AchievementMicro, MilestoneAchieved, MilestoneCognitive, MilestoneMotor, MilestoneLanguage, MilestoneSocial, QuadrantTransition, DevelopmentTransition } from "@/components/illustrations";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -120,22 +121,22 @@ function formatDate(dateStr: string): string {
   });
 }
 
-const CATEGORY_META: Record<string, { label: string; color: string; icon: typeof Brain }> = {
-  cognitive: { label: "Cognitive", color: "text-blue-600 bg-blue-50 border-blue-100", icon: Brain },
+const CATEGORY_META: Record<string, { label: string; color: string; icon: React.ComponentType<{ className?: string; size?: number }> }> = {
+  cognitive: { label: "Cognitive", color: "text-blue-600 bg-blue-50 border-blue-100", icon: MilestoneCognitive },
   motor: {
     label: "Motor",
     color: "text-emerald-600 bg-emerald-50 border-emerald-100",
-    icon: Activity,
+    icon: MilestoneMotor,
   },
   language: {
     label: "Language",
     color: "text-amber-600 bg-amber-50 border-amber-100",
-    icon: MessageCircle,
+    icon: MilestoneLanguage,
   },
   social: {
     label: "Social",
     color: "text-violet-600 bg-violet-50 border-violet-100",
-    icon: Sparkles,
+    icon: MilestoneSocial,
   },
 };
 
@@ -233,7 +234,7 @@ function MilestoneProgressRing({
       </div>
       <div className="text-center">
         <div className="flex items-center justify-center gap-1">
-          <Icon className="h-3 w-3" style={{ color: ringColor }} />
+          <Icon className="h-3 w-3" size={12} />
           <p className="text-xs font-medium text-foreground">{meta.label}</p>
         </div>
         <p className="text-[11px] text-muted-foreground">{Math.round(pct)}%</p>
@@ -510,6 +511,10 @@ export default function DevelopmentPage() {
   const [timelineFilter, setTimelineFilter] = useState<string>("all");
   const [expandedTimelineId, setExpandedTimelineId] = useState<string | null>(null);
 
+  // Achievement micro state
+  const [showAchievement, setShowAchievement] = useState(false);
+  // Transition state
+  const [showTransition, setShowTransition] = useState(true);
   // Modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalType, setAddModalType] = useState<"measurement" | "milestone">("measurement");
@@ -822,6 +827,9 @@ export default function DevelopmentPage() {
           achievedDate: status === "hit" ? new Date().toISOString().split("T")[0] : null,
         }),
       });
+      if (status === "hit") {
+        setShowAchievement(true);
+      }
       fetchData();
     } catch {
       // silently fail
@@ -858,6 +866,21 @@ export default function DevelopmentPage() {
   ];
 
   return (
+    <>
+      <AchievementMicro
+        illustration={<MilestoneAchieved size={64} />}
+        show={showAchievement}
+        onDismiss={() => setShowAchievement(false)}
+        label="Milestone achieved!"
+        position="center"
+      />
+      <QuadrantTransition
+        illustration={<DevelopmentTransition className="h-full w-full" />}
+        bgClass="bg-development-muted/80"
+        accentClass="ring-development/30"
+        play={showTransition}
+        onComplete={() => setShowTransition(false)}
+      >
     <div className="animate-fade-in">
       {/* ── Page Header ── */}
       <div className="mb-6 flex items-start justify-between">
@@ -963,7 +986,7 @@ export default function DevelopmentPage() {
 
       {/* ── Overview Tab ── */}
       {activeTab === "overview" && (
-        <div className="space-y-6">
+        <div className="animate-tab-crossfade space-y-6">
           {/* Vitals cards */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <VitalCard
@@ -1111,7 +1134,7 @@ export default function DevelopmentPage() {
 
       {/* ── Growth Tab ── */}
       {activeTab === "growth" && (
-        <div className="space-y-6">
+        <div className="animate-tab-crossfade space-y-6">
           <div className="rounded-xl border-[0.5px] border-border bg-card p-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">
@@ -1194,7 +1217,7 @@ export default function DevelopmentPage() {
 
       {/* ── Milestones Tab ── */}
       {activeTab === "milestones" && (
-        <div className="space-y-6">
+        <div className="animate-tab-crossfade space-y-6">
           {/* Filter pills */}
           <div className="flex gap-2">
             {["all", "cognitive", "motor", "language", "social"].map((cat) => (
@@ -1235,7 +1258,7 @@ export default function DevelopmentPage() {
                         {isHit ? (
                           <Check className="h-4 w-4 text-development" />
                         ) : (
-                          <meta.icon className="h-4 w-4 text-development/50" />
+                          <meta.icon className="text-development/50" size={16} />
                         )}
                       </div>
                       <div>
@@ -1294,7 +1317,7 @@ export default function DevelopmentPage() {
 
       {/* ── Timeline Tab ── */}
       {activeTab === "timeline" && (
-        <div className="space-y-4">
+        <div className="animate-tab-crossfade space-y-4">
           {/* Search + filter */}
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -1647,5 +1670,7 @@ export default function DevelopmentPage() {
         </div>
       )}
     </div>
+      </QuadrantTransition>
+    </>
   );
 }

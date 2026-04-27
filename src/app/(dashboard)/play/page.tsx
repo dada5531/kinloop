@@ -32,6 +32,7 @@ import { useState, useEffect, useCallback } from "react";
 
 import { PlayLabIcon } from "@/components/icons/QuadrantIcons";
 import { PlayLabEmpty } from "@/components/illustrations/PlayLabEmpty";
+import { AchievementMicro, ActivityScheduled, SensoryIcon, MotorIcon, CognitiveIcon, CreativeIcon, QuadrantTransition, PlayLabTransition } from "@/components/illustrations";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -147,7 +148,7 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 }
 
 function CategoryBadge({ category }: { category: string }) {
-  const icons: Record<string, string> = {
+  const emojiIcons: Record<string, string> = {
     sensory: "🧠",
     art: "🎨",
     stem: "🧪",
@@ -157,9 +158,20 @@ function CategoryBadge({ category }: { category: string }) {
     movement: "🏃",
     other: "✨",
   };
+  // Map categories to illustration components
+  const IllustrationMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+    sensory: SensoryIcon,
+    motor: MotorIcon,
+    movement: MotorIcon,
+    cognitive: CognitiveIcon,
+    stem: CognitiveIcon,
+    creative: CreativeIcon,
+    art: CreativeIcon,
+  };
+  const Illust = IllustrationMap[category];
   return (
     <span className="inline-flex items-center gap-1 rounded-full border-[0.5px] border-play/20 bg-play-muted px-2 py-0.5 text-[10px] font-medium text-play">
-      {icons[category] || "✨"} {category}
+      {Illust ? <Illust size={14} className="inline-block" /> : (emojiIcons[category] || "✨")} {category}
     </span>
   );
 }
@@ -421,8 +433,11 @@ export default function PlayLabPage() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleActivityTitle, setScheduleActivityTitle] = useState("");
   const [scheduleActivityDuration, setScheduleActivityDuration] = useState<number | null>(null);
-  const [calendarInviteHint, setCalendarInviteHint] = useState(false);
-
+   const [calendarInviteHint, setCalendarInviteHint] = useState(false);
+  // Achievement micro state
+  const [showAchievement, setShowAchievement] = useState(false);
+  // Transition state
+  const [showTransition, setShowTransition] = useState(true);
   // Fetch activities
   const fetchActivities = useCallback(async () => {
     if (!selectedChildId) return;
@@ -623,6 +638,7 @@ export default function PlayLabPage() {
         }
 
         setScheduleSuccess(schedulingActivityId);
+        setShowAchievement(true);
         setShowScheduleModal(false);
         setSchedulingActivityId(null);
         setScheduleDate("");
@@ -639,6 +655,21 @@ export default function PlayLabPage() {
   };
 
   return (
+    <>
+      <AchievementMicro
+        illustration={<ActivityScheduled size={64} />}
+        show={showAchievement}
+        onDismiss={() => setShowAchievement(false)}
+        label="Activity scheduled!"
+        position="center"
+      />
+      <QuadrantTransition
+        illustration={<PlayLabTransition className="h-full w-full" />}
+        bgClass="bg-play-muted/80"
+        accentClass="ring-play/30"
+        play={showTransition}
+        onComplete={() => setShowTransition(false)}
+      >
     <div className="animate-fade-in">
       {/* Fix 2: Page header — responsive layout */}
       <div className="mb-6">
@@ -1007,8 +1038,16 @@ export default function PlayLabPage() {
                     onClick={() => setExpandedActivityId(isExpanded ? null : activity.id)}
                     className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-background-secondary"
                   >
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-play-muted">
-                      <PlayLabIcon size={14} className="text-play" />
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-play-muted">
+                      {(() => {
+                        const cat = activity.category?.toLowerCase() || "";
+                        const iconProps = { size: 24, className: "text-play" };
+                        if (cat === "sensory") return <SensoryIcon {...iconProps} />;
+                        if (cat === "motor" || cat === "movement") return <MotorIcon {...iconProps} />;
+                        if (cat === "cognitive" || cat === "stem") return <CognitiveIcon {...iconProps} />;
+                        if (cat === "creative" || cat === "art") return <CreativeIcon {...iconProps} />;
+                        return <PlayLabIcon size={16} className="text-play" />;
+                      })()}
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate text-sm font-medium text-foreground">
@@ -1513,5 +1552,7 @@ export default function PlayLabPage() {
         </div>
       )}
     </div>
+      </QuadrantTransition>
+    </>
   );
 }

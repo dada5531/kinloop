@@ -23,6 +23,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 
 import { CoachIcon, PlayLabIcon } from "@/components/icons/QuadrantIcons";
 import { CoachEmpty } from "@/components/illustrations/CoachEmpty";
+import { AchievementMicro, TipSaved, SleepIcon, BehaviorIcon, NutritionIcon, DevelopmentTipIcon, SafetyIcon, QuadrantTransition, CoachTransition } from "@/components/illustrations";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 
@@ -174,6 +175,10 @@ export default function CoachPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Achievement micro state
+  const [showAchievement, setShowAchievement] = useState(false);
+  // Transition state
+  const [showTransition, setShowTransition] = useState(true);
   // Daily content state
   const [dailyTip, setDailyTip] = useState<DailyTip | null>(null);
   const [dailyActivity, setDailyActivity] = useState<DailyActivity | null>(null);
@@ -227,6 +232,7 @@ export default function CoachPage() {
         }),
       });
       setTipSaved(true);
+      setShowAchievement(true);
     } catch {
       // Fail silently
     }
@@ -311,6 +317,21 @@ export default function CoachPage() {
   };
 
   return (
+    <>
+      <AchievementMicro
+        illustration={<TipSaved size={64} />}
+        show={showAchievement}
+        onDismiss={() => setShowAchievement(false)}
+        label="Tip saved!"
+        position="center"
+      />
+      <QuadrantTransition
+        illustration={<CoachTransition className="h-full w-full" />}
+        bgClass="bg-coach-muted/80"
+        accentClass="ring-coach/30"
+        play={showTransition}
+        onComplete={() => setShowTransition(false)}
+      >
     <div className="animate-fade-in flex h-[calc(100vh-4rem)] flex-col">
       {/* Page header */}
       <div className="flex-shrink-0 px-0 pb-4">
@@ -366,7 +387,15 @@ export default function CoachPage() {
                   <div className="group relative rounded-xl border-[0.5px] border-border bg-background p-5 transition-colors hover:border-coach/30">
                     <div className="mb-3 flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <CoachIcon size={12} className="text-coach" />
+                        {(() => {
+                          const cat = dailyTip.category?.toLowerCase() || "";
+                          if (cat.includes("sleep")) return <SleepIcon size={16} className="text-coach" />;
+                          if (cat.includes("behavior") || cat.includes("tantrum") || cat.includes("discipline")) return <BehaviorIcon size={16} className="text-coach" />;
+                          if (cat.includes("nutrition") || cat.includes("food") || cat.includes("eating")) return <NutritionIcon size={16} className="text-coach" />;
+                          if (cat.includes("development") || cat.includes("milestone") || cat.includes("learning")) return <DevelopmentTipIcon size={16} className="text-coach" />;
+                          if (cat.includes("safety")) return <SafetyIcon size={16} className="text-coach" />;
+                          return <CoachIcon size={12} className="text-coach" />;
+                        })()}
                         <span className="text-[10px] font-medium uppercase tracking-wider text-coach">
                           Tip of the day
                         </span>
@@ -613,5 +642,7 @@ export default function CoachPage() {
         </div>
       </div>
     </div>
+      </QuadrantTransition>
+    </>
   );
 }

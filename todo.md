@@ -133,36 +133,36 @@
 - [ ] Respect prefers-reduced-motion — deferred to full rollout
 
 #### 3e — Achievement Micro-Illos (60px, animate 1.5s then fade)
-- [ ] Milestone marked done: 5-point star + 3-4 confetti dots, sage-green fills
-- [ ] Activity scheduled: paper crane taking flight + dotted trail, butter fills
-- [ ] Tip saved: heart with tiny sprig overlaid, rose fills
-- [ ] Email sent: paper plane drifting upward + dotted trail, peach fills
+- [x] Milestone marked done: MilestoneAchieved illustration on Development milestone toggle
+- [x] Activity scheduled: ActivityScheduled illustration on Play Lab + Scheduler event approval
+- [x] Tip saved: TipSaved illustration on Coach tip save
+- [ ] Email sent: paper plane drifting upward + dotted trail — deferred (no standalone email-send trigger point)
 
 #### 3f — Play Lab Activity Card Header Illos (40px, per-category)
-- [ ] Sensory: small bowl with three bumps, peach fills
-- [ ] Motor: small balance beam with single ball, sage fills
-- [ ] Cognitive: two interlocking puzzle pieces, butter fills
-- [ ] Creative: small paint brush with single drop, rose fills
+- [x] Sensory: SensoryIcon at 24px in 40px card header + 14px in CategoryBadge
+- [x] Motor: MotorIcon at 24px in 40px card header + 14px in CategoryBadge
+- [x] Cognitive: CognitiveIcon at 24px in 40px card header + 14px in CategoryBadge
+- [x] Creative: CreativeIcon at 24px in 40px card header + 14px in CategoryBadge
 
 #### 3g — Coach Tip Card Header Illos (40px, per-topic)
-- [ ] Sleep tips: small moon
-- [ ] Behavior tips: heart with sprig
-- [ ] Nutrition tips: small bowl with sprig of greens
-- [ ] Development tips: small sprout (scaled from Development empty state)
-- [ ] Safety tips: small folded paper triangle
+- [x] Sleep tips: SleepIcon in daily tip card header
+- [x] Behavior tips: BehaviorIcon in daily tip card header
+- [x] Nutrition tips: NutritionIcon in daily tip card header
+- [x] Development tips: DevelopmentTipIcon in daily tip card header
+- [x] Safety tips: SafetyIcon in daily tip card header
 
 #### 3h — Development Milestone Category Icons (~16px, replace checkmark)
-- [ ] Cognitive: small spark (3 short radiating lines)
-- [ ] Motor: small footprint
-- [ ] Language: small speech bubble with sprig
-- [ ] Social: two overlapping circles forming venn
+- [x] Cognitive: MilestoneCognitive icon in progress ring + milestone list
+- [x] Motor: MilestoneMotor icon in progress ring + milestone list
+- [x] Language: MilestoneLanguage icon in progress ring + milestone list
+- [x] Social: MilestoneSocial icon in progress ring + milestone listapping circles forming venn
 
 #### 3i — Quadrant Transition Motifs (800ms sequence, Framer Motion)
 - [x] Build QuadrantTransition wrapper component with 3-phase animation (fade-in, hold+sub-anim, crossfade to content)
-- [ ] SchedulerTransition: envelope tilts ±2deg
-- [ ] DevelopmentTransition: sprout sways ±3deg
-- [ ] PlayLabTransition: crane drifts ±4px
-- [ ] CoachTransition: book pages flicker
+- [x] SchedulerTransition: envelope tilts ±2deg (already wired)
+- [x] DevelopmentTransition: sprout sways ±3deg
+- [x] PlayLabTransition: crane drifts ±4px
+- [x] CoachTransition: book pages flicker
 - [x] prefers-reduced-motion: simpler 400ms appear + 200ms fade, no scale/sub-animation
 
 #### 3j — Ambient Corner Accents
@@ -177,7 +177,7 @@
 - [ ] Push and send screenshots for approval before full rollout
 
 #### Style Guide
-- [ ] Create /docs/illustrations.md documenting color palette, stroke weights, patterns
+- [x] Create /docs/illustrations.md documenting color palette, stroke weights, patterns
 
 ### Ask 4 — Card Warmth
 - [x] Each quadrant card gets 4% opacity wash of its accent color
@@ -188,6 +188,8 @@
 ### Ask 5 — Microinteractions
 - [x] Card hover: scale 1.005 + warmth wash, 200ms ease-out
 - [x] Button press: scale 0.98 + brief color deepening, 100ms (btn-press class on all Button components)
-- [ ] Save/schedule actions: success icon grows in + accent flush + achievement micro-illustration
-- [ ] Tab switches: 250ms ease-out cross-fade
+- [x] Save/schedule actions: achievement micro-illustration fires on approve/save success (Scheduler, Play Lab, Development, Coach)
+- [ ] Save/schedule actions: success icon grow-in + accent flush animation — deferred to polish pass
+- [x] Tab switches: 250ms ease-out cross-fade on Development page tabs (4 tabs)
+- [ ] Tab switches: wire cross-fade to other tabbed areas if any — deferred to polish pass
 - [x] Timeline entries: fade-in on load with 50ms stagger (animate-stagger-item on Scheduler event list)
