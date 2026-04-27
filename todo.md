@@ -221,4 +221,14 @@
 - [x] prefers-reduced-motion: freeze marquee at -15%, disable all internal motions, content at final state immediately
 - [x] Mobile: stack CTAs vertically, shorter loop (28s), smaller illos (52px), gap 56px
 - [x] Framer Motion for entrance animations (subtitle/CTAs/footer fade-up)
-- [ ] Send preview URL for review before publish
+- [x] Send preview URL for review before publish
+
+## v1.6.3 — Surface Motion (three distinct animation languages)
+- [x] Landing page (/): already done in previous commit — marquee parade, breathing wordmark, Framer entrance. Verified still correct.
+- [x] Sign-in page (/enter): rewrite with centered floating illustration (envelope/letters motif at 12% opacity), frosted glass card (backdrop-filter blur 8px, 85% bg opacity), 6 decorative dots in quadrant accent colors (2-5px, stagger 0.5-1.5s), card fade-up at 0.6s, "Demo access for HBS preview" helper text at 0.3s, NO marquee
+- [x] Dashboard (/dashboard): 4 ambient drifting illustrations in fixed positions (upper-right, lower-left, mid-right, upper-left), 15-20% opacity, 15-22s drift loops, position:fixed z-index 1, one rotates 180° during drift, NO marquee, NO entrance animations on content cards
+- [x] CSS keyframes: kl-centerpiece-float (10s), kl-drift-a (18s), kl-drift-b (22s), kl-drift-c (15s), kl-drift-d (20s with 180° rotate)
+- [x] Create ambient SVG illustration components from reference (cloud/blob, plant/stem, diamond/star, small sun with rays)
+- [x] prefers-reduced-motion: centerpiece and drifts disabled, card/dots at final state immediately
+- [x] Mobile: centerpiece 240px, card padding smaller, dashboard drops ambient-3 and ambient-4
+- [ ] Send preview URL for review

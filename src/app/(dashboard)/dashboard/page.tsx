@@ -11,6 +11,7 @@ import {
 } from "@/components/icons/QuadrantIcons";
 import { MorningMug, AfternoonSun, EveningMoon } from "@/components/illustrations";
 import { useChild } from "@/components/providers/ChildProvider";
+import DashboardAmbient from "@/components/DashboardAmbient";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QuadrantCard, PreviewRow } from "@/components/ui/quadrant-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -118,7 +119,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="animate-fade-in">
+    <>
+    <DashboardAmbient />
+    <div className="animate-fade-in relative z-10">
       {/* Page header with time-of-day motif */}
       <div className="mb-8 flex items-center gap-4">
         <motion.div
@@ -265,6 +268,7 @@ export default function DashboardPage() {
         </QuadrantCard>
       </div>
     </div>
+    </>
   );
 }
 

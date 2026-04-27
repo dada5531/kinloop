@@ -507,6 +507,258 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   v1.6.3 — Sign-in Motion
+   ═══════════════════════════════════════════════════════════════ */
+
+/* "Demo access" helper text above the card */
+.kl-hello-text {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: hsl(var(--muted-foreground));
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* Centerpiece — large ambient illustration floating behind the card */
+.kl-centerpiece {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  height: 320px;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 1;
+  animation: kl-centerpiece-float 10s ease-in-out infinite alternate;
+}
+
+@keyframes kl-centerpiece-float {
+  0%   { transform: translate(-50%, calc(-50% - 8px)); }
+  100% { transform: translate(-50%, calc(-50% + 8px)); }
+}
+
+/* Decorative dots — small circles scattered around the card area */
+.kl-dot {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  animation: kl-dot-fade 0.8s ease-out forwards;
+}
+
+.kl-dot-1 {
+  width: 4px; height: 4px;
+  background: hsl(262 38% 58%); /* scheduler purple */
+  top: 30%; left: 22%;
+  animation-delay: 0.5s;
+}
+
+.kl-dot-2 {
+  width: 3px; height: 3px;
+  background: hsl(164 35% 48%); /* development sage */
+  top: 25%; right: 24%;
+  animation-delay: 0.7s;
+}
+
+.kl-dot-3 {
+  width: 5px; height: 5px;
+  background: hsl(18 65% 62%); /* play coral */
+  bottom: 32%; left: 28%;
+  animation-delay: 0.9s;
+}
+
+.kl-dot-4 {
+  width: 3px; height: 3px;
+  background: hsl(338 40% 62%); /* coach rose */
+  bottom: 28%; right: 20%;
+  animation-delay: 1.1s;
+}
+
+.kl-dot-5 {
+  width: 2px; height: 2px;
+  background: hsl(45 80% 65%); /* butter yellow */
+  top: 38%; right: 30%;
+  animation-delay: 1.3s;
+}
+
+.kl-dot-6 {
+  width: 4px; height: 4px;
+  background: hsl(var(--muted-foreground)); /* neutral */
+  bottom: 38%; left: 20%;
+  animation-delay: 1.5s;
+}
+
+@keyframes kl-dot-fade {
+  0%   { opacity: 0; transform: scale(0); }
+  100% { opacity: 0.55; transform: scale(1); }
+}
+
+/* Frosted glass sign-in card */
+.kl-signin-card {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 360px;
+  padding: 36px 32px;
+  border-radius: 16px;
+  background: hsl(var(--card) / 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 0.5px solid hsl(var(--border) / 0.5);
+  box-shadow: 0 4px 24px hsl(var(--foreground) / 0.04);
+}
+
+.kl-signin-title {
+  font-family: var(--font-serif-display, "Fraunces", serif);
+  font-size: 22px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+.kl-signin-helper {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.kl-signin-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 0.5px solid hsl(var(--border));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  margin-bottom: 8px;
+}
+
+.kl-signin-input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+.kl-signin-input:focus {
+  border-color: hsl(var(--foreground) / 0.2);
+  box-shadow: 0 0 0 3px hsl(var(--foreground) / 0.06);
+}
+
+.kl-signin-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 28px;
+  border-radius: 9999px;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: opacity 150ms ease, transform 100ms ease;
+  cursor: pointer;
+  border: none;
+}
+
+.kl-signin-button:hover {
+  opacity: 0.85;
+}
+
+.kl-signin-button:active {
+  transform: scale(0.98);
+}
+
+.kl-signin-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   v1.6.3 — Dashboard Ambient Drifts
+   ═══════════════════════════════════════════════════════════════ */
+
+.kl-ambient {
+  position: fixed;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Upper-right: cloud — 18s drift, 18% opacity */
+.kl-ambient-1 {
+  top: 8%;
+  right: 6%;
+  width: 100px;
+  height: 80px;
+  opacity: 0.18;
+  animation: kl-drift-a 18s ease-in-out infinite alternate;
+}
+
+/* Lower-left: plant — 22s drift, 15% opacity */
+.kl-ambient-2 {
+  bottom: 10%;
+  left: 4%;
+  width: 60px;
+  height: 76px;
+  opacity: 0.15;
+  animation: kl-drift-b 22s ease-in-out infinite alternate;
+}
+
+/* Mid-right: diamond — 15s drift, 20% opacity */
+.kl-ambient-3 {
+  top: 50%;
+  right: 3%;
+  width: 44px;
+  height: 50px;
+  opacity: 0.20;
+  animation: kl-drift-c 15s ease-in-out infinite alternate;
+}
+
+/* Upper-left: sun — 20s drift with 180° rotate, 16% opacity */
+.kl-ambient-4 {
+  top: 14%;
+  left: 5%;
+  width: 32px;
+  height: 32px;
+  opacity: 0.16;
+  animation: kl-drift-d 20s ease-in-out infinite alternate;
+}
+
+@keyframes kl-drift-a {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(-12px, 10px); }
+}
+
+@keyframes kl-drift-b {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(15px, -8px); }
+}
+
+@keyframes kl-drift-c {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(-10px, 14px); }
+}
+
+@keyframes kl-drift-d {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(10px, -12px) rotate(180deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    Mobile responsive
    ═══════════════════════════════════════════════════════════════ */
 
@@ -536,6 +788,34 @@
 
   .kl-subtitle {
     padding: 0 8px;
+  }
+
+  .kl-centerpiece {
+    width: 240px;
+    height: 240px;
+  }
+
+  .kl-signin-card {
+    max-width: 320px;
+    padding: 28px 24px;
+  }
+}
+
+/* Dashboard: drop ambient-3 and ambient-4 on mobile */
+@media (max-width: 768px) {
+  .kl-ambient-3,
+  .kl-ambient-4 {
+    display: none;
+  }
+
+  .kl-ambient-1 {
+    width: 70px;
+    height: 56px;
+  }
+
+  .kl-ambient-2 {
+    width: 44px;
+    height: 56px;
   }
 }
 
@@ -577,5 +857,26 @@
   .animate-stagger-item {
     animation: none;
     opacity: 1;
+  }
+
+  /* Sign-in: freeze centerpiece and dots at final state */
+  .kl-centerpiece {
+    animation: none;
+    transform: translate(-50%, -50%);
+  }
+
+  .kl-dot {
+    animation: none;
+    opacity: 0.55;
+    transform: scale(1);
+  }
+
+  /* Dashboard: freeze all ambient drifts */
+  .kl-ambient-1,
+  .kl-ambient-2,
+  .kl-ambient-3,
+  .kl-ambient-4 {
+    animation: none;
+    transform: none;
   }
 }

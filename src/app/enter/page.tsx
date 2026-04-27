@@ -3,17 +3,19 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
 import { motion } from "framer-motion";
-import MarqueeStrip from "@/components/MarqueeStrip";
+import SigninCenterpiece from "@/components/illustrations/SigninCenterpiece";
 
 /**
- * Password gate — v1.6.3 landing-motion.
+ * Sign-in page — v1.6.3 surface-motion.
  *
- * Same visual language as landing page but adjusted timing:
- * - Breathing wordmark at top center
- * - Password input fades in at 0.4s
- * - Enter button fades in at 0.8s
- * - Same marquee strip at bottom
- * - Footer note fades in at 1.2s
+ * Calm, welcoming, focused. Different animation language from landing page.
+ * - Centered ambient illustration (envelope/letters motif) at 12% opacity, floats behind card
+ * - 6 small decorative dots in quadrant accent colors, stagger fade-in 0.5-1.5s
+ * - Frosted glass sign-in card (backdrop-filter blur 8px, 85% opacity bg)
+ * - Card fades up from translateY(12px) at 0.6s
+ * - "Demo access for HBS preview" helper text fades in at 0.3s
+ * - Breathing wordmark at top
+ * - NO marquee — would compete with the password input
  */
 
 function EnterForm() {
@@ -59,63 +61,75 @@ function EnterForm() {
         kin<span className="kl-wordmark-loop">loop</span>
       </div>
 
-      {/* Center stage — password form */}
-      <div className="kl-center-stage">
-        <form onSubmit={handleSubmit} className="kl-enter-form">
-          {/* Password input — fade in at 0.4s */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-            className="w-full"
-          >
-            <label htmlFor="password" className="sr-only">
-              Access Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Access password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (error) setError("");
-              }}
-              autoFocus
-              autoComplete="off"
-              className="kl-password-input"
-            />
-            {error && (
-              <p className="mt-2 text-center text-sm text-red-500/90">{error}</p>
-            )}
-          </motion.div>
-
-          {/* Enter button — fade in at 0.8s */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
-            className="w-full"
-          >
-            <button
-              type="submit"
-              disabled={loading || !password}
-              className="kl-btn-primary w-full"
-            >
-              {loading ? "Verifying..." : "Enter"}
-            </button>
-          </motion.div>
-        </form>
-      </div>
-
-      {/* Bottom marquee strip */}
-      <MarqueeStrip />
-
-      {/* Footer note — fade in at 1.2s */}
+      {/* "Demo access" helper text — fades in at 0.3s */}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+        className="kl-hello-text"
+      >
+        Demo access for HBS preview
+      </motion.div>
+
+      {/* Centerpiece — large ambient illustration floating behind the card */}
+      <SigninCenterpiece className="kl-centerpiece" />
+
+      {/* Decorative dots scattered around the form */}
+      <div className="kl-dot kl-dot-1" />
+      <div className="kl-dot kl-dot-2" />
+      <div className="kl-dot kl-dot-3" />
+      <div className="kl-dot kl-dot-4" />
+      <div className="kl-dot kl-dot-5" />
+      <div className="kl-dot kl-dot-6" />
+
+      {/* Frosted glass sign-in card — fades up at 0.6s */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut", delay: 1.2 }}
+        transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
+        className="kl-signin-card"
+      >
+        <h1 className="kl-signin-title">Welcome to Kinloop</h1>
+        <p className="kl-signin-helper">
+          Enter the access password to continue.
+        </p>
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="password" className="sr-only">
+            Access Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            placeholder="Access password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (error) setError("");
+            }}
+            autoFocus
+            autoComplete="off"
+            className="kl-signin-input"
+          />
+          {error && (
+            <p className="mt-1 mb-2 text-center text-sm text-red-500/90">
+              {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={loading || !password}
+            className="kl-signin-button"
+          >
+            {loading ? "Verifying..." : "Enter"}
+          </button>
+        </form>
+      </motion.div>
+
+      {/* Footer note — fades in at 1.4s */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 1.4 }}
         className="kl-footer-note"
       >
         AI-native parenting dashboard &middot; HBS MBA Capstone 2026
