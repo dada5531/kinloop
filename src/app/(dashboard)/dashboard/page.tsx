@@ -96,10 +96,6 @@ export default function DashboardPage() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  if (loading) {
-    return <DashboardSkeleton />;
-  }
-
   const prefersReduced = useReducedMotion();
   const greeting = getTimeOfDayGreeting();
   const { TimeMotif, driftAnim } = useMemo(() => {
@@ -117,6 +113,9 @@ export default function DashboardPage() {
       driftAnim: { y: [0, -3, 0, 3, 0], x: [0, 1, 0, -1, 0] },
     };
   }, []);
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="animate-fade-in">

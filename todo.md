@@ -192,3 +192,25 @@
 - [x] Tab switches: 250ms ease-out cross-fade on Development page tabs (4 tabs)
 - [x] Tab switches: no other tabbed areas found — Development is the only page with tabs
 - [x] Timeline entries: fade-in on load with 50ms stagger (animate-stagger-item on Scheduler event list)
+
+## v1.6 Stage B Review — User-Requested Before Publish
+- [ ] Confirm preview URL (NOT production) and send to user
+- [ ] Screen recording (30-90s .mp4) of 5 animation moments:
+  - [ ] a. Login → welcome screen with larger photo + ambient illustration accents
+  - [ ] b. Dashboard → time-of-day motif with drift animation
+  - [ ] c. Scheduler quadrant transition (3-phase: fade-in, internal anim, fade-out + content)
+  - [ ] d. Play Lab: schedule activity → crane achievement micro plays
+  - [ ] e. Development: mark milestone done → star achievement micro plays
+- [ ] 7 still screenshots:
+  - [ ] a. Each of 4 quadrant pages with cream bg + illustrations (4 screenshots)
+  - [ ] b. Dashboard with 4 tile-warmth washes visible
+  - [ ] c. Play Lab activity card with category icon in top-left
+  - [ ] d. Coach tip card with theme icon in top-right
+  - [ ] e. Development milestone tracker with new category icons
+  - [ ] f. Welcome screen at 375px mobile width
+- [ ] Answer 4 explicit questions:
+  - [ ] Did you integrate all 26 illustrations from references, or draw your own?
+  - [ ] Are animations using Framer Motion with prefers-reduced-motion?
+  - [ ] Did the Scheduler-only checkpoint run before full rollout?
+  - [ ] Page-load time impact / Lighthouse score impact?
+- [ ] DO NOT publish to production until user signs off
