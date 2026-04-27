@@ -25,6 +25,7 @@ import {
 import { useState, useRef, useCallback, useEffect } from "react";
 
 import { SchedulerIcon } from "@/components/icons/QuadrantIcons";
+import { SchedulerEmpty } from "@/components/illustrations/SchedulerEmpty";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -906,6 +907,7 @@ export default function SchedulerPage() {
               actionLabel="Add content"
               onAction={() => setShowPasteDialog(true)}
               accentColor="scheduler"
+              illustration={<SchedulerEmpty />}
             />
           )}
         </div>

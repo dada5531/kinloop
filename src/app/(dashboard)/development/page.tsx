@@ -24,6 +24,7 @@ import {
 import { useState, useEffect, useCallback, useMemo } from "react";
 
 import { DevelopmentIcon } from "@/components/icons/QuadrantIcons";
+import { DevelopmentEmpty } from "@/components/illustrations/DevelopmentEmpty";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -1424,6 +1425,7 @@ export default function DevelopmentPage() {
                   : "Add health records or milestones to build your timeline"
               }
               accentColor="development"
+              illustration={!timelineSearch ? <DevelopmentEmpty /> : undefined}
             />
           )}
         </div>

@@ -92,10 +92,10 @@
 ## v1.6 Stage B — Design Warmth (illustrations, microinteractions, card warmth)
 
 ### Ask 1 — Welcome Screen: Bigger Photo
-- [ ] Desktop: photo at least 480px tall, occupying upper 50-55% of viewport
-- [ ] Mobile: photo at least 320px tall, dominating upper 60% of viewport
-- [ ] Keep rounded corners (16px) and soft shadow
-- [ ] Increase vertical whitespace between photo and greeting to ~32px
+- [x] Desktop: photo at least 480px tall, occupying upper 50-55% of viewport
+- [x] Mobile: photo at least 320px tall, dominating upper 60% of viewport
+- [x] Keep rounded corners (16px) and soft shadow
+- [x] Increase vertical whitespace between photo and greeting to ~32px
 
 ### Ask 2 — Landing Page: Abeto-Inspired Redesign
 - [ ] Massive Fraunces headline (64-80px desktop, 36-44px mobile): "Less chaos. More childhood."
@@ -105,26 +105,69 @@
 - [ ] Headline letters fade in with 30ms stagger, total <600ms
 - [ ] Single small decorative element (botanical sprig or similar)
 
-### Ask 3 — Hand-Drawn Illustrations
-- [ ] Illustration style: hand-drawn, toddler-life themed, soft pastel fills, 1.5-2px stroke, SVG
-- [ ] All illustrations in /src/components/illustrations/ as React SVG components
-- [ ] 1. Welcome screen: soft botanical/object motif framing photo at 20% opacity
-- [ ] 2. Landing page: single subtle decorative element
-- [ ] 3. Dashboard header: time-of-day illustration (~80px) with subtle drift animation
-- [ ] 4. Empty states: custom illustration per quadrant (~180px tall)
-- [ ] 5. Achievement moments: micro-illustrations that animate in for ~1.5s
-- [ ] 6. Play Lab activity cards: small themed illustration (~40px) per category
-- [ ] 7. Coach tip cards: small thematic illustration in card corner
-- [ ] 8. Development Hub milestones: themed illustration replacing checkmark when achieved
+### Ask 3 — Hand-Drawn Illustrations (user-provided style + extensions)
+
+#### 3a — Empty States (user-provided SVGs)
+- [ ] Copy 4 user-provided SVGs to /src/components/illustrations/ as React components
+- [ ] SchedulerEmpty: envelopes/letters scene, ~280px tall
+- [ ] DevelopmentEmpty: growth chart + potted sprout, ~280px tall
+- [ ] PlayLabEmpty: paper airplane + blocks + key, ~280px tall
+- [ ] CoachEmpty: open journal + steaming mug, ~280px tall
+- [ ] Wire each to respective quadrant empty state (replace current no-data text)
+- [ ] Empty-state copy appears below illustration
+
+#### 3b — Welcome Screen Motifs
+- [ ] 2 small decorative elements at 20% opacity in opposite corners of photo frame
+- [ ] Sprig of leaves (2-3 small leaves) in one corner
+- [ ] Tiny paper crane drifting in opposite corner
+
+#### 3c — Landing Page Decoration
+- [ ] One small ~60px detail in lower-right/trailing corner
+- [ ] Subject: small balloon string with sprig OR crayon sun with squiggle rays
+
+#### 3d — Dashboard Header Time-of-Day Motifs (80px, Framer Motion)
+- [ ] Morning: steaming mug + small sprig (teacup style from Coach empty state)
+- [ ] Afternoon: paper sun with 6 rays, butter-yellow fills
+- [ ] Evening: soft crescent moon with 1-2 small clouds, dusty blue/grey fills
+- [ ] 4-5 second drift loop animation (steam curls / sun rotates 5deg / moon bobs)
+- [ ] Respect prefers-reduced-motion
+
+#### 3e — Achievement Micro-Illos (60px, animate 1.5s then fade)
+- [ ] Milestone marked done: 5-point star + 3-4 confetti dots, sage-green fills
+- [ ] Activity scheduled: paper crane taking flight + dotted trail, butter fills
+- [ ] Tip saved: heart with tiny sprig overlaid, rose fills
+- [ ] Email sent: paper plane drifting upward + dotted trail, peach fills
+
+#### 3f — Play Lab Activity Card Header Illos (40px, per-category)
+- [ ] Sensory: small bowl with three bumps, peach fills
+- [ ] Motor: small balance beam with single ball, sage fills
+- [ ] Cognitive: two interlocking puzzle pieces, butter fills
+- [ ] Creative: small paint brush with single drop, rose fills
+
+#### 3g — Coach Tip Card Header Illos (40px, per-topic)
+- [ ] Sleep tips: small moon
+- [ ] Behavior tips: heart with sprig
+- [ ] Nutrition tips: small bowl with sprig of greens
+- [ ] Development tips: small sprout (scaled from Development empty state)
+- [ ] Safety tips: small folded paper triangle
+
+#### 3h — Development Milestone Category Icons (~16px, replace checkmark)
+- [ ] Cognitive: small spark (3 short radiating lines)
+- [ ] Motor: small footprint
+- [ ] Language: small speech bubble with sprig
+- [ ] Social: two overlapping circles forming venn
+
+#### Style Guide
+- [ ] Create /docs/illustrations.md documenting color palette, stroke weights, patterns
 
 ### Ask 4 — Card Warmth
-- [ ] Each quadrant card gets 4% opacity wash of its accent color
-- [ ] Border color shifts to warm-gray #E8E2D5
-- [ ] Hover: wash deepens to 8%, card lifts with soft shadow (0 4px 12px rgba(0,0,0,0.04))
-- [ ] Selected/active states: 2px border in quadrant accent at full opacity
+- [x] Each quadrant card gets 4% opacity wash of its accent color
+- [x] Border color shifts to warm-gray #E8E2D5
+- [x] Hover: wash deepens to 8%, card lifts with soft shadow (0 4px 12px rgba(0,0,0,0.04))
+- [x] Selected/active states: 2px border in quadrant accent at full opacity
 
 ### Ask 5 — Microinteractions
-- [ ] Card hover: scale 1.005 + warmth wash, 200ms ease-out
+- [x] Card hover: scale 1.005 + warmth wash, 200ms ease-out
 - [ ] Button press: scale 0.98 + brief color deepening, 100ms
 - [ ] Save/schedule actions: success icon grows in + accent flush + achievement micro-illustration
 - [ ] Tab switches: 250ms ease-out cross-fade

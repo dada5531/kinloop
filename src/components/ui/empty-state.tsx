@@ -13,6 +13,8 @@ interface EmptyStateProps {
   onAction?: () => void;
   accentColor?: "scheduler" | "development" | "play" | "coach";
   className?: string;
+  /** Optional hand-drawn illustration to display above the title (replaces the icon circle) */
+  illustration?: React.ReactNode;
 }
 
 const bgClasses: Record<string, string> = {
@@ -37,6 +39,7 @@ export function EmptyState({
   onAction,
   accentColor,
   className,
+  illustration,
 }: EmptyStateProps) {
   return (
     <div
@@ -45,20 +48,24 @@ export function EmptyState({
         className,
       )}
     >
-      <div
-        className={cn(
-          "mb-4 flex h-12 w-12 items-center justify-center rounded-2xl",
-          accentColor ? bgClasses[accentColor] : "bg-muted",
-        )}
-      >
-        <Icon
-          size={20}
+      {illustration ? (
+        <div className="mb-6 w-full max-w-[280px]">{illustration}</div>
+      ) : (
+        <div
           className={cn(
-            "h-5 w-5",
-            accentColor ? textClasses[accentColor] : "text-muted-foreground",
+            "mb-4 flex h-12 w-12 items-center justify-center rounded-2xl",
+            accentColor ? bgClasses[accentColor] : "bg-muted",
           )}
-        />
-      </div>
+        >
+          <Icon
+            size={20}
+            className={cn(
+              "h-5 w-5",
+              accentColor ? textClasses[accentColor] : "text-muted-foreground",
+            )}
+          />
+        </div>
+      )}
       <h3 className="mb-1 text-sm font-medium text-foreground">{title}</h3>
       <p className="mb-5 max-w-[240px] text-xs leading-relaxed text-muted-foreground">
         {description}

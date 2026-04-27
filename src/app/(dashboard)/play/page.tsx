@@ -31,6 +31,7 @@ import {
 import { useState, useEffect, useCallback } from "react";
 
 import { PlayLabIcon } from "@/components/icons/QuadrantIcons";
+import { PlayLabEmpty } from "@/components/illustrations/PlayLabEmpty";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -1264,6 +1265,7 @@ export default function PlayLabPage() {
             actionLabel="Add your first activity"
             onAction={() => setShowInputDialog(true)}
             accentColor="play"
+            illustration={<PlayLabEmpty />}
           />
         )}
       </div>

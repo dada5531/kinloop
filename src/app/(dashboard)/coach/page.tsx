@@ -22,6 +22,7 @@ import {
 import { useState, useRef, useEffect, useCallback } from "react";
 
 import { CoachIcon, PlayLabIcon } from "@/components/icons/QuadrantIcons";
+import { CoachEmpty } from "@/components/illustrations/CoachEmpty";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 
@@ -498,8 +499,8 @@ export default function CoachPage() {
 
               {/* Greeting + topic suggestions */}
               <div className="flex flex-col items-center">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-coach-muted">
-                  <CoachIcon size={24} className="text-coach" />
+                <div className="mb-6 w-full max-w-[280px]">
+                  <CoachEmpty />
                 </div>
                 <h2 className="mb-1 text-base font-semibold text-foreground">
                   What&apos;s on your mind?
