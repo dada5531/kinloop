@@ -108,13 +108,13 @@
 ### Ask 3 — Hand-Drawn Illustrations (user-provided style + extensions)
 
 #### 3a — Empty States (user-provided SVGs)
-- [ ] Copy 4 user-provided SVGs to /src/components/illustrations/ as React components
-- [ ] SchedulerEmpty: envelopes/letters scene, ~280px tall
-- [ ] DevelopmentEmpty: growth chart + potted sprout, ~280px tall
-- [ ] PlayLabEmpty: paper airplane + blocks + key, ~280px tall
-- [ ] CoachEmpty: open journal + steaming mug, ~280px tall
-- [ ] Wire each to respective quadrant empty state (replace current no-data text)
-- [ ] Empty-state copy appears below illustration
+- [x] Copy 4 user-provided SVGs to /src/components/illustrations/ as React components
+- [x] SchedulerEmpty: envelopes/letters scene, ~280px tall
+- [x] DevelopmentEmpty: growth chart + potted sprout, ~280px tall
+- [x] PlayLabEmpty: paper airplane + blocks + key, ~280px tall
+- [x] CoachEmpty: open journal + steaming mug, ~280px tall
+- [x] Wire each to respective quadrant empty state (replace current no-data text)
+- [x] Empty-state copy appears below illustration
 
 #### 3b — Welcome Screen Motifs
 - [ ] 2 small decorative elements at 20% opacity in opposite corners of photo frame
