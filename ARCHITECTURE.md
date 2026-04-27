@@ -155,12 +155,21 @@ kinloop/
 │   │   ├── enter/                 # Password gate page
 │   │   ├── page.tsx               # Landing page
 │   │   ├── layout.tsx             # Root layout (Inter font, AuthProvider)
-│   │   └── globals.css            # Design tokens, animations
+│   │   └── globals.css            # Design tokens, animations, microinteraction keyframes
 │   ├── components/
 │   │   ├── dashboard/             # Sidebar, TopBar, Grid, QuadrantTile
+│   │   ├── illustrations/         # 32 SVG-as-React components (v1.6)
+│   │   │   ├── *Empty.tsx         # Empty states (4)
+│   │   │   ├── *Transition.tsx    # Page entrance motifs (4)
+│   │   │   ├── *Icon.tsx          # Category/theme icons (13)
+│   │   │   ├── *Achieved/*.tsx    # Achievement micros (4)
+│   │   │   ├── Morning/Afternoon/Evening*.tsx  # Time-of-day (3)
+│   │   │   ├── QuadrantTransition.tsx  # Framer Motion wrapper
+│   │   │   ├── AchievementMicro.tsx    # Spring overlay wrapper
+│   │   │   └── LeafSprig/DriftingCrane/BalloonSprig/CrayonSun.tsx  # Ambient (4)
 │   │   ├── ui/                    # Button, Skeleton, EmptyState, QuadrantCard
 │   │   ├── icons/                 # QuadrantIcons
-│   │   ├── WelcomeScreen.tsx      # 7s cinematic welcome with photo
+│   │   ├── WelcomeScreen.tsx      # 7s cinematic welcome with photo + ambient accents
 │   │   ├── WelcomePhotoUploader.tsx
 │   │   └── providers/             # AuthProvider (passthrough for demo)
 │   ├── lib/
@@ -182,6 +191,7 @@ kinloop/
 │   └── seed.sql                   # Demo data (Jenn + Mia)
 ├── tests/unit/                    # Vitest tests (18 total)
 ├── docs/                          # API docs, prompt changelog, audit, demo script
+│   └── illustrations.md       # v1.6 illustration style guide (palette, sizing, wiring)
 ├── vercel.json                    # Cron configuration
 ├── tailwind.config.ts             # Design tokens + quadrant colors
 └── next.config.js                 # Image domains, server action limits
@@ -404,9 +414,23 @@ GET /api/context/{childId}
 
 This context is injected into every Claude system prompt, enabling personalized responses across all quadrants.
 
+## Design System (v1.6)
+
+The v1.6 release introduced a warm, hand-drawn illustration system built as inline SVG React components. The design language is "crayon on craft paper" — soft fills, visible strokes, imperfect shapes.
+
+**Color Palette:** Warm cream background (#f8f5f1), with per-quadrant accent colors: Scheduler lavender (#896bbc), Development sage (#4fa58e), Play Lab coral (#dd845f), Coach rose (#c47793).
+
+**Typography:** Inter for body text, Fraunces (Google Fonts) for editorial headings and section titles.
+
+**Illustration Components:** 32 SVG-as-React components in `src/components/illustrations/`, organized into 8 categories: empty states (4), page transitions (4), achievement micros (4), time-of-day motifs (3), activity category icons (4), coach tip theme icons (5), milestone category icons (4), and ambient corner accents (4). Two Framer Motion wrapper components (`QuadrantTransition`, `AchievementMicro`) handle animation orchestration.
+
+**Animation:** All Framer Motion animations respect `prefers-reduced-motion` via the `useReducedMotion()` hook. CSS microinteractions (button press, tab crossfade, timeline stagger, success grow-in) are defined in `globals.css`.
+
+See [docs/illustrations.md](./docs/illustrations.md) for the full style guide.
+
 ## External API Integrations
 
-| Service | Purpose | Auth Method | Status (v1.5) |
+| Service | Purpose | Auth Method | Status (v1.6) |
 |---|---|---|---|
 | **Anthropic** (Claude) | All AI extraction and chat | API key (`ANTHROPIC_API_KEY`) | Active |
 | **Voyage AI** | Embedding generation for RAG | API key (`VOYAGE_API_KEY`) | Active |
@@ -418,25 +442,13 @@ This context is injected into every Claude system prompt, enabling personalized 
 | **Stripe** | Subscription management | API key | Planned (Series A) |
 | **Supabase Storage** | File uploads (PDFs, images, photos) | Service role key | Active |
 
-## Design System
-
-The design follows a warm Scandinavian minimalist aesthetic with quadrant-specific accent colors defined as CSS custom properties in `globals.css`:
-
-| Token | HSL Value | Usage |
-|---|---|---|
-| `--background` | `40 20% 96%` | Page background (warm off-white) |
-| `--scheduler` | `262 47% 55%` | Scheduler accent (purple) |
-| `--development` | `168 40% 45%` | Development Hub accent (teal) |
-| `--play` | `15 70% 60%` | Play Lab accent (coral) |
-| `--coach` | `340 45% 60%` | Coach accent (rose) |
-
-Typography: Inter (400/500/600/700) via `next/font/google`. Letter-spacing tightened on headings (`-0.01em`) and body text (`-0.005em`).
-
 ## Deployment
 
-- **Platform**: Vercel
+- **Platform**: Vercel (auto-deploy from `main` via GitHub Actions)
 - **Production URL**: `kinloop-weld.vercel.app`
 - **PR previews**: `kinloop-git-{branch}-dada5531s-projects.vercel.app`
 - **Cron**: Daily content ingestion at 6:00 AM UTC (`/api/cron/ingest-content`)
 - **Build**: `next build` (no custom build step)
 - **Node**: 20.x
+- **Current version**: v1.6.0 (tagged April 2026)
+- **Lighthouse (April 2026)**: Performance 96, Accessibility 93, Best Practices 96, SEO 100

@@ -268,16 +268,28 @@ Play Lab materials include "Find on Amazon" links with the `kinloop-20` affiliat
 | `activities_corpus` | 0004 | Activities corpus for Coach daily picks |
 | `daily_recommendations` | 0004 | Cached daily tip/activity of the day |
 
-## 7. What to Build Next
+## 7. What Shipped (v1.0–v1.6)
 
-See [ROADMAP.md](./ROADMAP.md) for the full timeline. The immediate next milestone is **v1.6 Design Warmth** (colors and typography refresh).
+The project is demo-ready at v1.6. All four quadrants are functional with real AI extraction, cross-quadrant intelligence, calendar invite delivery, and a warm illustration-driven design system. See [ROADMAP.md](./ROADMAP.md) for the full version history.
 
-Suggested build order for remaining v1.x work:
+**v1.6 Design Warmth** (the final shipped version) added:
+- Warm cream palette (#f8f5f1), soft pastel quadrant accents, Fraunces serif for editorial headings
+- 32 original SVG illustration components (empty states, transitions, achievement micros, category icons, ambient accents)
+- Framer Motion page entrance transitions and achievement micro-animations with `prefers-reduced-motion` support
+- Time-of-day motifs (morning mug, afternoon sun, evening moon) with drift loop animations
+- CSS microinteractions: button press, tab crossfade, timeline stagger, success icon grow-in
 
-1. v1.6 Stage A: Warm cream backgrounds, pastel accents, Fraunces serif for headings
-2. v1.6 Stage B: Micro-interactions, card shadows, hover states
-3. v1.7: Error boundaries, rate limiting, Sentry, loading skeletons
-4. v1.8: Custom Resend domain setup
+**Lighthouse scores (production, April 2026):** Performance 96, Accessibility 93, Best Practices 96, SEO 100.
+
+## 7a. What to Build Next
+
+See [ROADMAP.md](./ROADMAP.md) for the full deferred and future timeline.
+
+Suggested build order for post-demo work:
+
+1. v1.7: Error boundaries, rate limiting, Sentry, loading skeletons, WCAG 2.1 AA audit
+2. v1.8: Custom Resend domain setup (see ROADMAP.md for DNS checklist)
+3. Series A: Clerk auth, multi-tenancy, Weekly Planner agentic layer (spec preserved in ROADMAP.md)
 
 ## 8. What NOT to Do
 

@@ -214,3 +214,15 @@
   - [ ] Did the Scheduler-only checkpoint run before full rollout?
   - [ ] Page-load time impact / Lighthouse score impact?
 - [ ] DO NOT publish to production until user signs off
+
+## v1.6 Closeout Tasks
+- [x] Move Weekly Planner (v1.7) from "in progress" to "Series A roadmap — agentic layer" in ROADMAP.md
+- [x] Preserve Weekly Planner spec (data sources, action types, guardrails) in ROADMAP.md
+- [x] Confirm v1.5 is fully closed (calendar invite, age-filter, welcome screen, 5 cleanup items)
+- [x] Confirm v1.6 Stage B is on production (kinloop-weld.vercel.app returns 200, font-serif-display present)
+- [x] Run Lighthouse on production URL: Performance 96, Accessibility 93, Best Practices 96, SEO 100
+- [x] Update CLAUDE.md to reflect final state (Section 7 rewritten, Lighthouse scores added)
+- [x] Update ARCHITECTURE.md to reflect final state (illustrations in file tree, Design System v1.6 section, Deployment updated)
+- [x] Update ROADMAP.md to reflect final state (v1.6 shipped, Weekly Planner in Series A, spec preserved)
+- [ ] Tag v1.6.0 release on GitHub
+- [ ] Send final status summary
