@@ -98,12 +98,12 @@
 - [x] Increase vertical whitespace between photo and greeting to ~32px
 
 ### Ask 2 — Landing Page: Abeto-Inspired Redesign
-- [ ] Massive Fraunces headline (64-80px desktop, 36-44px mobile): "Less chaos. More childhood."
-- [ ] Single supporting line in Inter, ~18px, muted, max 80 chars
-- [ ] Two CTAs: primary "Get started" (dark pill) + secondary "Sign in" (ghost link with arrow)
-- [ ] Remove 4 quadrant cards from above-fold (or push below fold as secondary section)
-- [ ] Headline letters fade in with 30ms stagger, total <600ms
-- [ ] Single small decorative element (botanical sprig or similar)
+- [x] Massive Fraunces headline (64-80px desktop, 36-44px mobile): "Less chaos. More childhood."
+- [x] Single supporting line in Inter, ~18px, muted, max 80 chars
+- [x] Two CTAs: primary "Get started" (dark pill) + secondary "Sign in" (ghost link with arrow)
+- [x] Remove 4 quadrant cards from above-fold (or push below fold as secondary section)
+- [x] Headline letters fade in with 30ms stagger, total <600ms
+- [ ] Single small decorative element (botanical sprig or similar) — deferred to 3c
 
 ### Ask 3 — Hand-Drawn Illustrations (user-provided style + extensions)
 
@@ -156,6 +156,25 @@
 - [ ] Motor: small footprint
 - [ ] Language: small speech bubble with sprig
 - [ ] Social: two overlapping circles forming venn
+
+#### 3i — Quadrant Transition Motifs (800ms sequence, Framer Motion)
+- [x] Build QuadrantTransition wrapper component with 3-phase animation (fade-in, hold+sub-anim, crossfade to content)
+- [ ] SchedulerTransition: envelope tilts ±2deg
+- [ ] DevelopmentTransition: sprout sways ±3deg
+- [ ] PlayLabTransition: crane drifts ±4px
+- [ ] CoachTransition: book pages flicker
+- [x] prefers-reduced-motion: simpler 400ms appear + 200ms fade, no scale/sub-animation
+
+#### 3j — Ambient Corner Accents
+- [ ] Welcome screen: LeafSprig + DriftingCrane at 20% opacity in opposite corners
+- [ ] Landing page: 1-2 ambient accents at 25% opacity (BalloonSprig or CrayonSun)
+
+#### Scheduler-Only Demo Checkpoint
+- [x] Extract all 26 SVGs into individual React TSX components
+- [x] Wire Scheduler transition motif on page mount (plays once per visit)
+- [ ] Wire Scheduler empty state (already done)
+- [x] Wire ActivityScheduled crane achievement micro on event approval success
+- [ ] Push and send screenshots for approval before full rollout
 
 #### Style Guide
 - [ ] Create /docs/illustrations.md documenting color palette, stroke weights, patterns

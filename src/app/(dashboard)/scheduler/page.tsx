@@ -25,6 +25,10 @@ import {
 import { useState, useRef, useCallback, useEffect } from "react";
 
 import { SchedulerIcon } from "@/components/icons/QuadrantIcons";
+import { AchievementMicro } from "@/components/illustrations";
+import { QuadrantTransition } from "@/components/illustrations";
+import { SchedulerTransition } from "@/components/illustrations";
+import { ActivityScheduled } from "@/components/illustrations";
 import { SchedulerEmpty } from "@/components/illustrations/SchedulerEmpty";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
@@ -186,6 +190,10 @@ export default function SchedulerPage() {
 
   // Batch operation state
   const [batchApproving, setBatchApproving] = useState(false);
+
+  // Illustration animation state
+  const [showTransition, setShowTransition] = useState(true);
+  const [showAchievement, setShowAchievement] = useState(false);
 
   // Fetch events
   const fetchEvents = useCallback(async () => {
@@ -439,6 +447,8 @@ export default function SchedulerPage() {
       });
 
       if (res.ok) {
+        // Show achievement micro-celebration
+        setShowAchievement(true);
         // Remove the approved event from the extraction result
         setExtractedResults((prev) =>
           prev
@@ -500,6 +510,7 @@ export default function SchedulerPage() {
         }
       }
       setExtractedResults([]);
+      setShowAchievement(true);
       fetchEvents();
     } catch {
       // silently fail
@@ -580,6 +591,23 @@ export default function SchedulerPage() {
 
   // ─── Render ─────────────────────────────────────────────────
   return (
+    <>
+      {/* Achievement micro-celebration overlay */}
+      <AchievementMicro
+        illustration={<ActivityScheduled size={64} />}
+        show={showAchievement}
+        onDismiss={() => setShowAchievement(false)}
+        label="Event scheduled!"
+        position="center"
+      />
+
+      <QuadrantTransition
+        illustration={<SchedulerTransition className="h-full w-full" />}
+        bgClass="bg-scheduler-muted/80"
+        accentClass="ring-scheduler/30"
+        play={showTransition}
+        onComplete={() => setShowTransition(false)}
+      >
     <div className="animate-fade-in">
       {/* Page header */}
       <div className="mb-6 flex items-start justify-between">
@@ -1304,5 +1332,7 @@ export default function SchedulerPage() {
         </div>
       )}
     </div>
+      </QuadrantTransition>
+    </>
   );
 }
