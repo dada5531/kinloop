@@ -1,0 +1,121 @@
+import { NextRequest, NextResponse } from "next/server";
+
+import { getAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/lib/supabase/types";
+
+type EventInsert = Database["public"]["Tables"]["events"]["Insert"];
+type EventUpdate = Database["public"]["Tables"]["events"]["Update"];
+
+/**
+ * GET /api/events?childId=xxx
+ * Returns all events for a child, ordered by created_at desc.
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const childId = searchParams.get("childId");
+
+    if (!childId) {
+      return NextResponse.json({ error: "childId is required" }, { status: 400 });
+    }
+
+    const supabase = getAdminClient();
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .eq("child_id", childId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("[Events GET] Error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data || []);
+  } catch (error) {
+    console.error("[Events GET] Error:", error);
+    return NextResponse.json({ error: "Failed to fetch events" }, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/events
+ * Create a new event (approve an extracted event).
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    if (!body.title) {
+      return NextResponse.json({ error: "title is required" }, { status: 400 });
+    }
+
+    const supabase = getAdminClient();
+    const effectiveUserId = body.userId || "11111111-1111-1111-1111-111111111111";
+
+    const row: EventInsert = {
+      user_id: effectiveUserId,
+      child_id: body.childId || null,
+      title: body.title,
+      start_time: body.startTime || null,
+      end_time: body.endTime || null,
+      location: body.location || null,
+      source: body.source || "paste",
+      source_label: body.sourceLabel || null,
+      action_items: body.actionItems || [],
+      amount_due: body.amountDue || null,
+      confidence: body.confidence ?? null,
+      raw_content: body.rawContent || null,
+      reply_draft: body.replyDraft || null,
+      file_url: body.fileUrl || null,
+      status: body.status || "approved",
+    };
+
+    const { data, error } = await supabase.from("events").insert(row).select().single();
+
+    if (error) {
+      console.error("[Events POST] Error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("[Events POST] Error:", error);
+    return NextResponse.json({ error: "Failed to create event" }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH /api/events
+ * Update event status (approve/dismiss).
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { eventId, status } = body;
+
+    if (!eventId || !status) {
+      return NextResponse.json({ error: "eventId and status are required" }, { status: 400 });
+    }
+
+    const supabase = getAdminClient();
+    const updates: EventUpdate = { status, updated_at: new Date().toISOString() };
+
+    const { data, error } = await supabase
+      .from("events")
+      .update(updates)
+      .eq("id", eventId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("[Events PATCH] Error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("[Events PATCH] Error:", error);
+    return NextResponse.json({ error: "Failed to update event" }, { status: 500 });
+  }
+}

@@ -1,61 +1,193 @@
-# KINLOOP Full-Stack Upgrade
+# Project TODO
 
-## Phase 1: Infrastructure
-- [x] Upgrade to web-db-user (backend + database)
-- [x] Set up database schema (children, events, health_records, activities, coach_chunks, coach_conversations)
-- [x] Add Anthropic SDK dependency (using built-in Forge LLM)
-- [x] Configure environment secrets (using built-in Forge API keys)
+## Section 3 PR-B — Amazon Integration
+- [x] Enhance amazon-paapi.ts with PA-API v5 placeholder (activates when env vars present)
+- [x] Add generateAmazonSearchUrl for individual materials (search-link fallback as primary V1)
+- [x] Add "Buy on Amazon" button to expanded activity card materials section
+- [x] Add "Shop all materials" button that opens Amazon search for all materials combined
+- [x] Style Amazon CTA buttons consistent with design system (0.5px borders, rounded-xl, soft icons)
+- [x] Ensure PA-API placeholder code is gated behind AMAZON_ACCESS_KEY / AMAZON_SECRET_KEY / AMAZON_PARTNER_TAG env vars
+- [x] Write vitest tests for Amazon URL generation (13 tests passing)
+- [x] Push branch, open PR (#29), take Vercel preview screenshots, send to user for approval
 
-## Phase 2: Backend API Routes
-- [x] tRPC scheduler.extract — Claude extraction for emails/PDFs/images
-- [x] tRPC playLab.extractFromUrl — Extract activity from URL/text
-- [x] tRPC context.summary — Cross-quadrant context
-- [x] tRPC coach.chat — RAG-powered coach chat
-- [x] tRPC upload.file — File upload to S3 storage
-- [x] tRPC children.list / children.create — Child management
-- [x] tRPC development.extractHealth — Health record extraction
-- [x] tRPC development.askAboutChild — Health Q&A
+## Section 3 PR-B v2 — Amazon CTA Redesign
+- [x] Prominent bulk CTA: dark pill button (#2C2C2A bg, white text, 14px), Amazon icon, estimated cost, affiliate disclosure
+- [x] Per-material links: external-link arrow icon inside each chip, underline-on-hover, tooltip "Find on Amazon"
+- [x] Total price estimate line above bulk CTA: "Estimated total: $XX on Amazon · X items eligible for Prime"
+- [x] Layout order: Description → Steps → Materials header → Material chips (with icons) → Price estimate → Dark bulk CTA → Affiliate disclosure → Skills → Safety
+- [x] Take mobile (375px) and desktop (1440px) screenshots from Vercel preview
 
-## Phase 3: Scheduler (real AI)
-- [x] Paste text → Claude extraction
-- [x] Review UI with extracted events, action items, amounts, reply
-- [x] Approve → save to events table
-- [x] File upload (PDF/image) → S3 → Claude extraction (multimodal: images via image_url, PDFs via file_url)
+## PR-B Bug Fix — Add to Cart button not working
+- [x] Diagnose: bulk CTA query too long (5 materials) → Amazon "No results". Per-material chips work.
+- [x] Fix: shortened bulk CTA to top 2 materials + "kids activity supplies", stripped parentheticals from URLs
+- [x] Fix: per-material chips already worked, now with cleaned names (parentheticals stripped)
+- [x] Verify: bulk CTA → 3 results on Amazon ✓, per-material "Baking soda" → 1000+ results ✓, all with kinloop-20 tag
 
-## Phase 4: Development Hub (real AI)
-- [x] Upload pediatrician summary / school report (paste text)
-- [x] Claude extraction of health data
-- [x] Growth chart from real data
-- [x] Growth data stats (weight, height, percentiles)
-- [x] "Ask about child" chat with health records context
+## Section 3 PR-C — Scheduler Integration + Saved Activities List
+- [x] Schedule modal: date picker, time picker, duration auto-fill, notes textarea, reminder toggle (15/30/60 min), Cancel/Save
+- [x] On Save: insert into events table (same as Quadrant 1 Scheduler), source = "play_lab"
+- [x] Success state: green banner "Scheduled for [day]" with check icon
+- [x] Dashboard "This week" event counter increments (auto — TopBar fetches /api/events)
+- [x] Scheduler quadrant shows the event in its list (auto — dashboard fetches /api/events)
+- [x] After scheduling: green "Scheduled for [day] at [time]" badge replaces button, with "Edit" link
+- [x] Saved activities list at top of Play Lab: upcoming activities with date/time/Open button
+- [x] Past activities collapse into "Done" section
+- [x] Take screenshots: schedule modal, success state, upcoming activities, TopBar counter, Scheduler quadrant — all verified end-to-end
 
-## Phase 5: Play Lab (real AI)
-- [x] URL paste → detect platform
-- [x] YouTube transcript extraction (fixed ESM import)
-- [x] Claude extraction of activity plan
-- [x] Materials with Amazon search links
-- [x] Save to activities table
-- [x] Age-appropriateness warning
+## PR-C Fix — Calendar Invite Email (.ics via Resend)
+- [x] Create shared utility for calendar invite emails (reusable across all quadrants) — src/lib/calendar/send-invite.ts
+- [x] Generate .ics file using existing `ics` package when user clicks Schedule
+- [x] Send via Resend to user's configured notification email
+- [x] Subject: "Kinloop · Scheduled: [activity title] · [day] [time]"
+- [x] Body: brief description, materials list (amber section), deep link to Play Lab
+- [x] Attachment: .ics file (kinloop-play_lab-YYYY-MM-DD.ics)
+- [x] If no notification email configured: show amber hint toast with link to Settings
+- [x] Test end-to-end: schedule activity → POST /api/play/send-calendar called (689ms) → response: {status: 400, code: "no_email", error: "No email configured..."} → correct no-email path
+- [x] Vitest: 5 ICS generator tests passing (VCALENDAR wrapper, DTSTART/DTEND, multi-event, description, unique UIDs)
+- [x] Vitest: 13 Amazon URL tests + 5 ICS tests = 18 total tests passing
+- Note: Full email delivery requires Resend API key + notification_email in user_settings. The code path is verified; email delivery is gated on credentials.
 
-## Phase 6: Coach (RAG)
-- [x] Seed parenting corpus (41 chunks from books/AAP — sufficient for demo, expandable)
-- [x] RAG retrieval + Claude chat
-- [x] Source citations in responses
-- [x] Conversation history persistence
+## v1.5-cleanup PR
+- [x] Curl test: /api/coach/daily?childId=... returns in-range activity for Mia (50mo), NOT Water Pouring (age_max: 48)
+- [x] Welcome screen polish confirmation: 7s duration, 320px+ photo, progress bar, fade transitions
+- [x] Amazon button test: confirm "Shop materials on Amazon" opens working Amazon search URL with kinloop-20 tag
+- [x] Update CLAUDE.md, ARCHITECTURE.md, ROADMAP.md for v1.5 final state
+- [x] Move deferred items (FHIR, HealthKit, Instacart, multi-user auth, Clerk) to ROADMAP.md as Series A milestones
+- [x] Add domain-verification status check to /api/health/email (warn when RESEND_FROM_EMAIL is onboarding@resend.dev)
+- [x] Document custom-domain Resend setup as v1.8 task in CLAUDE.md and ROADMAP.md (DNS records, Resend dashboard config checklist)
+- [x] Tag v1.5.0 release on GitHub
 
-## Phase 7: Cross-quadrant + Polish
-- [x] Context endpoint aggregating all tables
-- [x] Dashboard 2x2 grid with real data
-- [x] Onboarding flow for new users
-- [x] Fix growth data extraction (ageMonths fallback)
+## v1.6 Stage A — Color and Typography Token Changes
+- [ ] Warm cream backgrounds (replace cool grays)
+- [ ] Soft saturated pastel accents (peachy coral, sage, butter, rose)
+- [ ] Fraunces serif for editorial moments (headings, greeting, section titles)
+- [ ] Take screenshots of dashboard + Coach page
+- [ ] Wait for user approval before Stage B
 
-## Phase 8: Deliver
-- [x] Final end-to-end regression of all quadrants after fixes
-- [x] 19 vitest tests passing
-- [x] Final checkpoint
-- [x] Guide user to export to GitHub
+## Notification Email Settings Bug — BLOCKING PR-C
+- [x] DIAGNOSE: Settings page exists, email field visible, typed test@kinloop.com, clicked Save → 500 error, no toast shown
+- [x] DIAGNOSE: user_settings table empty for demo user (0 rows). Table schema correct. RLS disabled.
+- [x] DIAGNOSE: POST /api/settings → upsert with user_id '00000000...' → FK violation (user doesn't exist in users table)
+- [x] DIAGNOSE: send-invite.ts reads user_settings.notification_email → falls back to users.email → calls resend.ts → RESEND_API_KEY empty
+- [x] FIX: Added error toast + success confirmation to settings page
+- [x] FIX: Already uses getAdminClient() (service role key). Root cause was wrong user ID, not RLS.
+- [x] FIX: send-invite.ts reads user_settings.notification_email with correct user ID now
+- [x] FIX: Added /api/health/email endpoint — returns user_exists, notification_email, resend_api_key, effective_recipient, status, blockers
+- [x] VERIFY: RESEND_API_KEY is set on Vercel (resend_api_key_set: true from /api/health/email)
+- [x] VERIFY: RESEND_FROM_EMAIL falls back to "Kinloop <onboarding@resend.dev>" (Resend test domain — works for testing)
+- [x] VERIFY: Send test email via scheduling flow → 200 OK → "Calendar invite sent to test@kinloop.com"
+- [x] VERIFY: Resend API accepted the email (200 OK). Delivery depends on real recipient address. Pipeline fully verified.
 
-## Phase 9: File Upload E2E Verification
-- [x] Upload dialog UI (drag-and-drop, click-to-upload)
-- [x] Image upload → S3 → multimodal AI extraction (tested with permission slip image)
-- [x] Extracted event, action items, payment, suggested reply from image
+## PR-C Pre-Merge — Real Email Delivery Verification
+- [x] Update demo user notification_email to dlim@mba2027.hbs.edu via Supabase SQL
+- [x] Confirm via Supabase SQL: setting_value = "dlim@mba2027.hbs.edu" (row id: d2b8e434-78fb-40b7-8836-5c3c0118ff23)
+- [x] Trigger full scheduling flow → POST /api/play/send-calendar → 200 OK → sent to dlim@mba2027.hbs.edu
+- [x] Resend API confirms: last_event = "delivered" (email ID: dd3245f2-3512-4992-ba61-aeb90b60fbd2)
+- [x] .ics attachment included (code-level proof: resend.ts lines 62-68, base64-encoded text/calendar)
+- [x] Delivery status: "delivered" — confirmed via Resend GET /emails/{id} API
+- [x] Full Resend API response saved to resend-delivery-proof.txt
+- [x] User confirmed: email arrived in inbox, .ics opens correctly, adds event at right date/time
+- [x] PR-C merged (#30)
+
+## v1.6 Stage B — Design Warmth (illustrations, microinteractions, card warmth)
+
+### Ask 1 — Welcome Screen: Bigger Photo
+- [x] Desktop: photo at least 480px tall, occupying upper 50-55% of viewport
+- [x] Mobile: photo at least 320px tall, dominating upper 60% of viewport
+- [x] Keep rounded corners (16px) and soft shadow
+- [x] Increase vertical whitespace between photo and greeting to ~32px
+
+### Ask 2 — Landing Page: Abeto-Inspired Redesign
+- [x] Massive Fraunces headline (64-80px desktop, 36-44px mobile): "Less chaos. More childhood."
+- [x] Single supporting line in Inter, ~18px, muted, max 80 chars
+- [x] Two CTAs: primary "Get started" (dark pill) + secondary "Sign in" (ghost link with arrow)
+- [x] Remove 4 quadrant cards from above-fold (or push below fold as secondary section)
+- [x] Headline letters fade in with 30ms stagger, total <600ms
+- [ ] Single small decorative element (botanical sprig or similar) — deferred to 3c
+
+### Ask 3 — Hand-Drawn Illustrations (user-provided style + extensions)
+
+#### 3a — Empty States (user-provided SVGs)
+- [x] Copy 4 user-provided SVGs to /src/components/illustrations/ as React components
+- [x] SchedulerEmpty: envelopes/letters scene, ~280px tall
+- [x] DevelopmentEmpty: growth chart + potted sprout, ~280px tall
+- [x] PlayLabEmpty: paper airplane + blocks + key, ~280px tall
+- [x] CoachEmpty: open journal + steaming mug, ~280px tall
+- [x] Wire each to respective quadrant empty state (replace current no-data text)
+- [x] Empty-state copy appears below illustration
+
+#### 3b — Welcome Screen Motifs
+- [ ] 2 small decorative elements at 20% opacity in opposite corners of photo frame
+- [ ] Sprig of leaves (2-3 small leaves) in one corner
+- [ ] Tiny paper crane drifting in opposite corner
+
+#### 3c — Landing Page Decoration
+- [ ] One small ~60px detail in lower-right/trailing corner
+- [ ] Subject: small balloon string with sprig OR crayon sun with squiggle rays
+
+#### 3d — Dashboard Header Time-of-Day Motifs (80px, Framer Motion)
+- [ ] Morning: steaming mug + small sprig (teacup style from Coach empty state)
+- [ ] Afternoon: paper sun with 6 rays, butter-yellow fills
+- [ ] Evening: soft crescent moon with 1-2 small clouds, dusty blue/grey fills
+- [ ] 4-5 second drift loop animation (steam curls / sun rotates 5deg / moon bobs)
+- [ ] Respect prefers-reduced-motion
+
+#### 3e — Achievement Micro-Illos (60px, animate 1.5s then fade)
+- [ ] Milestone marked done: 5-point star + 3-4 confetti dots, sage-green fills
+- [ ] Activity scheduled: paper crane taking flight + dotted trail, butter fills
+- [ ] Tip saved: heart with tiny sprig overlaid, rose fills
+- [ ] Email sent: paper plane drifting upward + dotted trail, peach fills
+
+#### 3f — Play Lab Activity Card Header Illos (40px, per-category)
+- [ ] Sensory: small bowl with three bumps, peach fills
+- [ ] Motor: small balance beam with single ball, sage fills
+- [ ] Cognitive: two interlocking puzzle pieces, butter fills
+- [ ] Creative: small paint brush with single drop, rose fills
+
+#### 3g — Coach Tip Card Header Illos (40px, per-topic)
+- [ ] Sleep tips: small moon
+- [ ] Behavior tips: heart with sprig
+- [ ] Nutrition tips: small bowl with sprig of greens
+- [ ] Development tips: small sprout (scaled from Development empty state)
+- [ ] Safety tips: small folded paper triangle
+
+#### 3h — Development Milestone Category Icons (~16px, replace checkmark)
+- [ ] Cognitive: small spark (3 short radiating lines)
+- [ ] Motor: small footprint
+- [ ] Language: small speech bubble with sprig
+- [ ] Social: two overlapping circles forming venn
+
+#### 3i — Quadrant Transition Motifs (800ms sequence, Framer Motion)
+- [x] Build QuadrantTransition wrapper component with 3-phase animation (fade-in, hold+sub-anim, crossfade to content)
+- [ ] SchedulerTransition: envelope tilts ±2deg
+- [ ] DevelopmentTransition: sprout sways ±3deg
+- [ ] PlayLabTransition: crane drifts ±4px
+- [ ] CoachTransition: book pages flicker
+- [x] prefers-reduced-motion: simpler 400ms appear + 200ms fade, no scale/sub-animation
+
+#### 3j — Ambient Corner Accents
+- [ ] Welcome screen: LeafSprig + DriftingCrane at 20% opacity in opposite corners
+- [ ] Landing page: 1-2 ambient accents at 25% opacity (BalloonSprig or CrayonSun)
+
+#### Scheduler-Only Demo Checkpoint
+- [x] Extract all 26 SVGs into individual React TSX components
+- [x] Wire Scheduler transition motif on page mount (plays once per visit)
+- [ ] Wire Scheduler empty state (already done)
+- [x] Wire ActivityScheduled crane achievement micro on event approval success
+- [ ] Push and send screenshots for approval before full rollout
+
+#### Style Guide
+- [ ] Create /docs/illustrations.md documenting color palette, stroke weights, patterns
+
+### Ask 4 — Card Warmth
+- [x] Each quadrant card gets 4% opacity wash of its accent color
+- [x] Border color shifts to warm-gray #E8E2D5
+- [x] Hover: wash deepens to 8%, card lifts with soft shadow (0 4px 12px rgba(0,0,0,0.04))
+- [x] Selected/active states: 2px border in quadrant accent at full opacity
+
+### Ask 5 — Microinteractions
+- [x] Card hover: scale 1.005 + warmth wash, 200ms ease-out
+- [ ] Button press: scale 0.98 + brief color deepening, 100ms
+- [ ] Save/schedule actions: success icon grows in + accent flush + achievement micro-illustration
+- [ ] Tab switches: 250ms ease-out cross-fade
+- [ ] Timeline entries: fade-in on load with 50ms stagger

@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Page & surface — warm cream tones */
+    --background: 38 35% 96%;
+    --background-secondary: 36 28% 93%;
+    --background-tertiary: 34 22% 90%;
+    --foreground: 30 8% 15%;
+
+    /* Cards — warm white */
+    --card: 40 30% 99%;
+    --card-foreground: 30 8% 15%;
+
+    --popover: 40 30% 99%;
+    --popover-foreground: 30 8% 15%;
+
+    /* Primary — warm charcoal (slightly brown-tinted) */
+    --primary: 30 6% 20%;
+    --primary-foreground: 40 30% 99%;
+
+    /* Secondary */
+    --secondary: 36 28% 93%;
+    --secondary-foreground: 30 8% 15%;
+
+    /* Muted */
+    --muted: 36 22% 92%;
+    --muted-foreground: 25 6% 50%;
+
+    /* Accent */
+    --accent: 36 28% 93%;
+    --accent-foreground: 30 8% 15%;
+
+    /* Destructive */
+    --destructive: 4 72% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders — warm, slightly visible */
+    --border: 32 18% 87%;
+    --input: 32 18% 87%;
+    --ring: 262 40% 58%;
+
+    --radius: 0.75rem;
+
+    /* KINLOOP Quadrant accent colors — warmer, softer pastels */
+    --scheduler: 262 38% 58%;
+    --scheduler-foreground: 0 0% 100%;
+    --scheduler-muted: 262 30% 95%;
+
+    --development: 164 35% 48%;
+    --development-foreground: 0 0% 100%;
+    --development-muted: 164 25% 95%;
+
+    --play: 18 65% 62%;
+    --play-foreground: 0 0% 100%;
+    --play-muted: 18 45% 95%;
+
+    --coach: 338 40% 62%;
+    --coach-foreground: 0 0% 100%;
+    --coach-muted: 338 30% 95%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography — tightened letter-spacing for body */
+  h1,
+  h2 {
+    letter-spacing: -0.015em;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    letter-spacing: -0.005em;
+  }
+
+  body,
+  p,
+  span,
+  a,
+  li {
+    letter-spacing: -0.005em;
+  }
+}
+
+/* Utility class for serif headings (Fraunces) — uses Tailwind config font-serif-display */
+/* The font-serif-display class is defined in tailwind.config.ts fontFamily */
+
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--background-secondary)) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* Fade-in animation for page transitions and new items */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 300ms ease-out forwards;
+}
+
+/* Slide-fade for new items */
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-fade-in {
+  animation: slideFadeIn 250ms ease-out forwards;
+}
