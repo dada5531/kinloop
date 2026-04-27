@@ -102,11 +102,20 @@ export default function DashboardPage() {
 
   const prefersReduced = useReducedMotion();
   const greeting = getTimeOfDayGreeting();
-  const TimeMotif = useMemo(() => {
+  const { TimeMotif, driftAnim } = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return MorningMug;
-    if (hour < 17) return AfternoonSun;
-    return EveningMoon;
+    if (hour < 12) return {
+      TimeMotif: MorningMug,
+      driftAnim: { y: [0, -2, 0, 2, 0], rotate: [0, 1.5, 0, -1.5, 0], scale: [1, 1.01, 1, 0.99, 1] },
+    };
+    if (hour < 17) return {
+      TimeMotif: AfternoonSun,
+      driftAnim: { rotate: [0, 5, 0, -5, 0], scale: [1, 1.02, 1, 0.98, 1] },
+    };
+    return {
+      TimeMotif: EveningMoon,
+      driftAnim: { y: [0, -3, 0, 3, 0], x: [0, 1, 0, -1, 0] },
+    };
   }, []);
 
   return (
@@ -115,10 +124,7 @@ export default function DashboardPage() {
       <div className="mb-8 flex items-center gap-4">
         <motion.div
           className="hidden h-14 w-14 flex-shrink-0 sm:block md:h-16 md:w-16"
-          animate={prefersReduced ? {} : {
-            y: [0, -2, 0, 2, 0],
-            rotate: [0, 1, 0, -1, 0],
-          }}
+          animate={prefersReduced ? {} : driftAnim}
           transition={{
             duration: 4.5,
             repeat: Infinity,

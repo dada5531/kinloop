@@ -99,7 +99,7 @@ const PLATFORM_CONFIG: Record<
     icon: <span className="text-[11px] font-bold">TT</span>,
     label: "TikTok",
     color: "text-foreground",
-    bgColor: "bg-gray-100",
+    bgColor: "bg-muted",
   },
   instagram: {
     icon: <span className="text-[11px] font-bold">IG</span>,
@@ -179,7 +179,7 @@ function CategoryBadge({ category }: { category: string }) {
 // Fix 4: Skill tag with color differentiation by category
 function SkillTag({ skill }: { skill: string }) {
   const lower = skill.toLowerCase();
-  let colorClass = "border-slate-200 bg-slate-50 text-slate-600"; // default
+  let colorClass = "border-border bg-muted text-muted-foreground"; // default
   if (
     lower.includes("motor") ||
     lower.includes("coordination") ||
@@ -1235,8 +1235,8 @@ export default function PlayLabPage() {
                       <div className="border-t-[0.5px] border-border pt-3">
                         {scheduleSuccess === activity.id ? (
                           <div className="space-y-2">
-                            <div className="flex items-center gap-2 rounded-lg border-[0.5px] border-green-200 bg-green-50 px-3 py-2">
-                              <Check className="h-4 w-4 text-green-600" />
+                            <div className="flex items-center gap-2 animate-accent-flush rounded-lg border-[0.5px] border-green-200 bg-green-50 px-3 py-2">
+                              <Check className="h-4 w-4 text-green-600 animate-success-icon" />
                               <span className="text-sm font-medium text-green-700">
                                 Scheduled for {activity.scheduled_for ? new Date(activity.scheduled_for).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : "soon"}
                               </span>
@@ -1317,7 +1317,7 @@ export default function PlayLabPage() {
             onClick={() => !extracting && setShowInputDialog(false)}
           />
           <div className="relative mx-4 w-full max-w-lg rounded-2xl border-[0.5px] border-border bg-card p-6">
-            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
+            <h2 className="mb-1 flex items-center gap-2 font-serif-display text-base font-semibold">
               <PlayLabIcon size={16} className="text-play" />
               New activity
             </h2>
@@ -1433,7 +1433,7 @@ export default function PlayLabPage() {
             onClick={() => !scheduleSaving && setShowScheduleModal(false)}
           />
           <div className="relative mx-4 w-full max-w-md rounded-2xl border-[0.5px] border-border bg-card p-6">
-            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
+            <h2 className="mb-1 flex items-center gap-2 font-serif-display text-base font-semibold">
               <CalendarPlus className="h-4 w-4 text-play" />
               Schedule activity
             </h2>

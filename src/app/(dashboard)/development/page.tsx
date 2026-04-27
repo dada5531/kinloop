@@ -1462,7 +1462,7 @@ export default function DevelopmentPage() {
             onClick={() => setShowPasteDialog(false)}
           />
           <div className="relative mx-4 w-full max-w-lg rounded-2xl border-[0.5px] border-border bg-card p-6">
-            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
+            <h2 className="mb-1 flex items-center gap-2 font-serif-display text-base font-semibold">
               <ClipboardPaste className="h-4 w-4 text-development" />
               Paste health notes
             </h2>

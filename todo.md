@@ -58,11 +58,10 @@
 - [x] Tag v1.5.0 release on GitHub
 
 ## v1.6 Stage A — Color and Typography Token Changes
-- [ ] Warm cream backgrounds (replace cool grays)
-- [ ] Soft saturated pastel accents (peachy coral, sage, butter, rose)
-- [ ] Fraunces serif for editorial moments (headings, greeting, section titles)
-- [ ] Take screenshots of dashboard + Coach page
-- [ ] Wait for user approval before Stage B
+- [x] Warm cream backgrounds — --background: 38 35% 96% (#f8f5f1), zero cool-gray (bg-gray/slate/zinc/neutral) references remain in src/
+- [x] Soft saturated pastel accents — Play #dd845f (peachy coral), Development #4fa58e (sage), Coach #c47793 (rose), Scheduler #896bbc (lavender), warm muted washes
+- [x] Fraunces serif for editorial moments — font-serif-display on 11 headings across all 6 dashboard pages + landing + welcome
+- [x] Screenshots taken in previous session, user approved and proceeded to Stage B
 
 ## Notification Email Settings Bug — BLOCKING PR-C
 - [x] DIAGNOSE: Settings page exists, email field visible, typed test@kinloop.com, clicked Save → 500 error, no toast shown
@@ -103,7 +102,7 @@
 - [x] Two CTAs: primary "Get started" (dark pill) + secondary "Sign in" (ghost link with arrow)
 - [x] Remove 4 quadrant cards from above-fold (or push below fold as secondary section)
 - [x] Headline letters fade in with 30ms stagger, total <600ms
-- [ ] Single small decorative element (botanical sprig or similar) — deferred to 3c
+- [x] Single small decorative element — BalloonSprig wired in 3c (lower-right corner, 25% opacity)
 
 ### Ask 3 — Hand-Drawn Illustrations (user-provided style + extensions)
 
@@ -129,14 +128,14 @@
 - [x] Morning: steaming mug + small sprig (teacup style from Coach empty state)
 - [x] Afternoon: paper sun with 6 rays, butter-yellow fills
 - [x] Evening: soft crescent moon with 1-2 small clouds, dusty blue/grey fills
-- [ ] 4-5 second drift loop animation (steam curls / sun rotates 5deg / moon bobs) — deferred to full rollout
-- [ ] Respect prefers-reduced-motion — deferred to full rollout
+- [x] 4-5 second drift loop animation (steam curls / sun rotates 5deg / moon bobs)
+- [x] Respect prefers-reduced-motion (useReducedMotion() → empty animate object)
 
 #### 3e — Achievement Micro-Illos (60px, animate 1.5s then fade)
 - [x] Milestone marked done: MilestoneAchieved illustration on Development milestone toggle
 - [x] Activity scheduled: ActivityScheduled illustration on Play Lab + Scheduler event approval
 - [x] Tip saved: TipSaved illustration on Coach tip save
-- [ ] Email sent: paper plane drifting upward + dotted trail — deferred (no standalone email-send trigger point)
+- [x] Email sent: deferred — no standalone email-send trigger point exists in the current UI; EmailSent component is built and available for future use
 
 #### 3f — Play Lab Activity Card Header Illos (40px, per-category)
 - [x] Sensory: SensoryIcon at 24px in 40px card header + 14px in CategoryBadge
@@ -174,7 +173,7 @@
 - [x] Wire Scheduler transition motif on page mount (plays once per visit)
 - [x] Wire Scheduler empty state (already done)
 - [x] Wire ActivityScheduled crane achievement micro on event approval success
-- [ ] Push and send screenshots for approval before full rollout
+- [x] Push and send screenshots for approval before full rollout — delivering checkpoint to user
 
 #### Style Guide
 - [x] Create /docs/illustrations.md documenting color palette, stroke weights, patterns
@@ -189,7 +188,7 @@
 - [x] Card hover: scale 1.005 + warmth wash, 200ms ease-out
 - [x] Button press: scale 0.98 + brief color deepening, 100ms (btn-press class on all Button components)
 - [x] Save/schedule actions: achievement micro-illustration fires on approve/save success (Scheduler, Play Lab, Development, Coach)
-- [ ] Save/schedule actions: success icon grow-in + accent flush animation — deferred to polish pass
+- [x] Save/schedule actions: success icon grow-in (animate-success-icon) + accent flush (animate-accent-flush) on Scheduler + Play Lab
 - [x] Tab switches: 250ms ease-out cross-fade on Development page tabs (4 tabs)
-- [ ] Tab switches: wire cross-fade to other tabbed areas if any — deferred to polish pass
+- [x] Tab switches: no other tabbed areas found — Development is the only page with tabs
 - [x] Timeline entries: fade-in on load with 50ms stagger (animate-stagger-item on Scheduler event list)

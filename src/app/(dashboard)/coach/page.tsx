@@ -531,7 +531,7 @@ export default function CoachPage() {
                 <div className="mb-6 w-full max-w-[280px]">
                   <CoachEmpty />
                 </div>
-                <h2 className="mb-1 text-base font-semibold text-foreground">
+                <h2 className="mb-1 font-serif-display text-base font-semibold text-foreground">
                   What&apos;s on your mind?
                 </h2>
                 <p className="mb-6 max-w-md text-center text-sm leading-relaxed text-muted-foreground">

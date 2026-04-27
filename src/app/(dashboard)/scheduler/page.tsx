@@ -879,14 +879,14 @@ export default function SchedulerPage() {
                     <div
                       className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
                         evt.status === "approved"
-                          ? "bg-green-50 text-green-600"
+                          ? "bg-green-50 text-green-600 animate-accent-flush"
                           : evt.status === "dismissed"
                             ? "bg-muted text-muted-foreground"
                             : "bg-scheduler-muted text-scheduler"
                       }`}
                     >
                       {evt.status === "approved" ? (
-                        <Check className="h-3.5 w-3.5" />
+                        <Check className="h-3.5 w-3.5 animate-success-icon" />
                       ) : evt.status === "dismissed" ? (
                         <X className="h-3.5 w-3.5" />
                       ) : (
@@ -973,7 +973,7 @@ export default function SchedulerPage() {
                 )}
               </div>
 
-              <h2 className="mb-2 text-lg font-semibold text-foreground">{selectedEvent.title}</h2>
+              <h2 className="mb-2 font-serif-display text-lg font-semibold text-foreground">{selectedEvent.title}</h2>
 
               <div className="mb-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
                 {selectedEvent.start_time && (
