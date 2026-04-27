@@ -866,12 +866,13 @@ export default function SchedulerPage() {
             <InboxSkeleton />
           ) : events.length > 0 ? (
             <div className="divide-y divide-border/50">
-              {events.map((evt) => (
+              {events.map((evt, idx) => (
                 <button
                   key={evt.id}
-                  className={`w-full p-4 text-left transition-colors duration-150 hover:bg-background-secondary ${
+                  className={`animate-stagger-item w-full p-4 text-left transition-colors duration-150 hover:bg-background-secondary ${
                     selectedEventId === evt.id ? "bg-scheduler-muted/30" : ""
                   }`}
+                  style={{ animationDelay: `${idx * 50}ms` }}
                   onClick={() => setSelectedEventId(evt.id)}
                 >
                   <div className="flex items-start gap-3">

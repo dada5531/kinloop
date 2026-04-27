@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
+import { LeafSprig, DriftingCrane } from "@/components/illustrations";
 import { useChild } from "@/components/providers/ChildProvider";
 
 /**
@@ -90,7 +91,7 @@ export function WelcomeScreen() {
       <div className="relative flex flex-col items-center px-6 text-center" style={{ marginTop: "-5vh" }}>
         {/* Photo — DOMINANT: 480px desktop, 320px mobile */}
         <div
-          className={`overflow-hidden rounded-2xl shadow-xl transition-transform ease-out ${
+          className={`relative overflow-hidden rounded-2xl shadow-xl transition-transform ease-out ${
             fadeOut
               ? "scale-95 duration-500"
               : fadeIn
@@ -116,6 +117,13 @@ export function WelcomeScreen() {
               </span>
             </div>
           )}
+          {/* Ambient corner accents — inside photo frame, 20% opacity */}
+          <div className="pointer-events-none absolute left-2 top-2 opacity-20 sm:left-3 sm:top-3">
+            <LeafSprig className="h-10 w-10 sm:h-12 sm:w-12" />
+          </div>
+          <div className="pointer-events-none absolute bottom-2 right-2 opacity-20 sm:bottom-3 sm:right-3">
+            <DriftingCrane className="h-10 w-10 sm:h-12 sm:w-12" />
+          </div>
         </div>
 
         {/* 32px gap between photo and greeting */}
@@ -147,6 +155,7 @@ export function WelcomeScreen() {
           {selectedChild.name}, {ageDisplay}
         </p>
       </div>
+
 
       {/* Progress bar — 2px, full-width, bottom of screen */}
       <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-transparent">

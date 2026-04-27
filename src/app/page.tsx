@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+import { BalloonSprig } from "@/components/illustrations";
+
 /**
  * Marketing landing page — Abeto-inspired, editorial, warm.
  * Massive headline with letter-stagger animation, clean CTAs,
@@ -58,7 +60,7 @@ export default function LandingPage() {
   });
 
   return (
-    <main className="flex min-h-screen flex-col bg-background">
+    <main className="relative flex min-h-screen flex-col bg-background">
       {/* ─── Hero: above-fold ─── */}
       <section className="flex flex-1 flex-col items-center justify-center px-6 pb-16 pt-24 md:pb-24 md:pt-32">
         <div className="mx-auto max-w-3xl text-center">
@@ -173,6 +175,11 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Ambient accent — lower-right decorative element */}
+      <div className="pointer-events-none absolute bottom-24 right-6 opacity-25 sm:bottom-32 sm:right-12 md:right-20">
+        <BalloonSprig className="h-14 w-14 sm:h-16 sm:w-16" />
+      </div>
 
       {/* ─── Footer ─── */}
       <footer className="border-t border-border/30 px-6 py-8 text-center">

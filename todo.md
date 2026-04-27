@@ -117,20 +117,20 @@
 - [x] Empty-state copy appears below illustration
 
 #### 3b — Welcome Screen Motifs
-- [ ] 2 small decorative elements at 20% opacity in opposite corners of photo frame
-- [ ] Sprig of leaves (2-3 small leaves) in one corner
-- [ ] Tiny paper crane drifting in opposite corner
+- [x] 2 small decorative elements at 20% opacity in opposite corners of photo frame
+- [x] Sprig of leaves (2-3 small leaves) in one corner
+- [x] Tiny paper crane drifting in opposite corner
 
 #### 3c — Landing Page Decoration
-- [ ] One small ~60px detail in lower-right/trailing corner
-- [ ] Subject: small balloon string with sprig OR crayon sun with squiggle rays
+- [x] One small ~60px detail in lower-right/trailing corner (BalloonSprig)
+- [x] Subject: small balloon string with sprig OR crayon sun with squiggle rays
 
 #### 3d — Dashboard Header Time-of-Day Motifs (80px, Framer Motion)
-- [ ] Morning: steaming mug + small sprig (teacup style from Coach empty state)
-- [ ] Afternoon: paper sun with 6 rays, butter-yellow fills
-- [ ] Evening: soft crescent moon with 1-2 small clouds, dusty blue/grey fills
-- [ ] 4-5 second drift loop animation (steam curls / sun rotates 5deg / moon bobs)
-- [ ] Respect prefers-reduced-motion
+- [x] Morning: steaming mug + small sprig (teacup style from Coach empty state)
+- [x] Afternoon: paper sun with 6 rays, butter-yellow fills
+- [x] Evening: soft crescent moon with 1-2 small clouds, dusty blue/grey fills
+- [ ] 4-5 second drift loop animation (steam curls / sun rotates 5deg / moon bobs) — deferred to full rollout
+- [ ] Respect prefers-reduced-motion — deferred to full rollout
 
 #### 3e — Achievement Micro-Illos (60px, animate 1.5s then fade)
 - [ ] Milestone marked done: 5-point star + 3-4 confetti dots, sage-green fills
@@ -166,13 +166,13 @@
 - [x] prefers-reduced-motion: simpler 400ms appear + 200ms fade, no scale/sub-animation
 
 #### 3j — Ambient Corner Accents
-- [ ] Welcome screen: LeafSprig + DriftingCrane at 20% opacity in opposite corners
-- [ ] Landing page: 1-2 ambient accents at 25% opacity (BalloonSprig or CrayonSun)
+- [x] Welcome screen: LeafSprig + DriftingCrane at 20% opacity in opposite corners
+- [x] Landing page: BalloonSprig at 25% opacity in lower-right corner
 
 #### Scheduler-Only Demo Checkpoint
 - [x] Extract all 26 SVGs into individual React TSX components
 - [x] Wire Scheduler transition motif on page mount (plays once per visit)
-- [ ] Wire Scheduler empty state (already done)
+- [x] Wire Scheduler empty state (already done)
 - [x] Wire ActivityScheduled crane achievement micro on event approval success
 - [ ] Push and send screenshots for approval before full rollout
 
@@ -187,7 +187,7 @@
 
 ### Ask 5 — Microinteractions
 - [x] Card hover: scale 1.005 + warmth wash, 200ms ease-out
-- [ ] Button press: scale 0.98 + brief color deepening, 100ms
+- [x] Button press: scale 0.98 + brief color deepening, 100ms (btn-press class on all Button components)
 - [ ] Save/schedule actions: success icon grows in + accent flush + achievement micro-illustration
 - [ ] Tab switches: 250ms ease-out cross-fade
-- [ ] Timeline entries: fade-in on load with 50ms stagger
+- [x] Timeline entries: fade-in on load with 50ms stagger (animate-stagger-item on Scheduler event list)

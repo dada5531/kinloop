@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 import {
   SchedulerIcon,
@@ -8,6 +9,7 @@ import {
   PlayLabIcon,
   CoachIcon,
 } from "@/components/icons/QuadrantIcons";
+import { MorningMug, AfternoonSun, EveningMoon } from "@/components/illustrations";
 import { useChild } from "@/components/providers/ChildProvider";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QuadrantCard, PreviewRow } from "@/components/ui/quadrant-card";
@@ -98,20 +100,43 @@ export default function DashboardPage() {
     return <DashboardSkeleton />;
   }
 
+  const prefersReduced = useReducedMotion();
   const greeting = getTimeOfDayGreeting();
+  const TimeMotif = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return MorningMug;
+    if (hour < 17) return AfternoonSun;
+    return EveningMoon;
+  }, []);
 
   return (
     <div className="animate-fade-in">
-      {/* Page header */}
-      <div className="mb-8">
-        <h1 className="font-serif-display text-xl font-semibold text-foreground md:text-2xl">
-          {selectedChild ? `${greeting}, ${selectedChild.name.split(" ")[0]}` : greeting}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {selectedChild
-            ? `Here's what's happening for ${selectedChild.name}`
-            : "Select a child to see their dashboard"}
-        </p>
+      {/* Page header with time-of-day motif */}
+      <div className="mb-8 flex items-center gap-4">
+        <motion.div
+          className="hidden h-14 w-14 flex-shrink-0 sm:block md:h-16 md:w-16"
+          animate={prefersReduced ? {} : {
+            y: [0, -2, 0, 2, 0],
+            rotate: [0, 1, 0, -1, 0],
+          }}
+          transition={{
+            duration: 4.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <TimeMotif className="h-full w-full" />
+        </motion.div>
+        <div>
+          <h1 className="font-serif-display text-xl font-semibold text-foreground md:text-2xl">
+            {selectedChild ? `${greeting}, ${selectedChild.name.split(" ")[0]}` : greeting}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {selectedChild
+              ? `Here's what's happening for ${selectedChild.name}`
+              : "Select a child to see their dashboard"}
+          </p>
+        </div>
       </div>
 
       {/* 2x2 Quadrant Grid */}

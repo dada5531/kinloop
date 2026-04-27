@@ -155,3 +155,47 @@
 .animate-slide-fade-in {
   animation: slideFadeIn 250ms ease-out forwards;
 }
+
+/* ─── Microinteractions ─── */
+
+/* Button press: scale 0.98 + brief color deepening */
+.btn-press {
+  transition: transform 100ms ease-out, filter 100ms ease-out;
+}
+.btn-press:active {
+  transform: scale(0.98);
+  filter: brightness(0.95);
+}
+
+/* Tab switch crossfade */
+@keyframes tabCrossfade {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-tab-crossfade {
+  animation: tabCrossfade 250ms ease-out forwards;
+}
+
+/* Timeline stagger fade-in */
+@keyframes staggerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-stagger-item {
+  animation: staggerFadeIn 300ms ease-out forwards;
+  opacity: 0;
+}
