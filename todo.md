@@ -224,5 +224,5 @@
 - [x] Update CLAUDE.md to reflect final state (Section 7 rewritten, Lighthouse scores added)
 - [x] Update ARCHITECTURE.md to reflect final state (illustrations in file tree, Design System v1.6 section, Deployment updated)
 - [x] Update ROADMAP.md to reflect final state (v1.6 shipped, Weekly Planner in Series A, spec preserved)
-- [ ] Tag v1.6.0 release on GitHub
-- [ ] Send final status summary
+- [x] Tag v1.6.0 release on GitHub (annotated tag pushed)
+- [x] Send final status summary
