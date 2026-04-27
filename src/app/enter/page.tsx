@@ -2,6 +2,19 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
+import { motion } from "framer-motion";
+import MarqueeStrip from "@/components/MarqueeStrip";
+
+/**
+ * Password gate — v1.6.3 landing-motion.
+ *
+ * Same visual language as landing page but adjusted timing:
+ * - Breathing wordmark at top center
+ * - Password input fades in at 0.4s
+ * - Enter button fades in at 0.8s
+ * - Same marquee strip at bottom
+ * - Footer note fades in at 1.2s
+ */
 
 function EnterForm() {
   const router = useRouter();
@@ -40,26 +53,22 @@ function EnterForm() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-      <div className="animate-fade-in w-full max-w-sm">
-        {/* Logo */}
-        <div className="mb-8 text-center">
-          <h1 className="font-serif-display text-3xl font-semibold tracking-tight text-foreground">
-            kin<span className="font-normal text-muted-foreground">loop</span>
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">Demo access for HBS preview</p>
-        </div>
+    <div className="kl-viewport">
+      {/* Breathing wordmark */}
+      <div className="kl-wordmark">
+        kin<span className="kl-wordmark-loop">loop</span>
+      </div>
 
-        {/* Card */}
-        <div className="rounded-xl border-[0.5px] border-border bg-card p-6">
-          <h2 className="text-center text-base font-semibold text-foreground">
-            Welcome to Kinloop
-          </h2>
-          <p className="mt-1 text-center text-sm text-muted-foreground">
-            Enter the access password to continue.
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-5">
+      {/* Center stage — password form */}
+      <div className="kl-center-stage">
+        <form onSubmit={handleSubmit} className="kl-enter-form">
+          {/* Password input — fade in at 0.4s */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+            className="w-full"
+          >
             <label htmlFor="password" className="sr-only">
               Access Password
             </label>
@@ -74,27 +83,44 @@ function EnterForm() {
               }}
               autoFocus
               autoComplete="off"
-              className="w-full rounded-xl border-[0.5px] border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
+              className="kl-password-input"
             />
+            {error && (
+              <p className="mt-2 text-center text-sm text-red-500/90">{error}</p>
+            )}
+          </motion.div>
 
-            {error && <p className="animate-slide-fade-in mt-2 text-sm text-red-600">{error}</p>}
-
+          {/* Enter button — fade in at 0.8s */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
+            className="w-full"
+          >
             <button
               type="submit"
               disabled={loading || !password}
-              className="mt-4 w-full rounded-full bg-foreground px-4 py-2.5 text-[13px] font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-40"
+              className="kl-btn-primary w-full"
             >
               {loading ? "Verifying..." : "Enter"}
             </button>
-          </form>
-        </div>
-
-        {/* Footer */}
-        <p className="mt-6 text-center text-[11px] text-muted-foreground">
-          AI-native parenting dashboard &middot; HBS MBA Capstone 2026
-        </p>
+          </motion.div>
+        </form>
       </div>
-    </main>
+
+      {/* Bottom marquee strip */}
+      <MarqueeStrip />
+
+      {/* Footer note — fade in at 1.2s */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 1.2 }}
+        className="kl-footer-note"
+      >
+        AI-native parenting dashboard &middot; HBS MBA Capstone 2026
+      </motion.div>
+    </div>
   );
 }
 
@@ -102,9 +128,14 @@ export default function EnterPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen items-center justify-center bg-background">
-          <div className="text-sm text-muted-foreground">Loading...</div>
-        </main>
+        <div className="kl-viewport">
+          <div className="kl-wordmark">
+            kin<span className="kl-wordmark-loop">loop</span>
+          </div>
+          <div className="kl-center-stage">
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          </div>
+        </div>
       }
     >
       <EnterForm />

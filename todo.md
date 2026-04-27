@@ -194,26 +194,11 @@
 - [x] Timeline entries: fade-in on load with 50ms stagger (animate-stagger-item on Scheduler event list)
 
 ## v1.6 Stage B Review — User-Requested Before Publish
-- [ ] Confirm preview URL (NOT production) and send to user
-- [ ] Screen recording (30-90s .mp4) of 5 animation moments:
-  - [ ] a. Login → welcome screen with larger photo + ambient illustration accents
-  - [ ] b. Dashboard → time-of-day motif with drift animation
-  - [ ] c. Scheduler quadrant transition (3-phase: fade-in, internal anim, fade-out + content)
-  - [ ] d. Play Lab: schedule activity → crane achievement micro plays
-  - [ ] e. Development: mark milestone done → star achievement micro plays
-- [ ] 7 still screenshots:
-  - [ ] a. Each of 4 quadrant pages with cream bg + illustrations (4 screenshots)
-  - [ ] b. Dashboard with 4 tile-warmth washes visible
-  - [ ] c. Play Lab activity card with category icon in top-left
-  - [ ] d. Coach tip card with theme icon in top-right
-  - [ ] e. Development milestone tracker with new category icons
-  - [ ] f. Welcome screen at 375px mobile width
-- [ ] Answer 4 explicit questions:
-  - [ ] Did you integrate all 26 illustrations from references, or draw your own?
-  - [ ] Are animations using Framer Motion with prefers-reduced-motion?
-  - [ ] Did the Scheduler-only checkpoint run before full rollout?
-  - [ ] Page-load time impact / Lighthouse score impact?
-- [ ] DO NOT publish to production until user signs off
+- [x] Confirm preview URL (NOT production) and send to user — https://kinloop-bi4rup9jo-dada5531s-projects.vercel.app
+- [x] Screen recording — not possible in sandbox (no screen recording tool); user directed to test animations live
+- [x] 9 still screenshots delivered (landing, dashboard, scheduler x2, development x2, coach, play lab, welcome mobile 375px)
+- [x] 4 explicit questions answered in v16_stage_b_review.md
+- [x] User signed off and requested closeout (dropped v1.7, proceeded to closeout tasks)
 
 ## v1.6 Closeout Tasks
 - [x] Move Weekly Planner (v1.7) from "in progress" to "Series A roadmap — agentic layer" in ROADMAP.md
@@ -226,3 +211,14 @@
 - [x] Update ROADMAP.md to reflect final state (v1.6 shipped, Weekly Planner in Series A, spec preserved)
 - [x] Tag v1.6.0 release on GitHub (annotated tag pushed)
 - [x] Send final status summary
+
+## v1.6.3 — Landing Motion
+- [x] Create 8 marquee SVG illustration React components from reference (paper crane, plant, paper airplane, balloon flower, open book, seedling, envelope, house)
+- [x] Create shared MarqueeStrip component: CSS keyframe marquee (36s desktop, 28s mobile), duplicate-set seamless loop, per-item bob/sway/tilt/float motions, horizon line, edge fade gradients
+- [x] Rewrite landing page (/): no headline, Fraunces subtitle at clamp(28px,4vw,40px) fade-in 0.4s, CTAs fade-in 1.0s, wordmark breathing animation, footer note fade-in 1.6s, marquee strip
+- [x] Rewrite password gate (/enter): no subtitle, password input fade-in 0.4s, enter button fade-in 0.8s, same marquee strip
+- [x] CSS keyframes in globals.css: kl-breathe, kl-marquee, kl-item-bob, kl-item-sway, kl-item-tilt, kl-item-float
+- [x] prefers-reduced-motion: freeze marquee at -15%, disable all internal motions, content at final state immediately
+- [x] Mobile: stack CTAs vertically, shorter loop (28s), smaller illos (52px), gap 56px
+- [x] Framer Motion for entrance animations (subtitle/CTAs/footer fade-up)
+- [ ] Send preview URL for review before publish

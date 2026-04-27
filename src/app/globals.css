@@ -235,3 +235,347 @@
 .animate-accent-flush {
   animation: accentFlush 600ms ease-out forwards;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   v1.6.3 — Landing Motion
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Viewport: full-screen flex column ─── */
+.kl-viewport {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: hsl(var(--background));
+  overflow: hidden;
+  position: relative;
+}
+
+/* ─── Breathing wordmark ─── */
+.kl-wordmark {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-serif-display, "Fraunces", serif);
+  font-size: clamp(18px, 2.5vw, 24px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: hsl(var(--foreground));
+  animation: kl-breathe 4s ease-in-out infinite;
+  z-index: 10;
+}
+
+.kl-wordmark-loop {
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+}
+
+@keyframes kl-breathe {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50%      { transform: translateX(-50%) scale(1.005); }
+}
+
+/* ─── Center stage ─── */
+.kl-center-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 0 24px;
+  max-width: 520px;
+  width: 100%;
+  z-index: 10;
+}
+
+/* ─── Subtitle (Fraunces serif) ─── */
+.kl-subtitle {
+  font-family: var(--font-serif-display, "Fraunces", serif);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 400;
+  line-height: 1.25;
+  text-align: center;
+  color: hsl(var(--foreground));
+  letter-spacing: -0.01em;
+}
+
+/* ─── CTA row ─── */
+.kl-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.kl-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  border-radius: 9999px;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: opacity 150ms ease, transform 100ms ease;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+}
+
+.kl-btn-primary:hover {
+  opacity: 0.85;
+}
+
+.kl-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.kl-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.kl-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.kl-btn-ghost:hover {
+  color: hsl(var(--foreground));
+}
+
+/* ─── Password form (enter page) ─── */
+.kl-enter-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.kl-password-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 0.5px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.kl-password-input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+.kl-password-input:focus {
+  border-color: hsl(var(--foreground) / 0.2);
+  box-shadow: 0 0 0 3px hsl(var(--foreground) / 0.06);
+}
+
+/* ─── Footer note ─── */
+.kl-footer-note {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Marquee Strip
+   ═══════════════════════════════════════════════════════════════ */
+
+.kl-marquee-strip {
+  position: absolute;
+  bottom: 48px;
+  left: 0;
+  right: 0;
+  height: 110px;
+  overflow: hidden;
+  z-index: 1;
+  /* Edge fade gradients */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+}
+
+/* Subtle horizon line under the marquee */
+.kl-marquee-strip::after {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: hsl(var(--border));
+  opacity: 0.5;
+}
+
+/* Marquee track — two copies side-by-side, scrolling left */
+.kl-marquee-track {
+  display: flex;
+  align-items: flex-end;
+  gap: 88px;
+  width: max-content;
+  padding-bottom: 16px;
+  animation: kl-marquee 36s linear infinite;
+}
+
+@keyframes kl-marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Each illustration item */
+.kl-marquee-item {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-end;
+  opacity: 0.7;
+}
+
+.kl-marquee-item svg {
+  width: auto;
+  height: 64px;
+}
+
+/* ─── Per-item internal motions ─── */
+
+.kl-bob {
+  animation: kl-item-bob 3.2s ease-in-out infinite;
+}
+
+.kl-sway {
+  animation: kl-item-sway 4.0s ease-in-out infinite;
+}
+
+.kl-tilt {
+  animation: kl-item-tilt 3.6s ease-in-out infinite;
+}
+
+.kl-float {
+  animation: kl-item-float 4.4s ease-in-out infinite;
+}
+
+@keyframes kl-item-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@keyframes kl-item-sway {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(3deg); }
+  75%      { transform: rotate(-3deg); }
+}
+
+@keyframes kl-item-tilt {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  50%      { transform: rotate(-2deg) translateY(-4px); }
+}
+
+@keyframes kl-item-float {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  33%      { transform: translateY(-5px) translateX(2px); }
+  66%      { transform: translateY(-2px) translateX(-2px); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Mobile responsive
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .kl-cta-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .kl-btn-primary {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .kl-marquee-track {
+    gap: 56px;
+    animation-duration: 28s;
+  }
+
+  .kl-marquee-item svg {
+    height: 52px;
+  }
+
+  .kl-marquee-strip {
+    height: 90px;
+  }
+
+  .kl-subtitle {
+    padding: 0 8px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Reduced motion
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Freeze marquee at -15% */
+  .kl-marquee-track {
+    animation: none;
+    transform: translateX(-15%);
+  }
+
+  /* Disable all internal motions */
+  .kl-bob,
+  .kl-sway,
+  .kl-tilt,
+  .kl-float {
+    animation: none;
+  }
+
+  /* Disable breathing wordmark */
+  .kl-wordmark {
+    animation: none;
+  }
+
+  /* Disable btn-press and other microinteractions */
+  .btn-press:active {
+    transform: none;
+    filter: none;
+  }
+
+  .animate-tab-crossfade {
+    animation: none;
+    opacity: 1;
+  }
+
+  .animate-stagger-item {
+    animation: none;
+    opacity: 1;
+  }
+}
