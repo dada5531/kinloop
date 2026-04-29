@@ -1405,7 +1405,7 @@ export default function DevelopmentPage() {
                         <div className="flex items-center gap-1">
                           <ItemActionsMenu
                             onDelete={() => setDeleteTarget({
-                              id: item.id,
+                              id: (item.data as { id: string }).id,
                               title: item.title,
                               type: item.type === "health_record" ? "health record" : "milestone",
                               apiEndpoint: item.type === "health_record" ? "/api/health-records" : "/api/milestones",
