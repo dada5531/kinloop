@@ -18,6 +18,8 @@ import {
   BookmarkCheck,
   ExternalLink,
   ChevronRight,
+  ShoppingBag,
+  Headphones,
 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 
@@ -41,6 +43,8 @@ interface DailyTip {
   source: string;
   source_url: string | null;
   category: string | null;
+  affiliate_url_amazon: string | null;
+  affiliate_url_audible: string | null;
 }
 
 interface DailyActivity {
@@ -418,16 +422,43 @@ export default function CoachPage() {
                     <p className="mb-3 text-sm leading-relaxed text-foreground">
                       {dailyTip.content}
                     </p>
-                    <div className="flex items-center gap-2">
+                    {/* Source attribution */}
+                    <div className="mb-2">
                       <span className="text-[11px] text-muted-foreground">{dailyTip.source}</span>
+                    </div>
+
+                    {/* Affiliate + source links */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {dailyTip.affiliate_url_amazon && (
+                        <a
+                          href={`/api/affiliate/amazon/redirect?url=${encodeURIComponent(dailyTip.affiliate_url_amazon)}&ctx_source=coach_tip`}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          className="inline-flex items-center gap-1 rounded-full bg-[#FF9900]/10 px-2.5 py-1 text-[11px] font-medium text-[#C17A00] transition-colors hover:bg-[#FF9900]/20"
+                        >
+                          <ShoppingBag className="h-3 w-3" />
+                          Read on Amazon
+                        </a>
+                      )}
+                      {dailyTip.affiliate_url_audible && (
+                        <a
+                          href={`/api/affiliate/audible/redirect?url=${encodeURIComponent(dailyTip.affiliate_url_audible)}&ctx_source=coach_tip`}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          className="inline-flex items-center gap-1 rounded-full bg-[#F8991D]/10 px-2.5 py-1 text-[11px] font-medium text-[#C17A00] transition-colors hover:bg-[#F8991D]/20"
+                        >
+                          <Headphones className="h-3 w-3" />
+                          Listen on Audible
+                        </a>
+                      )}
                       {dailyTip.source_url && (
                         <a
                           href={dailyTip.source_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-0.5 text-[11px] text-coach hover:underline"
+                          className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-foreground hover:underline"
                         >
-                          Read more
+                          View source
                           <ExternalLink className="h-2.5 w-2.5" />
                         </a>
                       )}
@@ -528,6 +559,13 @@ export default function CoachPage() {
                   </div>
                 ) : null}
               </div>
+
+              {/* Affiliate disclosure */}
+              {dailyTip?.affiliate_url_amazon && (
+                <p className="mb-6 text-center text-[10px] leading-relaxed text-muted-foreground/60">
+                  Some links are affiliate links. We may earn a small commission at no extra cost to you.
+                </p>
+              )}
 
               {/* Greeting + topic suggestions */}
               <div className="flex flex-col items-center">

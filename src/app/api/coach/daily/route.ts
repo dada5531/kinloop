@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     // --- Fetch all tips (universal, no age filtering) ---
     const { data: allTips } = await supabase
       .from("tips_corpus")
-      .select("id, content, source, source_url, category")
+      .select("id, content, source, source_url, category, affiliate_url_amazon, affiliate_url_audible")
       .order("id");
 
     // --- Fetch age-appropriate activities ---
@@ -114,6 +114,8 @@ export async function GET(request: NextRequest) {
         source: tip.source,
         source_url: tip.source_url,
         category: tip.category,
+        affiliate_url_amazon: tip.affiliate_url_amazon || null,
+        affiliate_url_audible: tip.affiliate_url_audible || null,
       };
       console.log(`[Daily] Picked tip index=${tipIndex}: ${tip.category}`);
     }

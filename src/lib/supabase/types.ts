@@ -482,6 +482,8 @@ export interface Database {
           category: string | null;
           age_bucket: string | null;
           embedding: string | null;
+          affiliate_url_amazon: string | null;
+          affiliate_url_audible: string | null;
           created_at: string;
         };
         Insert: {
@@ -492,6 +494,8 @@ export interface Database {
           category?: string | null;
           age_bucket?: string | null;
           embedding?: string | null;
+          affiliate_url_amazon?: string | null;
+          affiliate_url_audible?: string | null;
           created_at?: string;
         };
         Update: {
@@ -502,6 +506,8 @@ export interface Database {
           category?: string | null;
           age_bucket?: string | null;
           embedding?: string | null;
+          affiliate_url_amazon?: string | null;
+          affiliate_url_audible?: string | null;
           created_at?: string;
         };
         Relationships: [];
