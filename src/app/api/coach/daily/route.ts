@@ -106,9 +106,20 @@ export async function GET(request: NextRequest) {
     let tipData = null;
     let activityData = null;
 
+    // Support previewTipId override for QA/demo
+    const previewTipId = request.nextUrl.searchParams.get("previewTipId");
+
     if (allTips && allTips.length > 0) {
-      const tipIndex = deterministicIndex(`tip:${pickSeed}`, allTips.length);
-      const tip = allTips[tipIndex];
+      let tip;
+      if (previewTipId) {
+        tip = allTips.find((t) => t.id === previewTipId);
+        if (!tip) tip = allTips[0]; // fallback if ID not found
+        console.log(`[Daily] Preview override: tipId=${previewTipId}`);
+      } else {
+        const tipIndex = deterministicIndex(`tip:${pickSeed}`, allTips.length);
+        tip = allTips[tipIndex];
+        console.log(`[Daily] Picked tip index=${tipIndex}: ${tip.category}`);
+      }
       tipData = {
         content: tip.content,
         source: tip.source,
@@ -117,7 +128,6 @@ export async function GET(request: NextRequest) {
         affiliate_url_amazon: tip.affiliate_url_amazon || null,
         affiliate_url_audible: tip.affiliate_url_audible || null,
       };
-      console.log(`[Daily] Picked tip index=${tipIndex}: ${tip.category}`);
     }
 
     if (eligibleActivities && eligibleActivities.length > 0) {

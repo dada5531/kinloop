@@ -193,12 +193,15 @@ export default function CoachPage() {
   const [showActivitySteps, setShowActivitySteps] = useState(false);
 
   // Fetch daily content
+  // Support ?previewTipId=<uuid> for QA/demo — renders a specific tip instead of today's rotation
   useEffect(() => {
     const fetchDaily = async () => {
       try {
-        const url = selectedChildId
-          ? `/api/coach/daily?childId=${selectedChildId}`
-          : "/api/coach/daily";
+        const params = new URLSearchParams();
+        if (selectedChildId) params.set("childId", selectedChildId);
+        const previewTipId = new URLSearchParams(window.location.search).get("previewTipId");
+        if (previewTipId) params.set("previewTipId", previewTipId);
+        const url = `/api/coach/daily${params.toString() ? `?${params}` : ""}`;
         const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();

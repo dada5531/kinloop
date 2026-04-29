@@ -397,3 +397,17 @@
 - [ ] /admin/affiliate-clicks dashboard (admin-only) — deferred to Phase 3
 - [ ] /docs/affiliate-partnerships.md with application URLs and lead times — deferred to Phase 3
 - [ ] Update CLAUDE.md and ROADMAP.md — deferred to Phase 3
+
+## v1.7 Phase 1 — Verification Additions
+
+- [ ] Add previewTipId query param override to /api/coach/daily route
+- [ ] Pass previewTipId from Coach page URL to the daily API call
+- [ ] Take screenshot: book tip with both Amazon + Audible pills (desktop)
+- [ ] Take screenshot: book tip with both Amazon + Audible pills (mobile 375px)
+- [ ] Take screenshot: book tip with Amazon only (desktop)
+- [ ] Take screenshot: book tip with Amazon only (mobile 375px)
+- [ ] Take screenshot: AAP institutional tip with no affiliate pills (desktop)
+- [ ] Take screenshot: AAP institutional tip with no affiliate pills (mobile 375px)
+- [ ] Take screenshot: disclosure footer visible with affiliate pills (desktop)
+- [ ] Take screenshot: disclosure footer visible with affiliate pills (mobile 375px)
+- [ ] Click affiliate link on preview, confirm Amazon redirect contains kinloop-20 tag
