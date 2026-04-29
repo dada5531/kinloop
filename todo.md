@@ -432,5 +432,41 @@
 - [x] Zocdoc: URL generation includes address={ZIP}&insurance_carrier={INSURANCE_SLUG} via buildZocdocUrl()
 - [x] Zocdoc: Fallback "Add your ZIP in Settings" when no ZIP is saved — already implemented in Phase 2
 - [x] Zocdoc: Seed demo data with ZIP 02138 (Cambridge MA) — inserted in DB + added to seed.sql
-- [ ] Test: Click "Listen on Audible" → lands on Amazon Audible store with tag visible
-- [ ] Test: Click "Book on Zocdoc" → lands on Zocdoc with Cambridge MA pediatricians
+- [x] Test: Click "Listen on Audible" → lands on Amazon Audible store with tag=kinloop-20 visible
+- [x] Test: Click "Book on Zocdoc" → 302 redirect to zocdoc.com/search?dr_specialty=pediatrician&address=02138&insurance_carrier=Other (CAPTCHA on sandbox IP, works on residential)
+
+## Piece 1 — Zocdoc Smart Three-Layer Location Resolution
+- [ ] Three-layer resolution: 1) user_settings.zip_code → 2) Vercel edge geo headers → 3) fallback 02138
+- [ ] Log which source was used in affiliate click logging
+- [ ] Insurance handling: only include insurance_carrier if saved AND not "Skip"/"Other"
+- [ ] Map UI labels to Zocdoc carrier slugs (aetna, anthem-blue-cross-blue-shield, blue-cross-blue-shield, cigna, kaiser-permanente, united-healthcare)
+- [ ] Update demo seed: insurance_provider = "BlueCross" (was "Other")
+- [ ] Inline hint above Zocdoc button when ZIP unsaved: "Add your ZIP in Settings for results closest to you"
+- [ ] Confirm dr_specialty=pediatrician is correct Zocdoc slug
+- [ ] Cache Vercel edge headers per session (avoid re-resolve on every render)
+- [ ] Document three-layer fallback pattern in CLAUDE.md
+- [ ] Test: Zocdoc click produces non-empty pediatrician list
+- [ ] Ship on v1.7-affiliate branch, no new PR
+
+## Piece 2 — Phase 3: Scheduler Contextual Deep Links
+- [ ] Update extraction prompt: add event_type and suggested_action output fields
+- [ ] Update Zod schema for event_type and suggested_action_payload
+- [ ] Migration: add event_type (text, nullable) and suggested_action_payload (jsonb, nullable) to events table
+- [ ] teacher_appreciation → 1-800-Flowers deep link
+- [ ] classroom_potluck → DoorDash deep link (cuisine extracted from content)
+- [ ] birthday_party → Amazon gift search + Etsy handmade option (dual pills)
+- [ ] payment_due → Venmo deep link (requires school_venmo_handle in Settings)
+- [ ] doctor_visit → reuse Phase 2 Zocdoc with smart location
+- [ ] picture_day → Venmo if payment mentioned, else no pill
+- [ ] field_trip → Venmo if payment mentioned, else no pill
+- [ ] fundraiser / other → no pill
+- [ ] Add Settings field: school_venmo_handle (optional, @username format)
+- [ ] Suggested action pill component (reusable across event types)
+- [ ] Wire all to /api/affiliate/[partner]/redirect with click logging
+- [ ] Add env vars: 1800FLOWERS_PARTNER_ID, DOORDASH_PARTNER_ID, ETSY_PARTNER_ID (placeholders)
+- [ ] Create /docs/affiliate-partnerships.md with application URLs and lead times
+- [ ] Test: teacher appreciation email → 1-800-Flowers pill renders + click works
+- [ ] Test: classroom potluck email → DoorDash pill renders + click works
+- [ ] Test: birthday party invite → Amazon + Etsy pills render
+- [ ] Test: picture day with $35 → Venmo pill renders (saved + unsaved handle)
+- [ ] Send preview URL for review

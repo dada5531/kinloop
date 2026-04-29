@@ -389,3 +389,63 @@ pnpm typecheck     # TypeScript strict check
 | `AMAZON_ACCESS_KEY` | Future | Amazon PA-API v5 access key |
 | `AMAZON_SECRET_KEY` | Future | Amazon PA-API v5 secret key |
 | `AMAZON_PARTNER_TAG` | Future | Amazon affiliate tag (defaults to `kinloop-20`) |
+
+## 12. Affiliate Integration (v1.7)
+
+### Architecture
+
+Affiliate links use a **redirect-through-our-server** pattern for click tracking:
+
+```
+User clicks pill → /api/affiliate/[partner]/redirect?url=...&ctx_source=... → 302 to partner site
+```
+
+The redirect handler (`src/app/api/affiliate/[partner]/redirect/route.ts`) validates the target URL against a per-partner domain whitelist, logs the click as structured JSON to Vercel logs, and returns a 302.
+
+### Partners
+
+| Partner | Tag/ID | URL format | Notes |
+|---|---|---|---|
+| Amazon (books) | `tag=kinloop-20` | `amazon.com/s?k={title}&tag=kinloop-20` | Coach page book tips |
+| Amazon (Audible) | `tag=kinloop-20` + `i=audible` | `amazon.com/s?k={title}+audiobook&i=audible&tag=kinloop-20` | Coach page audiobook tips |
+| Amazon (products) | `tag=kinloop-20` | `amazon.com/s?k={query}&tag=kinloop-20` | Development milestone products |
+| Zocdoc | utm_source=kinloop | `zocdoc.com/search?dr_specialty=pediatrician&address={ZIP}&insurance_carrier={SLUG}&utm_source=kinloop` | Development page checkup CTA |
+
+### Three-Layer Location Resolution (Zocdoc)
+
+Zocdoc deep links need a location to show relevant results. The resolution priority:
+
+1. **Layer 1 — user_settings.zocdoc_zip_code** (explicit user input, highest trust)
+2. **Layer 2 — Vercel edge headers** (`x-vercel-ip-postal-code` or `x-vercel-ip-city` via `/api/geo`)
+3. **Layer 3 — Hardcoded fallback** `02138` (Cambridge MA, matches HBS context)
+
+The client fetches `/api/geo` once per session (cached in `sessionStorage`) and passes all three layers to `buildSmartZocdocUrl()` which returns the URL + `locationSource` for click logging.
+
+**Key files:**
+- `src/lib/affiliate/location-resolution.ts` — `resolveLocation()`, `resolveInsuranceSlug()`, `buildSmartZocdocUrl()`
+- `src/lib/affiliate/development-products.ts` — `getProductSuggestions()`, `buildProductAffiliateUrl()`
+- `src/lib/affiliate/index.ts` — `generateAffiliateUrl()`, `buildTrackedUrl()`, partner configs
+- `src/app/api/geo/route.ts` — Vercel edge header reader
+- `src/app/api/affiliate/[partner]/redirect/route.ts` — Redirect handler + click logging
+
+### Insurance Slug Mapping
+
+The `resolveInsuranceSlug()` function maps UI labels to Zocdoc carrier slugs:
+
+| UI Label | Zocdoc Slug | Behavior |
+|---|---|---|
+| Aetna | `aetna` | Included in URL |
+| Anthem | `anthem-blue-cross-blue-shield` | Included in URL |
+| BlueCross | `blue-cross-blue-shield` | Included in URL |
+| Cigna | `cigna` | Included in URL |
+| Kaiser | `kaiser-permanente` | Included in URL |
+| UnitedHealthcare | `united-healthcare` | Included in URL |
+| Other | — | **Omitted** (wrong filter worse than no filter) |
+| Skip | — | **Omitted** |
+
+### Adding a New Affiliate Partner
+
+1. Add the partner to `PARTNER_CONFIGS` in `src/lib/affiliate/index.ts`
+2. Add the partner's domains to `DOMAIN_WHITELIST` in `src/app/api/affiliate/[partner]/redirect/route.ts`
+3. Build the tracked URL with `buildTrackedUrl(partner, targetUrl, { source: "..." })`
+4. Add tests in `tests/unit/`

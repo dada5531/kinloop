@@ -43,11 +43,10 @@ import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import {
   getProductSuggestions,
   buildProductAffiliateUrl,
-  buildTrackedZocdocUrl,
   getNextCheckupRecommendation,
-  type ZocdocParams,
 } from "@/lib/affiliate/development-products";
-import { generateAffiliateUrl, buildTrackedUrl } from "@/lib/affiliate";
+import { buildTrackedUrl } from "@/lib/affiliate";
+import { buildSmartZocdocUrl, type SmartZocdocResult } from "@/lib/affiliate/location-resolution";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -526,6 +525,9 @@ export default function DevelopmentPage() {
     insurance_provider: null,
   });
 
+  // Vercel edge geolocation (layer 2 of three-layer resolution)
+  const [geoData, setGeoData] = useState<{ postalCode: string | null; city: string | null }>({ postalCode: null, city: null });
+
   // UI state
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [growthMetric, setGrowthMetric] = useState<"height" | "weight">("height");
@@ -593,6 +595,27 @@ export default function DevelopmentPage() {
     fetchData();
   }, [fetchData]);
 
+  // Fetch Vercel edge geolocation (layer 2) — cached per session
+  useEffect(() => {
+    const cached = sessionStorage.getItem("kinloop_geo");
+    if (cached) {
+      try {
+        setGeoData(JSON.parse(cached));
+        return;
+      } catch { /* fall through to fetch */ }
+    }
+    fetch("/api/geo")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data) {
+          const geo = { postalCode: data.postalCode || null, city: data.city || null };
+          setGeoData(geo);
+          sessionStorage.setItem("kinloop_geo", JSON.stringify(geo));
+        }
+      })
+      .catch(() => { /* silent — fallback to layer 3 */ });
+  }, []);
+
   // Computed data
   const ageMonths = selectedChild ? getAgeMonths(selectedChild.dob) : 0;
 
@@ -649,13 +672,15 @@ export default function DevelopmentPage() {
     [ageMonths, lastVisitDate],
   );
 
-  // Zocdoc params from settings
-  const zocdocParams: ZocdocParams = useMemo(
-    () => ({
-      zipCode: healthcareSettings.zocdoc_zip_code,
-      insurance: healthcareSettings.insurance_provider,
+  // Smart Zocdoc URL with three-layer location resolution
+  const zocdocResult: SmartZocdocResult = useMemo(
+    () => buildSmartZocdocUrl({
+      settingsZip: healthcareSettings.zocdoc_zip_code,
+      settingsInsurance: healthcareSettings.insurance_provider,
+      geoPostalCode: geoData.postalCode,
+      geoCity: geoData.city,
     }),
-    [healthcareSettings],
+    [healthcareSettings, geoData],
   );
 
   // Track whether any affiliate links are shown on this page
@@ -1211,7 +1236,7 @@ export default function DevelopmentPage() {
                   </p>
                 </div>
                 <a
-                  href={buildTrackedZocdocUrl(zocdocParams, { source: "development_overview" })}
+                  href={buildTrackedUrl("zocdoc", zocdocResult.url, { source: "development_overview", location_source: zocdocResult.locationSource })}
                   target="_blank"
                   rel="noopener noreferrer sponsored"
                   className="inline-flex items-center gap-1.5 rounded-full bg-development px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-development/90"
@@ -1221,13 +1246,13 @@ export default function DevelopmentPage() {
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
-              {!healthcareSettings.zocdoc_zip_code && (
+              {!zocdocResult.hasSettingsZip && (
                 <p className="mt-2 text-[10px] text-muted-foreground">
-                  Add your ZIP code in{" "}
+                  Add your ZIP in{" "}
                   <a href="/settings" className="text-development underline hover:text-development/80">
                     Settings
                   </a>{" "}
-                  to see doctors near you.
+                  for results closest to you.
                 </p>
               )}
             </div>
@@ -1581,7 +1606,7 @@ export default function DevelopmentPage() {
                           })()}
                           {/* Zocdoc CTA on health records */}
                           <a
-                            href={buildTrackedZocdocUrl(zocdocParams, { source: "development_timeline", recordId: (item.data as HealthRecord).id })}
+                            href={buildTrackedUrl("zocdoc", zocdocResult.url, { source: "development_timeline", recordId: (item.data as HealthRecord).id, location_source: zocdocResult.locationSource })}
                             target="_blank"
                             rel="noopener noreferrer sponsored"
                             className="inline-flex items-center gap-1.5 rounded-full bg-development/10 px-3 py-1.5 text-[11px] font-medium text-development transition-colors hover:bg-development/20"
