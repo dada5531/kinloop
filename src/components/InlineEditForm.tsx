@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Check, X, Loader2 } from "lucide-react";
 import { showErrorToast } from "@/lib/error-toasts";
 import { logError } from "@/lib/logger";
+import { safeToISOString } from "@/lib/safe-date";
 import { toast } from "sonner";
 
 interface EditField {
@@ -64,8 +65,8 @@ export function InlineEditForm({
         if (values[f.key] !== f.value) {
           if (f.type === "datetime-local" || f.type === "date") {
             // Convert to ISO string for the API
-            const d = new Date(values[f.key]);
-            body[f.key] = isNaN(d.getTime()) ? values[f.key] : d.toISOString();
+            const iso = safeToISOString(values[f.key]);
+            body[f.key] = iso ?? values[f.key];
           } else if (f.type === "number") {
             body[f.key] = parseFloat(values[f.key]) || 0;
           } else {

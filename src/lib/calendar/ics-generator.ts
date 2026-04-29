@@ -6,6 +6,7 @@
  */
 
 import { createEvents, type EventAttributes, type DateArray } from "ics";
+import { safeISODate } from "@/lib/safe-date";
 
 interface CalendarEvent {
   title: string;
@@ -19,7 +20,8 @@ interface CalendarEvent {
  * Convert an ISO date string to an ICS DateArray [year, month, day, hour, minute].
  */
 function toDateArray(isoDate: string): DateArray {
-  const d = new Date(isoDate);
+  const result = safeISODate(isoDate);
+  const d = result.date ?? new Date(); // fallback to now if unparseable
   return [
     d.getFullYear(),
     d.getMonth() + 1, // ICS months are 1-indexed

@@ -35,7 +35,7 @@ import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { safeToISOString, safeFormatDate, safeFormatTime } from "@/lib/safe-date";
+import { safeToISOString, safeFormatDate, safeFormatTime, safeGetTime, safeIsAfterOrEqual, safeIsBefore } from "@/lib/safe-date";
 import { logError } from "@/lib/logger";
 import { showErrorToast } from "@/lib/error-toasts";
 import { toast } from "sonner";
@@ -938,15 +938,15 @@ export default function SchedulerPage() {
             (() => {
               const now = new Date();
               const upcoming = events.filter(
-                (e) => !e.start_time || new Date(e.start_time) >= now
+                (e) => !e.start_time || safeIsAfterOrEqual(e.start_time, now)
               ).sort((a, b) => {
                 if (!a.start_time) return 1;
                 if (!b.start_time) return -1;
-                return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+                return safeGetTime(a.start_time) - safeGetTime(b.start_time);
               });
               const past = events.filter(
-                (e) => e.start_time && new Date(e.start_time) < now
-              ).sort((a, b) => new Date(b.start_time!).getTime() - new Date(a.start_time!).getTime());
+                (e) => e.start_time && safeIsBefore(e.start_time, now)
+              ).sort((a, b) => safeGetTime(b.start_time) - safeGetTime(a.start_time));
               
               const renderEventItem = (evt: typeof events[0], idx: number) => (
                 <button

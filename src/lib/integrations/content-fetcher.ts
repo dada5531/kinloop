@@ -10,6 +10,12 @@ import * as cheerio from "cheerio";
 
 import { extractVideoId } from "./youtube";
 
+/** Non-critical log for content fetching fallbacks */
+function logFetchFallback(source: string, url: string, error?: unknown): void {
+  const msg = error instanceof Error ? error.message : String(error ?? "unknown");
+  console.warn(`[ContentFetcher] ${source} fallback for ${url}: ${msg}`);
+}
+
 // ─── Types ──────────────────────────────────────────────────────
 
 export interface FetchedContent {
@@ -37,8 +43,8 @@ async function fetchYouTubeContent(url: string): Promise<FetchedContent> {
     const { YoutubeTranscript } = await import("youtube-transcript");
     const segments = await YoutubeTranscript.fetchTranscript(videoId);
     transcript = segments.map((s: { text: string }) => s.text).join(" ");
-  } catch {
-    // Transcript unavailable — will fall back to metadata
+  } catch (err) {
+    logFetchFallback("youtube.transcript", url, err);
   }
 
   // Fetch page metadata via oEmbed (no API key needed)
@@ -49,8 +55,8 @@ async function fetchYouTubeContent(url: string): Promise<FetchedContent> {
       const data = await res.json();
       title = data.title || "";
     }
-  } catch {
-    // Continue without oEmbed
+  } catch (err) {
+    logFetchFallback("youtube.oembed", url, err);
   }
 
   // Fetch page HTML for description
@@ -68,8 +74,8 @@ async function fetchYouTubeContent(url: string): Promise<FetchedContent> {
       const titleMatch = html.match(/<title>(.*?)<\/title>/);
       if (titleMatch) title = titleMatch[1].replace(" - YouTube", "").trim();
     }
-  } catch {
-    // Continue without page scrape
+  } catch (err) {
+    logFetchFallback("youtube.page", url, err);
   }
 
   thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
@@ -101,8 +107,8 @@ async function fetchTikTokContent(url: string): Promise<FetchedContent> {
       title = data.title || "";
       description = data.author_name ? `By ${data.author_name}` : "";
     }
-  } catch {
-    // Continue without oEmbed
+  } catch (err) {
+    logFetchFallback("tiktok.oembed", url, err);
   }
 
   // Scrape page for additional text
@@ -130,8 +136,8 @@ async function fetchTikTokContent(url: string): Promise<FetchedContent> {
         $('meta[property="og:title"]').attr("content") ||
         $("title").text().replace(" | TikTok", "").trim();
     }
-  } catch {
-    // Continue without scrape
+  } catch (err) {
+    logFetchFallback("tiktok.page", url, err);
   }
 
   return {
@@ -159,8 +165,8 @@ async function fetchInstagramContent(url: string): Promise<FetchedContent> {
       title = data.title || data.author_name || "";
       // Instagram oEmbed doesn't return caption, just author
     }
-  } catch {
-    // Continue
+  } catch (err) {
+    logFetchFallback("instagram.oembed", url, err);
   }
 
   // Scrape page for caption text
@@ -187,8 +193,8 @@ async function fetchInstagramContent(url: string): Promise<FetchedContent> {
         $('meta[property="og:title"]').attr("content") ||
         $("title").text().replace(" • Instagram", "").trim();
     }
-  } catch {
-    // Continue
+  } catch (err) {
+    logFetchFallback("instagram.page", url, err);
   }
 
   return {
@@ -235,12 +241,12 @@ async function fetchPinterestContent(url: string): Promise<FetchedContent> {
           description = ld.description;
         }
         if (ld.name && !title) title = ld.name;
-      } catch {
-        // Invalid JSON-LD
+      } catch (err) {
+        logFetchFallback("pinterest.jsonld", url, err);
       }
     }
-  } catch {
-    // Continue
+  } catch (err) {
+    logFetchFallback("pinterest.page", url, err);
   }
 
   return {
@@ -282,8 +288,8 @@ async function fetchGenericWebContent(url: string): Promise<FetchedContent> {
     const article = $("article").text().trim();
     const main = $("main").text().trim();
     bodyText = (article || main || $("body").text().trim()).replace(/\s+/g, " ").slice(0, 5000);
-  } catch {
-    // Continue
+  } catch (err) {
+    logFetchFallback("generic.page", url, err);
   }
 
   return {

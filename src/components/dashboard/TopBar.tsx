@@ -13,6 +13,7 @@ import {
 } from "@/components/icons/QuadrantIcons";
 import { useChild } from "@/components/providers/ChildProvider";
 import { logError } from "@/lib/logger";
+import { safeGetTime } from "@/lib/safe-date";
 import { showErrorToast } from "@/lib/error-toasts";
 
 // Dashboard uses Lucide (utility icon), quadrants use custom icons
@@ -60,8 +61,8 @@ export function TopBar() {
       const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
       const thisWeekEvents = events.filter((e: { start_time: string | null }) => {
         if (!e.start_time) return false;
-        const d = new Date(e.start_time);
-        return d >= now && d <= weekFromNow;
+        const t = safeGetTime(e.start_time);
+        return t > 0 && t >= now.getTime() && t <= weekFromNow.getTime();
       });
 
       setMetrics({

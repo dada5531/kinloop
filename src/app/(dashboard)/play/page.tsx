@@ -37,7 +37,7 @@ import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { safeFormatDate, safeFormatTime, safeToISOString } from "@/lib/safe-date";
+import { safeFormatDate, safeFormatTime, safeToISOString, safeGetTime, safeIsAfterOrEqual, safeIsBefore } from "@/lib/safe-date";
 import { logError } from "@/lib/logger";
 import { showErrorToast } from "@/lib/error-toasts";
 import { ItemActionsMenu } from "@/components/ItemActionsMenu";
@@ -588,9 +588,11 @@ export default function PlayLabPage() {
       // Calculate end time from activity duration
       let endISO: string | null = null;
       if (scheduleActivityDuration) {
-        const start = new Date(startISO);
-        const end = new Date(start.getTime() + scheduleActivityDuration * 60 * 1000);
-        endISO = end.toISOString();
+        const startMs = safeGetTime(startISO);
+        if (startMs > 0) {
+          const end = new Date(startMs + scheduleActivityDuration * 60 * 1000);
+          endISO = end.toISOString();
+        }
       }
 
       // Create an event in the scheduler (cross-quadrant)
@@ -714,11 +716,11 @@ export default function PlayLabPage() {
         const now = new Date();
         const scheduled = activities.filter((a) => a.scheduled_for);
         const upcoming = scheduled
-          .filter((a) => new Date(a.scheduled_for!) >= now)
-          .sort((a, b) => new Date(a.scheduled_for!).getTime() - new Date(b.scheduled_for!).getTime());
+          .filter((a) => safeIsAfterOrEqual(a.scheduled_for, now))
+          .sort((a, b) => safeGetTime(a.scheduled_for) - safeGetTime(b.scheduled_for));
         const past = scheduled
-          .filter((a) => new Date(a.scheduled_for!) < now)
-          .sort((a, b) => new Date(b.scheduled_for!).getTime() - new Date(a.scheduled_for!).getTime());
+          .filter((a) => safeIsBefore(a.scheduled_for, now))
+          .sort((a, b) => safeGetTime(b.scheduled_for) - safeGetTime(a.scheduled_for));
 
         if (scheduled.length === 0) return null;
 
@@ -1494,8 +1496,9 @@ export default function PlayLabPage() {
                     {scheduleDate && scheduleTime && (
                       <> &middot; Ends at{" "}
                         {(() => {
-                          const start = new Date(`${scheduleDate}T${scheduleTime}:00`);
-                          const end = new Date(start.getTime() + scheduleActivityDuration * 60 * 1000);
+                          const startMs = safeGetTime(`${scheduleDate}T${scheduleTime}:00`);
+                          if (startMs <= 0) return "--:--";
+                          const end = new Date(startMs + scheduleActivityDuration * 60 * 1000);
                           return end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
                         })()}
                       </>

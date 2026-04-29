@@ -15,7 +15,7 @@ import DashboardAmbient from "@/components/DashboardAmbient";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QuadrantCard, PreviewRow } from "@/components/ui/quadrant-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { safeFormatDate, safeFormatTime, safeToISOString } from "@/lib/safe-date";
+import { safeFormatDate, safeFormatTime, safeToISOString, safeGetTime, safeIsAfterOrEqual } from "@/lib/safe-date";
 import { logError } from "@/lib/logger";
 import { showErrorToast } from "@/lib/error-toasts";
 
@@ -84,11 +84,11 @@ export default function DashboardPage() {
       // Split events: upcoming first, past excluded from counter
       const now = new Date();
       const upcomingEvents = events
-        .filter((e: { start_time?: string | null }) => !e.start_time || new Date(e.start_time) >= now)
+        .filter((e: { start_time?: string | null }) => !e.start_time || safeIsAfterOrEqual(e.start_time, now))
         .sort((a: { start_time?: string | null }, b: { start_time?: string | null }) => {
           if (!a.start_time) return 1;
           if (!b.start_time) return -1;
-          return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+          return safeGetTime(a.start_time) - safeGetTime(b.start_time);
         });
 
       setData({

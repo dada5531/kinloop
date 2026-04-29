@@ -115,6 +115,33 @@ export function safeFormatDate(
 }
 
 /**
+ * Safely get the epoch timestamp (ms) from a date input.
+ * Returns fallback (default 0) if unparseable. Useful for sorting/filtering.
+ */
+export function safeGetTime(input: unknown, fallback = 0): number {
+  const result = safeISODate(input);
+  return result.date ? result.date.getTime() : fallback;
+}
+
+/**
+ * Safely check if a date input is >= a reference date.
+ * Returns false if the input can't be parsed.
+ */
+export function safeIsAfterOrEqual(input: unknown, ref: Date): boolean {
+  const result = safeISODate(input);
+  return result.date ? result.date >= ref : false;
+}
+
+/**
+ * Safely check if a date input is before a reference date.
+ * Returns false if the input can't be parsed.
+ */
+export function safeIsBefore(input: unknown, ref: Date): boolean {
+  const result = safeISODate(input);
+  return result.date ? result.date < ref : false;
+}
+
+/**
  * Safely format a time for display.
  */
 export function safeFormatTime(
