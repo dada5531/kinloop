@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/lib/supabase/types";
+type MeasurementUpdate = Database["public"]["Tables"]["measurements"]["Update"];
 
 /**
  * GET /api/measurements?childId=xxx&type=height|weight|head_circumference
@@ -83,6 +85,42 @@ export async function POST(request: NextRequest) {
   }
 }
 
+
+/**
+ * PATCH /api/measurements?itemId=xxx
+ * Update a measurement's value, date, or notes.
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const itemId = searchParams.get("itemId");
+    const body = await request.json();
+    const measurementId = itemId || body.id;
+    if (!measurementId) {
+      return NextResponse.json({ error: "itemId or id is required" }, { status: 400 });
+    }
+    const supabase = getAdminClient();
+    const updates: MeasurementUpdate = {};
+    if (body.value !== undefined) updates.value = body.value;
+    if (body.date !== undefined) updates.date = body.date;
+    if (body.notes !== undefined) updates.notes = body.notes;
+    if (body.unit !== undefined) updates.unit = body.unit;
+    const { data, error } = await supabase
+      .from("measurements")
+      .update(updates)
+      .eq("id", measurementId)
+      .select()
+      .single();
+    if (error) {
+      console.error("[Measurements PATCH] Error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("[Measurements PATCH] Error:", error);
+    return NextResponse.json({ error: "Failed to update measurement" }, { status: 500 });
+  }
+}
 
 // Soft-delete a measurement
 export async function DELETE(request: NextRequest) {

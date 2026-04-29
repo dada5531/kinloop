@@ -93,10 +93,10 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const activityId = searchParams.get("activityId");
+    const activityId = searchParams.get("activityId") || searchParams.get("itemId");
 
     if (!activityId) {
-      return NextResponse.json({ error: "activityId is required" }, { status: 400 });
+      return NextResponse.json({ error: "activityId or itemId is required" }, { status: 400 });
     }
 
     const body = await request.json();
@@ -104,8 +104,10 @@ export async function PATCH(request: NextRequest) {
 
     const updates: ActivityUpdate = {};
     if (body.scheduledFor !== undefined) updates.scheduled_for = body.scheduledFor;
+    if (body.scheduled_for !== undefined) updates.scheduled_for = body.scheduled_for;
     if (body.title !== undefined) updates.title = body.title;
     if (body.description !== undefined) updates.description = body.description;
+    // Activities don't have a status column — mark-done uses scheduled_for = null
 
     const { data, error } = await supabase
       .from("activities")

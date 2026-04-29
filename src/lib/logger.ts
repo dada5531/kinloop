@@ -12,10 +12,14 @@ interface LogContext {
   userId?: string;
   /** Child ID */
   childId?: string;
+  /** Item ID (event, activity, etc.) */
+  itemId?: string;
   /** The input that triggered the error (will be truncated/sanitized) */
   input?: unknown;
   /** Any additional metadata */
   meta?: Record<string, unknown>;
+  /** Allow extra context keys */
+  [key: string]: unknown;
 }
 
 /**

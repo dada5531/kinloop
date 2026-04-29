@@ -81,11 +81,21 @@ export default function DashboardPage() {
       const healthRecords = healthRes.ok ? await healthRes.json() : [];
       const activities = activitiesRes.ok ? await activitiesRes.json() : [];
 
+      // Split events: upcoming first, past excluded from counter
+      const now = new Date();
+      const upcomingEvents = events
+        .filter((e: { start_time?: string | null }) => !e.start_time || new Date(e.start_time) >= now)
+        .sort((a: { start_time?: string | null }, b: { start_time?: string | null }) => {
+          if (!a.start_time) return 1;
+          if (!b.start_time) return -1;
+          return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+        });
+
       setData({
-        events: events.slice(0, 3),
+        events: upcomingEvents.slice(0, 3),
         healthRecords: healthRecords.slice(0, 3),
         activities: activities.slice(0, 3),
-        eventsCount: events.length,
+        eventsCount: upcomingEvents.length,
         healthCount: healthRecords.length,
         activitiesCount: activities.length,
       });

@@ -40,6 +40,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { safeFormatDate, safeFormatTime, safeToISOString } from "@/lib/safe-date";
 import { logError } from "@/lib/logger";
 import { showErrorToast } from "@/lib/error-toasts";
+import { ItemActionsMenu } from "@/components/ItemActionsMenu";
+import { InlineEditForm } from "@/components/InlineEditForm";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 
 // ─── Types ──────────────────────────────────────────────────────
 interface ActivityExtractionResult {
@@ -413,6 +416,7 @@ export default function PlayLabPage() {
   const [activities, setActivities] = useState<SavedActivity[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [expandedActivityId, setExpandedActivityId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
 
   // Extraction state
   const [showInputDialog, setShowInputDialog] = useState(false);
@@ -1071,11 +1075,20 @@ export default function PlayLabPage() {
                         )}
                       </div>
                     </div>
-                    {isExpanded ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
+                    <div className="flex items-center gap-1">
+                      <ItemActionsMenu
+                        onEdit={() => {
+                          setExpandedActivityId(activity.id);
+                          // Edit handled in expanded card
+                        }}
+                        onDelete={() => setDeleteTarget({ id: activity.id, title: activity.title })}
+                      />
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
                   </button>
 
                   {isExpanded && (
@@ -1228,6 +1241,19 @@ export default function PlayLabPage() {
                         </div>
                       )}
 
+                      {/* Edit activity details */}
+                      <div className="border-t-[0.5px] border-border pt-3">
+                        <InlineEditForm
+                          fields={[
+                            { key: "title", label: "Title", type: "text", value: activity.title, required: true },
+                            { key: "description", label: "Description", type: "textarea", value: activity.description || "", placeholder: "Add a description" },
+                          ]}
+                          apiEndpoint="/api/activities"
+                          itemId={activity.id}
+                          onSaved={fetchActivities}
+                          logRoute="play.editActivity"
+                        />
+                      </div>
                       {/* Schedule CTA (PR-C enhanced) */}
                       <div className="border-t-[0.5px] border-border pt-3">
                         {scheduleSuccess === activity.id ? (
@@ -1543,6 +1569,19 @@ export default function PlayLabPage() {
       )}
     </div>
       </QuadrantTransition>
+      {/* Delete confirmation dialog */}
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        itemTitle={deleteTarget?.title || ""}
+        itemType="activity"
+        apiEndpoint="/api/activities"
+        itemId={deleteTarget?.id || ""}
+        onDeleted={() => {
+          setDeleteTarget(null);
+          fetchActivities();
+        }}
+      />
     </>
   );
 }

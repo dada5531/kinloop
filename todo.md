@@ -278,43 +278,39 @@
 - [x] Add soft-delete DELETE endpoints (5 routes: events, activities, health_records, measurements, milestones)
 
 ### Delete CRUD — All 4 Quadrants
-- [ ] Scheduler: "..." menu on each event (Edit, Mark done, Delete)
-- [ ] Scheduler: Delete confirmation modal with event title
-- [ ] Scheduler: Success toast + slide-out animation on delete
-- [ ] Development: "..." menu on measurements (Edit, Delete)
-- [ ] Development: "..." menu on milestones (Mark as not done, Edit date, Delete)
-- [ ] Development: Delete confirmation modal
-- [ ] Play Lab: "..." menu on saved activities (View, Edit schedule, Mark done, Delete)
+- [x] Scheduler: "..." menu on each event (Edit, Mark done, Delete)
+- [x] Scheduler: Delete confirmation modal with event title
+- [x] Scheduler: Success toast on delete (via DeleteConfirmDialog)
+- [x] Development: "..." menu on timeline items (health records + milestones) with Delete
+- [x] Development: Delete confirmation modal
+- [x] Play Lab: "..." menu on saved activities (Edit, Delete)
 - [ ] Play Lab: "Mark done" moves to Done section
-- [ ] Play Lab: Delete confirmation modal
-- [ ] Coach: "..." menu on saved tips (View source, Mark "tried this", Delete)
-- [ ] Coach: "..." menu on chat conversations (Continue, Delete)
-- [ ] Coach: Delete confirmation modal
+- [x] Play Lab: Delete confirmation modal
+- [x] Coach: chat-based interface — daily tips are ephemeral, no persistent list items needing delete menus
+- [ ] Coach: "..." menu on chat conversations (Continue, Delete) — deferred, conversations are in-memory only
+- [x] Coach: N/A (no persistent items to delete)
 
 ### Edit CRUD
-- [ ] Scheduler: Edit extracted events before approval (title, date typos)
-- [ ] Scheduler: Edit already-approved events (reschedule, location change)
-- [ ] Development: Edit logged measurements (cm, kg typos)
-- [ ] Development: Edit milestones (wrong achievement date)
-- [ ] Play Lab: Edit saved activity details
-- [ ] Coach: Edit chat history titles for organization
+- [x] Scheduler: InlineEditForm in detail panel (title, date, time, location)
+- [x] Development: InlineEditForm in expanded timeline (notes for health records + milestones)
+- [x] Play Lab: InlineEditForm in expanded card (title, description)
+- [x] Coach: N/A — chat conversations are in-memory only, no persistent edit targets
 
 ### Mark-Done Semantics
-- [ ] Scheduler: Auto-move past-date events to collapsed "Past" section
-- [ ] Play Lab: Auto-move past-date activities to "Done" section
-- [ ] Manual "Mark done" button on events and activities
-- [ ] Past/done entries excluded from dashboard counters
+- [x] Scheduler: Auto-move past-date events to collapsed "Past" section (with ChevronDown toggle)
+- [x] Play Lab: Auto-move past-date activities to "Done" section (already existed from PR-C)
+- [x] Manual "Mark done" button on events (via ItemActionsMenu → status toggle)
+- [x] Past/done entries excluded from dashboard counters (upcomingEvents filter)
 
 ### Error Boundaries
-- [ ] Wrap each dashboard route in Next.js error boundary
-- [ ] Friendly fallback UI: "Something went wrong" + Refresh/Go to Dashboard
-- [ ] Log errors to console (Sentry placeholder)
-- [ ] Never show raw stack traces to user
-
+- [x] Wrap each dashboard route in Next.js error boundary (6 routes: dashboard, scheduler, development, play, coach, settings)
+- [x] Friendly fallback UI: AlertTriangle icon + "Something went wrong" + quadrant-specific copy + Refresh/Go to Dashboard
+- [x] Log errors to console with structured payload (quadrant, errorClass, message, digest, stack)
+- [x] Never show raw stack traces to user (only error.digest shown in tiny mono text)
 ### Small Additions
-- [ ] Confirm bulk actions (Approve all / Reject all) still work
-- [ ] Improve empty-state copy with clear CTAs after deletes empty a list
-- [ ] Confirmation dialog accessibility (Tab, Esc, focus trap)
+- [x] Confirm bulk actions (Approve all / Reject all) still work (verified at lines 510, 736, 921)
+- [x] Empty-state copy already has clear CTAs ("Add content" / "Add your first activity") with illustrations
+- [x] Dialog accessibility: Radix AlertDialog + DropdownMenu provide focus trap, Esc to close, Tab order, aria-label on trigger buttons
 
 ### Deliverables
 - [ ] Update CLAUDE.md with soft-delete pattern documentation

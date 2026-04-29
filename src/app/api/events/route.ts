@@ -88,19 +88,33 @@ export async function POST(request: NextRequest) {
 
 /**
  * PATCH /api/events
- * Update event status (approve/dismiss).
+ * Update event fields. Supports:
+ *   - Status changes: { eventId, status }
+ *   - Field edits via query param: ?itemId=xxx + body { title, start_time, end_time, location }
  */
 export async function PATCH(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const itemId = searchParams.get("itemId");
     const body = await request.json();
-    const { eventId, status } = body;
 
-    if (!eventId || !status) {
-      return NextResponse.json({ error: "eventId and status are required" }, { status: 400 });
+    // Determine the event ID from either query param or body
+    const eventId = itemId || body.eventId;
+    if (!eventId) {
+      return NextResponse.json({ error: "eventId or itemId is required" }, { status: 400 });
     }
 
     const supabase = getAdminClient();
-    const updates: EventUpdate = { status, updated_at: new Date().toISOString() };
+    const updates: EventUpdate = { updated_at: new Date().toISOString() };
+
+    // Status update (legacy path)
+    if (body.status) updates.status = body.status;
+
+    // Field edits
+    if (body.title !== undefined) updates.title = body.title;
+    if (body.start_time !== undefined) updates.start_time = body.start_time;
+    if (body.end_time !== undefined) updates.end_time = body.end_time;
+    if (body.location !== undefined) updates.location = body.location;
 
     const { data, error } = await supabase
       .from("events")

@@ -34,6 +34,9 @@ import { WHO_WEIGHT_GIRLS, WHO_HEIGHT_GIRLS, computePercentile } from "@/lib/who
 import { safeFormatDate, safeFormatTime, safeToISOString } from "@/lib/safe-date";
 import { logError } from "@/lib/logger";
 import { showErrorToast } from "@/lib/error-toasts";
+import { ItemActionsMenu } from "@/components/ItemActionsMenu";
+import { InlineEditForm } from "@/components/InlineEditForm";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -513,6 +516,7 @@ export default function DevelopmentPage() {
   const [timelineSearch, setTimelineSearch] = useState("");
   const [timelineFilter, setTimelineFilter] = useState<string>("all");
   const [expandedTimelineId, setExpandedTimelineId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string; type: string; apiEndpoint: string } | null>(null);
 
   // Achievement micro state
   const [showAchievement, setShowAchievement] = useState(false);
@@ -1398,11 +1402,21 @@ export default function DevelopmentPage() {
                             )}
                           </div>
                         </div>
-                        {isExpanded ? (
-                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                        )}
+                        <div className="flex items-center gap-1">
+                          <ItemActionsMenu
+                            onDelete={() => setDeleteTarget({
+                              id: item.id,
+                              title: item.title,
+                              type: item.type === "health_record" ? "health record" : "milestone",
+                              apiEndpoint: item.type === "health_record" ? "/api/health-records" : "/api/milestones",
+                            })}
+                          />
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
                       </div>
 
                       {isExpanded && item.subtitle && (
@@ -1438,6 +1452,26 @@ export default function DevelopmentPage() {
                               </div>
                             );
                           })()}
+                        </div>
+                      )}
+                      {/* Inline edit for timeline items */}
+                      {isExpanded && (
+                        <div className="mt-3">
+                          <InlineEditForm
+                            fields={
+                              item.type === "health_record"
+                                ? [
+                                    { key: "notes", label: "Notes", type: "textarea", value: (item.data as unknown as Record<string, string>)?.notes || "", placeholder: "Add notes about this visit" },
+                                  ]
+                                : [
+                                    { key: "notes", label: "Notes", type: "textarea", value: (item.data as unknown as Record<string, string>)?.notes || "", placeholder: "Add notes" },
+                                  ]
+                            }
+                            apiEndpoint={item.type === "health_record" ? "/api/health-records" : "/api/milestones"}
+                            itemId={item.id}
+                            onSaved={fetchData}
+                            logRoute={`development.edit.${item.type}`}
+                          />
                         </div>
                       )}
                     </div>
@@ -1678,6 +1712,19 @@ export default function DevelopmentPage() {
       )}
     </div>
       </QuadrantTransition>
+      {/* Delete confirmation dialog */}
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        itemTitle={deleteTarget?.title || ""}
+        itemType={deleteTarget?.type || "item"}
+        apiEndpoint={deleteTarget?.apiEndpoint || ""}
+        itemId={deleteTarget?.id || ""}
+        onDeleted={() => {
+          setDeleteTarget(null);
+          fetchData();
+        }}
+      />
     </>
   );
 }

@@ -97,10 +97,13 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const itemId = searchParams.get("itemId");
     const body = await request.json();
+    const milestoneId = itemId || body.id;
 
-    if (!body.id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    if (!milestoneId) {
+      return NextResponse.json({ error: "itemId or id is required" }, { status: 400 });
     }
 
     const supabase = getAdminClient();
@@ -108,12 +111,14 @@ export async function PATCH(request: NextRequest) {
 
     if (body.status !== undefined) updates.status = body.status;
     if (body.achievedDate !== undefined) updates.achieved_date = body.achievedDate;
+    if (body.achieved_date !== undefined) updates.achieved_date = body.achieved_date;
     if (body.notes !== undefined) updates.notes = body.notes;
+    if (body.title !== undefined) updates.title = body.title;
 
     const { data, error } = await supabase
       .from("milestones")
       .update(updates)
-      .eq("id", body.id)
+      .eq("id", milestoneId)
       .select()
       .single();
 

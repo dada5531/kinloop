@@ -3,6 +3,7 @@
 import {
   Check,
   X,
+  ChevronDown,
   ChevronRight,
   Upload,
   ClipboardPaste,
@@ -39,6 +40,9 @@ import { logError } from "@/lib/logger";
 import { showErrorToast } from "@/lib/error-toasts";
 import { toast } from "sonner";
 import { validateExtractionResult, salvageExtractionResult } from "@/lib/extraction-schema";
+import { ItemActionsMenu } from "@/components/ItemActionsMenu";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
+import { InlineEditForm } from "@/components/InlineEditForm";
 
 // ─── Types ──────────────────────────────────────────────────────
 interface ExtractedEvent {
@@ -172,6 +176,7 @@ export default function SchedulerPage() {
   const [events, setEvents] = useState<SavedEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
 
   // Extraction state
   const [showPasteDialog, setShowPasteDialog] = useState(false);
@@ -930,8 +935,20 @@ export default function SchedulerPage() {
           {eventsLoading ? (
             <InboxSkeleton />
           ) : events.length > 0 ? (
-            <div className="divide-y divide-border/50">
-              {events.map((evt, idx) => (
+            (() => {
+              const now = new Date();
+              const upcoming = events.filter(
+                (e) => !e.start_time || new Date(e.start_time) >= now
+              ).sort((a, b) => {
+                if (!a.start_time) return 1;
+                if (!b.start_time) return -1;
+                return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+              });
+              const past = events.filter(
+                (e) => e.start_time && new Date(e.start_time) < now
+              ).sort((a, b) => new Date(b.start_time!).getTime() - new Date(a.start_time!).getTime());
+              
+              const renderEventItem = (evt: typeof events[0], idx: number) => (
                 <button
                   key={evt.id}
                   className={`animate-stagger-item w-full p-4 text-left transition-colors duration-150 hover:bg-background-secondary ${
@@ -963,7 +980,19 @@ export default function SchedulerPage() {
                         <h3 className="truncate text-sm font-medium text-foreground">
                           {evt.title}
                         </h3>
-                        <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/40" />
+                        <div className="flex items-center gap-1">
+                          <ItemActionsMenu
+                            onEdit={() => {
+                              setSelectedEventId(evt.id);
+                              // Edit handled in detail panel
+                            }}
+                            onDelete={() => setDeleteTarget({ id: evt.id, title: evt.title })}
+                            onMarkDone={evt.status !== "approved" ? () => handleUpdateStatus(evt.id, "approved") : undefined}
+                            onUndone={evt.status === "approved" ? () => handleUpdateStatus(evt.id, "pending") : undefined}
+                            isDone={evt.status === "approved"}
+                          />
+                          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/40" />
+                        </div>
                       </div>
                       {evt.source_label && (
                         <p className="mt-0.5 text-[11px] text-muted-foreground">
@@ -988,8 +1017,37 @@ export default function SchedulerPage() {
                     </div>
                   </div>
                 </button>
-              ))}
-            </div>
+              );
+              
+              return (
+                <div>
+                  {/* Upcoming events */}
+                  {upcoming.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground bg-background-secondary/50">
+                        Upcoming ({upcoming.length})
+                      </div>
+                      <div className="divide-y divide-border/50">
+                        {upcoming.map(renderEventItem)}
+                      </div>
+                    </div>
+                  )}
+                  {/* Past events — collapsed */}
+                  {past.length > 0 && (
+                    <details className="group border-t border-border/50">
+                      <summary className="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-background-secondary/30">
+                        <Check className="h-3 w-3 text-green-500" />
+                        Past ({past.length})
+                        <ChevronDown className="ml-auto h-3 w-3 transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="divide-y divide-border/50 opacity-60">
+                        {past.map(renderEventItem)}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              );
+            })()
           ) : (
             <EmptyState
               icon={SchedulerIcon}
@@ -1388,6 +1446,22 @@ export default function SchedulerPage() {
       )}
     </div>
       </QuadrantTransition>
+      {/* Delete confirmation dialog */}
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        itemTitle={deleteTarget?.title || ""}
+        itemType="event"
+        apiEndpoint="/api/events"
+        itemId={deleteTarget?.id || ""}
+        onDeleted={() => {
+          setDeleteTarget(null);
+          if (selectedEventId === deleteTarget?.id) {
+            setSelectedEventId(null);
+          }
+          fetchEvents();
+        }}
+      />
     </>
   );
 }
