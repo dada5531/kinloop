@@ -16,6 +16,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getAdminClient } from "@/lib/supabase/admin";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Compute a child's age in months from their DOB.
  */
