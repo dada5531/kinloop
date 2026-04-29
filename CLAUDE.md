@@ -249,6 +249,37 @@ Play Lab materials include "Find on Amazon" links with the `kinloop-20` affiliat
 - Demo user ID: `11111111-1111-1111-1111-111111111111` (NOT `00000000-...`)
 - Demo child ID: `22222222-2222-2222-2222-222222222222` (Mia, DOB 2022-02-15)
 
+### Soft-Delete Pattern (v1.6.4)
+
+All user-facing tables use soft-delete via a `deleted_at` column (`timestamptz`, nullable, default `NULL`). Deleting a record sets `deleted_at` to the current timestamp instead of removing the row.
+
+**Tables with soft-delete:** `events`, `activities`, `health_records`, `measurements`, `milestones`, `tips_saved`, `coach_conversations`
+
+**Tables excluded (system/corpus data):** `users`, `children`, `user_settings`, `sent_emails`, `embeddings`, `tips_corpus`, `activities_corpus`, `daily_recommendations`, `coach_messages`
+
+**Read queries:** Every `SELECT` on a soft-delete table MUST include `.is('deleted_at', null)`. This applies to list endpoints, the cross-quadrant context service (`/api/context/[childId]`), and the Coach RAG pipeline.
+
+**Delete endpoints:** `DELETE /api/{resource}` sets `deleted_at = NOW()` and returns `{ success: true }`. For health records, dependent `measurements` rows are also soft-deleted in the same request.
+
+**Admin recovery:** Soft-deleted records can be restored via Supabase SQL:
+
+```sql
+UPDATE events SET deleted_at = NULL WHERE id = '<uuid>';
+```
+
+**Rule: Never use hard DELETE on user-facing tables.** If you add a new table that stores user content, add a `deleted_at timestamptz DEFAULT NULL` column and apply the same pattern.
+
+### Error Handling Pattern (v1.6.4)
+
+All client-side error handling follows a structured pattern:
+
+- **`safeISODate(input)`** — bulletproof date parsing that handles null, undefined, empty string, "TBD", relative phrases, ISO with placeholder X chars. Returns `{ date: Date | null, parseable: boolean, original: string }`. Located in `src/lib/safe-date.ts`.
+- **`logError(error, context)`** — structured logging with JSON payload (route, userId, childId, errorClass, message, sanitized input). Located in `src/lib/logger.ts`.
+- **`showErrorToast(type, details?)`** — specific error copy per type (date_parse, network, validation, extraction, save, delete). Located in `src/lib/error-toasts.ts`.
+- **Client-side Zod validation** — Claude extraction responses are validated before rendering. On failure, a fallback UI shows "We had trouble reading this email" with raw extracted text visible. Located in `src/lib/extraction-schema.ts`.
+
+**Rule: Never use silent `catch {}` blocks.** Every catch must either log the error or show user-visible feedback. Content-fetcher fallbacks use `console.warn` (non-critical); all other errors use `logError()` + `showErrorToast()`.
+
 ### Tables (4 migrations)
 
 | Table | Added In | Purpose |
