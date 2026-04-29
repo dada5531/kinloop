@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Loader2, Mail, Bell, Shield, ChevronRight, ImageIcon } from "lucide-react";
+import { Check, Loader2, Mail, Bell, Shield, ChevronRight, ImageIcon, MapPin, Heart } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
 import { WelcomePhotoUploader } from "@/components/WelcomePhotoUploader";
@@ -15,6 +15,8 @@ interface Settings {
   notification_email: string | null;
   email_calendar_invites: string | null;
   email_weekly_digest: string | null;
+  zocdoc_zip_code: string | null;
+  insurance_provider: string | null;
 }
 
 // ─── Main Component ─────────────────────────────────────────────
@@ -25,11 +27,15 @@ export default function SettingsPage() {
     notification_email: null,
     email_calendar_invites: "true",
     email_weekly_digest: "true",
+    zocdoc_zip_code: null,
+    insurance_provider: null,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState("");
+  const [zipInput, setZipInput] = useState("");
+  const [insuranceInput, setInsuranceInput] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Fetch settings
@@ -42,6 +48,12 @@ export default function SettingsPage() {
         setSettings((prev) => ({ ...prev, ...data }));
         if (data.notification_email) {
           setEmailInput(data.notification_email);
+        }
+        if (data.zocdoc_zip_code) {
+          setZipInput(data.zocdoc_zip_code);
+        }
+        if (data.insurance_provider) {
+          setInsuranceInput(data.insurance_provider);
         }
       }
     } catch (err) {
@@ -76,7 +88,7 @@ export default function SettingsPage() {
         setTimeout(() => setSaveError(null), 4000);
       }
     } catch (err) {
-      logError(err, { route: "settings.uploadPhoto" });
+      logError(err, { route: "settings.save" });
       setSaveError("Network error. Please try again.");
       setTimeout(() => setSaveError(null), 4000);
     } finally {
@@ -190,6 +202,116 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Healthcare Preferences */}
+        <div className="rounded-xl border-[0.5px] border-border bg-card">
+          <div className="border-b-[0.5px] border-border p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-development-muted">
+                <Heart className="h-4 w-4 text-development" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">Healthcare</h2>
+                <p className="text-xs text-muted-foreground">
+                  Pre-fill doctor search with your location and insurance
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="divide-y-[0.5px] divide-border">
+            {/* ZIP Code */}
+            <div className="p-5">
+              {loading ? (
+                <Skeleton className="h-10 w-full" />
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                    <label className="text-sm font-medium text-foreground">ZIP code</label>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={5}
+                      value={zipInput}
+                      onChange={(e) => setZipInput(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                      placeholder="e.g. 02163"
+                      className="w-32 rounded-lg border-[0.5px] border-border bg-background px-4 py-2.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-development/30"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => saveSetting("zocdoc_zip_code", zipInput)}
+                      disabled={
+                        saving === "zocdoc_zip_code" ||
+                        zipInput.length !== 5 ||
+                        zipInput === settings.zocdoc_zip_code
+                      }
+                    >
+                      {saving === "zocdoc_zip_code" ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : saved === "zocdoc_zip_code" ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        "Save"
+                      )}
+                    </Button>
+                  </div>
+                  {saved === "zocdoc_zip_code" && (
+                    <p className="text-xs text-emerald-600 flex items-center gap-1">
+                      <Check className="h-3 w-3" /> ZIP code saved.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Insurance Provider */}
+            <div className="p-5">
+              {loading ? (
+                <Skeleton className="h-10 w-full" />
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                    <label className="text-sm font-medium text-foreground">Insurance provider</label>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={insuranceInput}
+                      onChange={(e) => setInsuranceInput(e.target.value)}
+                      placeholder="e.g. Blue Cross Blue Shield"
+                      className="flex-1 rounded-lg border-[0.5px] border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-development/30"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => saveSetting("insurance_provider", insuranceInput)}
+                      disabled={
+                        saving === "insurance_provider" ||
+                        !insuranceInput.trim() ||
+                        insuranceInput === settings.insurance_provider
+                      }
+                    >
+                      {saving === "insurance_provider" ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : saved === "insurance_provider" ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        "Save"
+                      )}
+                    </Button>
+                  </div>
+                  {saved === "insurance_provider" && (
+                    <p className="text-xs text-emerald-600 flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Insurance provider saved.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Notification Preferences */}
         <div className="rounded-xl border-[0.5px] border-border bg-card">
           <div className="border-b-[0.5px] border-border p-5">
@@ -295,7 +417,7 @@ export default function SettingsPage() {
         <div className="rounded-xl border-[0.5px] border-border bg-card p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Kinloop v1.5</p>
+              <p className="text-sm font-medium text-foreground">Kinloop v1.7</p>
               <p className="text-xs text-muted-foreground">HBS MBA Capstone 2026</p>
             </div>
             <span className="text-[10px] text-muted-foreground">

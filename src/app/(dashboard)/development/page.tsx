@@ -7,13 +7,16 @@ import {
   ChevronDown,
   ChevronUp,
   ClipboardPaste,
+  ExternalLink,
   FileText,
   Loader2,
   MessageCircle,
   Plus,
   Ruler,
   Search,
+  ShoppingBag,
   Sparkles,
+  Stethoscope,
   TrendingUp,
   Weight,
   X,
@@ -37,6 +40,14 @@ import { showErrorToast } from "@/lib/error-toasts";
 import { ItemActionsMenu } from "@/components/ItemActionsMenu";
 import { InlineEditForm } from "@/components/InlineEditForm";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
+import {
+  getProductSuggestions,
+  buildProductAffiliateUrl,
+  buildTrackedZocdocUrl,
+  getNextCheckupRecommendation,
+  type ZocdocParams,
+} from "@/lib/affiliate/development-products";
+import { generateAffiliateUrl, buildTrackedUrl } from "@/lib/affiliate";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -509,6 +520,12 @@ export default function DevelopmentPage() {
   const [records, setRecords] = useState<HealthRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Healthcare settings (for Zocdoc pre-fill)
+  const [healthcareSettings, setHealthcareSettings] = useState<{ zocdoc_zip_code: string | null; insurance_provider: string | null }>({
+    zocdoc_zip_code: null,
+    insurance_provider: null,
+  });
+
   // UI state
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [growthMetric, setGrowthMetric] = useState<"height" | "weight">("height");
@@ -547,15 +564,23 @@ export default function DevelopmentPage() {
     if (!selectedChildId) return;
     setLoading(true);
     try {
-      const [mRes, msRes, rRes] = await Promise.all([
+      const [mRes, msRes, rRes, settingsRes] = await Promise.all([
         fetch(`/api/measurements?childId=${selectedChildId}`),
         fetch(`/api/milestones?childId=${selectedChildId}`),
         fetch(`/api/health-records?childId=${selectedChildId}`),
+        fetch("/api/settings"),
       ]);
 
       if (mRes.ok) setMeasurements(await mRes.json());
       if (msRes.ok) setMilestones(await msRes.json());
       if (rRes.ok) setRecords(await rRes.json());
+      if (settingsRes.ok) {
+        const s = await settingsRes.json();
+        setHealthcareSettings({
+          zocdoc_zip_code: s.zocdoc_zip_code || null,
+          insurance_provider: s.insurance_provider || null,
+        });
+      }
     } catch (err) {
       logError(err, { route: "development" });
       showErrorToast("save");
@@ -616,6 +641,31 @@ export default function DevelopmentPage() {
 
   const milestonesHit = milestones.filter((m) => m.status === "hit").length;
   const milestonesTotal = milestones.length;
+
+  // Next checkup recommendation
+  const lastVisitDate = records.length > 0 ? (records[0].visit_date || records[0].created_at) : null;
+  const nextCheckup = useMemo(
+    () => getNextCheckupRecommendation(ageMonths, lastVisitDate),
+    [ageMonths, lastVisitDate],
+  );
+
+  // Zocdoc params from settings
+  const zocdocParams: ZocdocParams = useMemo(
+    () => ({
+      zipCode: healthcareSettings.zocdoc_zip_code,
+      insurance: healthcareSettings.insurance_provider,
+    }),
+    [healthcareSettings],
+  );
+
+  // Track whether any affiliate links are shown on this page
+  const hasAffiliateLinks = useMemo(() => {
+    // Zocdoc CTA is always shown if there are records or a next checkup
+    if (nextCheckup || records.length > 0) return true;
+    // Product suggestions are shown for upcoming milestones
+    if (milestones.some((m) => m.status !== "hit")) return true;
+    return false;
+  }, [nextCheckup, records, milestones]);
 
   // Timeline items
   const timelineItems = useMemo(() => {
@@ -1140,6 +1190,48 @@ export default function DevelopmentPage() {
               </div>
             </div>
           )}
+
+          {/* Next checkup recommendation + Zocdoc CTA */}
+          {nextCheckup && (
+            <div className="rounded-xl border-[0.5px] border-development/20 bg-development-muted p-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="mb-1 flex items-center gap-2">
+                    <Stethoscope className="h-4 w-4 text-development" />
+                    <h2 className="text-sm font-semibold text-foreground">Next Recommended Action</h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Schedule {selectedChild?.name}&apos;s{" "}
+                    <span className="font-medium text-foreground">{nextCheckup.label}</span>
+                    {nextCheckup.overdue && (
+                      <span className="ml-1.5 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                        Overdue
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <a
+                  href={buildTrackedZocdocUrl(zocdocParams, { source: "development_overview" })}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-development px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-development/90"
+                >
+                  <Stethoscope className="h-3.5 w-3.5" />
+                  Book on Zocdoc
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+              {!healthcareSettings.zocdoc_zip_code && (
+                <p className="mt-2 text-[10px] text-muted-foreground">
+                  Add your ZIP code in{" "}
+                  <a href="/settings" className="text-development underline hover:text-development/80">
+                    Settings
+                  </a>{" "}
+                  to see doctors near you.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -1256,10 +1348,11 @@ export default function DevelopmentPage() {
                 return (
                   <div
                     key={m.id}
-                    className={`flex items-center justify-between rounded-xl border-[0.5px] p-4 transition-colors ${
+                    className={`rounded-xl border-[0.5px] p-4 transition-colors ${
                       isHit ? "border-border bg-card" : "border-development/20 bg-development-muted"
                     }`}
                   >
+                    <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div
                         className={`flex h-8 w-8 items-center justify-center rounded-lg ${
@@ -1296,15 +1389,49 @@ export default function DevelopmentPage() {
                       </div>
                     </div>
                     {!isHit && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-xs text-development hover:text-development"
-                        onClick={() => handleMarkMilestone(m.id, "hit")}
-                      >
-                        <Check className="mr-1 h-3 w-3" />
-                        Done
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        {/* Product suggestion pills on upcoming milestones */}
+                        {getProductSuggestions(m.category, ageMonths, 2).map((p) => (
+                          <a
+                            key={p.query}
+                            href={buildProductAffiliateUrl(p, { source: "development_milestones", milestoneId: m.id, category: m.category })}
+                            target="_blank"
+                            rel="noopener noreferrer sponsored"
+                            onClick={(e) => e.stopPropagation()}
+                            className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[#FF9900]/10 px-2.5 py-1 text-[11px] font-medium text-[#C17A00] transition-colors hover:bg-[#FF9900]/20"
+                          >
+                            <ShoppingBag className="h-3 w-3" />
+                            {p.name}
+                          </a>
+                        ))}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-xs text-development hover:text-development"
+                          onClick={() => handleMarkMilestone(m.id, "hit")}
+                        >
+                          <Check className="mr-1 h-3 w-3" />
+                          Done
+                        </Button>
+                      </div>
+                    )}
+                    </div>
+                    {/* Mobile product pills shown below milestone info */}
+                    {!isHit && (
+                      <div className="mt-2 flex flex-wrap gap-1.5 sm:hidden">
+                        {getProductSuggestions(m.category, ageMonths, 2).map((p) => (
+                          <a
+                            key={p.query}
+                            href={buildProductAffiliateUrl(p, { source: "development_milestones", milestoneId: m.id, category: m.category })}
+                            target="_blank"
+                            rel="noopener noreferrer sponsored"
+                            className="inline-flex items-center gap-1 rounded-full bg-[#FF9900]/10 px-2.5 py-1 text-[11px] font-medium text-[#C17A00] transition-colors hover:bg-[#FF9900]/20"
+                          >
+                            <ShoppingBag className="h-3 w-3" />
+                            {p.name}
+                          </a>
+                        ))}
+                      </div>
                     )}
                   </div>
                 );
@@ -1426,7 +1553,7 @@ export default function DevelopmentPage() {
                       )}
 
                       {isExpanded && item.type === "health_record" && (
-                        <div className="mt-3">
+                        <div className="mt-3 space-y-3">
                           {(() => {
                             const r = item.data as HealthRecord;
                             return (
@@ -1452,8 +1579,48 @@ export default function DevelopmentPage() {
                               </div>
                             );
                           })()}
+                          {/* Zocdoc CTA on health records */}
+                          <a
+                            href={buildTrackedZocdocUrl(zocdocParams, { source: "development_timeline", recordId: (item.data as HealthRecord).id })}
+                            target="_blank"
+                            rel="noopener noreferrer sponsored"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-development/10 px-3 py-1.5 text-[11px] font-medium text-development transition-colors hover:bg-development/20"
+                          >
+                            <Stethoscope className="h-3 w-3" />
+                            Book next checkup on Zocdoc
+                            <ExternalLink className="h-2.5 w-2.5" />
+                          </a>
                         </div>
                       )}
+
+                      {/* Amazon product suggestions on milestones */}
+                      {isExpanded && item.type === "milestone" && (() => {
+                        const m = item.data as Milestone;
+                        const products = getProductSuggestions(m.category, ageMonths, 3);
+                        if (products.length === 0) return null;
+                        return (
+                          <div className="mt-3">
+                            <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                              Related products
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {products.map((p) => (
+                                <a
+                                  key={p.query}
+                                  href={buildProductAffiliateUrl(p, { source: "development_timeline", milestoneId: m.id, category: m.category })}
+                                  target="_blank"
+                                  rel="noopener noreferrer sponsored"
+                                  className="inline-flex items-center gap-1 rounded-full bg-[#FF9900]/10 px-2.5 py-1 text-[11px] font-medium text-[#C17A00] transition-colors hover:bg-[#FF9900]/20"
+                                >
+                                  <ShoppingBag className="h-3 w-3" />
+                                  {p.name}
+                                  <ExternalLink className="h-2.5 w-2.5" />
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
                       {/* Inline edit for timeline items */}
                       {isExpanded && (
                         <div className="mt-3">
@@ -1709,6 +1876,12 @@ export default function DevelopmentPage() {
             </div>
           </div>
         </div>
+      )}
+      {/* Affiliate disclosure */}
+      {hasAffiliateLinks && (
+        <p className="mt-8 text-center text-[10px] leading-relaxed text-muted-foreground/60">
+          Some links are affiliate links. We may earn a small commission at no extra cost to you.
+        </p>
       )}
     </div>
       </QuadrantTransition>

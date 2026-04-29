@@ -376,12 +376,15 @@
 - [ ] Send Phase 1 preview screenshots for sign-off (today's tip is AAP institutional — no affiliate links visible; verified DB has correct URLs for book tips)
 
 ### Phase 2 — Development: Zocdoc + Health Products
-- [ ] ZOCDOC_PARTNER_ID env var + "Book on Zocdoc →" button on next-recommended-action card
-- [ ] Settings fields for ZIP code and Insurance provider
-- [ ] Amazon affiliate for kids health products (symptom → product mapping)
-- [ ] Update health-extraction prompt for suggested_products array
-- [ ] GOODRX_PARTNER_ID env var + GoodRx links for medications
-- [ ] Affiliate disclosure on Development page
+- [x] ZOCDOC_PARTNER_ID env var + "Book on Zocdoc →" button on next-recommended-action card (Overview tab)
+- [x] "Book next checkup on Zocdoc" pill on expanded health records (Timeline tab)
+- [x] Settings fields for ZIP code and Insurance provider (Healthcare section)
+- [x] Amazon affiliate for kids health products (milestone category → product mapping)
+- [x] Product suggestion pills on upcoming milestones (Milestones tab + Timeline tab)
+- [x] Affiliate disclosure on Development page (conditional, same pattern as Coach)
+- [x] development-products.ts utility (getProductSuggestions, buildProductAffiliateUrl, buildTrackedZocdocUrl, getNextCheckupRecommendation)
+- [ ] Update health-extraction prompt for suggested_products array (deferred to Phase 2b)
+- [ ] GOODRX_PARTNER_ID env var + GoodRx links for medications (deferred to Phase 2b)
 - [ ] Send Phase 2 preview screenshots for sign-off
 
 ### Phase 3 — Scheduler: Contextual Deep Links
