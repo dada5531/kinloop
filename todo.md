@@ -356,7 +356,9 @@
 - [x] UI: extraction preview cards show Date TBD / ~approx badges
 - [x] UI: sidebar event list cards show Date TBD / ~ badges
 - [x] UI: approximate dates show amber badge with original_date_text
-- [ ] Test with original failing email: "End of Year Party (TBD)" → clean detail view, no red error
+- [x] Test with original failing email: TBD dates show "Date TBD" badge, "Add a date" button, disabled calendar send
+- [x] Test with mixed email (2 TBD + 1 exact): all 3 events extracted correctly with proper date_certainty
+- [x] Send-to-calendar API returns 200 OK (no more "No events provided" error)
 
 ### Verification
 - [ ] User runs 8-email gauntlet: TBD date, relative date, vague date, placeholder ISO, conflicting dates, no dates, non-English, gibberish
