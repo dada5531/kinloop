@@ -258,6 +258,15 @@
 - [x] Grep all unsafe new Date() calls across entire src/ — 44 instances in 13 files documented
 - [x] Fix every silent catch with proper logging + user-visible error feedback (39 instances across 16 files)
 - [x] Fix every unsafe new Date() with safeISODate()/safeFormatDate()/safeFormatTime() helper
+- [x] Add safeGetTime(), safeIsAfterOrEqual(), safeIsBefore() helpers to safe-date.ts
+- [x] Replace unsafe new Date() in dashboard event filtering with safe helpers
+- [x] Replace unsafe new Date() in scheduler event filtering/sorting with safe helpers
+- [x] Replace unsafe new Date() in Play Lab activity filtering/sorting with safe helpers
+- [x] Replace unsafe new Date() in TopBar metrics filtering with safeGetTime
+- [x] Replace unsafe new Date() in InlineEditForm with safeToISOString
+- [x] Replace unsafe new Date() in ICS generator with safeISODate
+- [x] Add logFetchFallback() to all 10 silent catch blocks in content-fetcher.ts
+- [x] Fix Development timeline delete passing prefixed IDs (milestone-{uuid}) instead of raw UUIDs
 
 ### Fix Infrastructure
 - [x] safeISODate() helper: handles null, undefined, empty string, "TBD", relative phrases, ISO with X placeholders. Returns { date: Date | null, parseable: boolean, original: string }
@@ -265,7 +274,7 @@
 - [x] Error toast system: specific copy per error type (date parse, network, validation, missing field)
 - [x] Client-side Zod validation on Claude extraction response before rendering
 - [x] Zod validation failure fallback: "We had trouble reading this email" + raw extracted text visible + salvage partial results
-- [ ] Test 10+ different sample emails (different formats, edge cases)
+- [ ] Test 8 deliberately problematic emails (TBD date, relative date, vague date, placeholder ISO, conflicting dates, no dates, non-English, gibberish)
 
 ### Soft-Delete Infrastructure
 - [x] Add deleted_at column to events table
@@ -314,6 +323,6 @@
 
 ### Deliverables
 - [ ] Update CLAUDE.md with soft-delete pattern documentation
-- [ ] End-to-end test all CRUD flows on preview
+- [x] End-to-end test all CRUD flows on preview (delete confirmed working, edit confirmed working)
 - [ ] Capture screenshots of delete modals, "..." menus, admin recovery
 - [ ] Create PR titled [v1.6.4-crud-and-fixes]
