@@ -12,6 +12,8 @@ import {
   CoachIcon,
 } from "@/components/icons/QuadrantIcons";
 import { useChild } from "@/components/providers/ChildProvider";
+import { logError } from "@/lib/logger";
+import { showErrorToast } from "@/lib/error-toasts";
 
 // Dashboard uses Lucide (utility icon), quadrants use custom icons
 const navItems = [
@@ -67,8 +69,9 @@ export function TopBar() {
         healthRecords: health.length,
         savedActivities: activities.length,
       });
-    } catch {
-      // Silently fail — metrics are non-critical
+    } catch (err) {
+      logError(err, { route: "topbar.fetchMetrics" });
+      // Metrics are non-critical — don't show toast
     }
   }, [childId]);
 

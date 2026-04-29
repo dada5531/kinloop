@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("measurements")
       .select("*")
+      .is('deleted_at', null)
       .eq("child_id", childId)
       .order("date", { ascending: true });
 
@@ -79,5 +80,30 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[Measurements POST] Error:", error);
     return NextResponse.json({ error: "Failed to save measurement" }, { status: 500 });
+  }
+}
+
+
+// Soft-delete a measurement
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const measurementId = searchParams.get("id");
+    if (!measurementId) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+    const supabase = getAdminClient();
+    const { error } = await supabase
+      .from("measurements")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", measurementId);
+    if (error) {
+      console.error("[Measurements DELETE] Soft-delete error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[Measurements DELETE] Error:", error);
+    return NextResponse.json({ error: "Failed to delete measurement" }, { status: 500 });
   }
 }

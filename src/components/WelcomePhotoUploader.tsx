@@ -4,6 +4,8 @@ import { Camera, Upload, Trash2, Loader2, Check } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
+import { logError } from "@/lib/logger";
+import { showErrorToast } from "@/lib/error-toasts";
 
 interface WelcomePhotoUploaderProps {
   childId: string;
@@ -92,8 +94,9 @@ export function WelcomePhotoUploader({
       if (!res.ok) throw new Error("Delete failed");
       setPreview(null);
       onPhotoUpdated();
-    } catch {
-      alert("Failed to remove photo");
+    } catch (err) {
+      logError(err, { route: "welcomePhoto.deletePhoto" });
+      showErrorToast("delete");
     } finally {
       setDeleting(false);
     }

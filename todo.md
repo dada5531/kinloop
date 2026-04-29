@@ -232,3 +232,92 @@
 - [x] prefers-reduced-motion: centerpiece and drifts disabled, card/dots at final state immediately
 - [x] Mobile: centerpiece 240px, card padding smaller, dashboard drops ambient-3 and ambient-4
 - [x] Send preview URL for review
+
+## HBS Appendix Screenshots (8 shots at 1440x900)
+- [ ] 01-landing.png — Landing page with marquee mid-scroll, headline, CTAs
+- [ ] 02-signin.png — Sign-in page with frosted card, dots, centerpiece
+- [ ] 03-dashboard.png — Dashboard with all 4 quadrant tiles, greeting, ambient illos
+- [ ] 04-scheduler.png — Scheduler with extracted school email event card
+- [ ] 05-development.png — Development Hub with WHO growth chart + milestones list
+- [ ] 06-playlab.png — Play Lab with Dinosaur Egg Excavation expanded, Amazon CTA
+- [ ] 07-coach.png — Coach with daily tip card + activity card, source citations
+- [ ] 08-coach-question.png — Coach response to "How do I get Mia to try new foods?" with citations
+- [ ] manifest.txt + kinloop-appendix-screenshots.zip delivered
+
+## v1.6.4 — CRUD and Fixes
+
+### Scheduler Error Diagnosis & Fix
+- [x] Reproduce scheduler error on live deployment (try 5+ different emails)
+- [x] Check Vercel function logs for 500 errors on /api/scheduler/* or /api/events/*
+- [x] Check events table for partial/orphaned rows on failure
+- [x] Identify root cause: race condition, missing user_id, bad JSON, date parsing, or RLS
+- [x] Report diagnosis to user BEFORE writing fix code
+
+### Codebase-Wide Error Handling Audit
+- [x] Grep all silent catch {} blocks across entire src/ — 39 instances in 16 files documented
+- [x] Grep all unsafe new Date() calls across entire src/ — 44 instances in 13 files documented
+- [x] Fix every silent catch with proper logging + user-visible error feedback (39 instances across 16 files)
+- [x] Fix every unsafe new Date() with safeISODate()/safeFormatDate()/safeFormatTime() helper
+
+### Fix Infrastructure
+- [x] safeISODate() helper: handles null, undefined, empty string, "TBD", relative phrases, ISO with X placeholders. Returns { date: Date | null, parseable: boolean, original: string }
+- [x] Structured logger: console.error with object payload (route, user_id, child_id, error class, message, sanitized input)
+- [x] Error toast system: specific copy per error type (date parse, network, validation, missing field)
+- [x] Client-side Zod validation on Claude extraction response before rendering
+- [x] Zod validation failure fallback: "We had trouble reading this email" + raw extracted text visible + salvage partial results
+- [ ] Test 10+ different sample emails (different formats, edge cases)
+
+### Soft-Delete Infrastructure
+- [x] Add deleted_at column to events table
+- [x] Add deleted_at column to measurements table
+- [x] Add deleted_at column to milestones table
+- [x] Add deleted_at column to activities table
+- [x] Add deleted_at column to coach tips table (tips_saved)
+- [x] Add deleted_at column to coach conversations table
+- [x] Add WHERE deleted_at IS NULL filter on all read queries (12 filters across 7 API routes)
+- [x] Add soft-delete DELETE endpoints (5 routes: events, activities, health_records, measurements, milestones)
+
+### Delete CRUD — All 4 Quadrants
+- [ ] Scheduler: "..." menu on each event (Edit, Mark done, Delete)
+- [ ] Scheduler: Delete confirmation modal with event title
+- [ ] Scheduler: Success toast + slide-out animation on delete
+- [ ] Development: "..." menu on measurements (Edit, Delete)
+- [ ] Development: "..." menu on milestones (Mark as not done, Edit date, Delete)
+- [ ] Development: Delete confirmation modal
+- [ ] Play Lab: "..." menu on saved activities (View, Edit schedule, Mark done, Delete)
+- [ ] Play Lab: "Mark done" moves to Done section
+- [ ] Play Lab: Delete confirmation modal
+- [ ] Coach: "..." menu on saved tips (View source, Mark "tried this", Delete)
+- [ ] Coach: "..." menu on chat conversations (Continue, Delete)
+- [ ] Coach: Delete confirmation modal
+
+### Edit CRUD
+- [ ] Scheduler: Edit extracted events before approval (title, date typos)
+- [ ] Scheduler: Edit already-approved events (reschedule, location change)
+- [ ] Development: Edit logged measurements (cm, kg typos)
+- [ ] Development: Edit milestones (wrong achievement date)
+- [ ] Play Lab: Edit saved activity details
+- [ ] Coach: Edit chat history titles for organization
+
+### Mark-Done Semantics
+- [ ] Scheduler: Auto-move past-date events to collapsed "Past" section
+- [ ] Play Lab: Auto-move past-date activities to "Done" section
+- [ ] Manual "Mark done" button on events and activities
+- [ ] Past/done entries excluded from dashboard counters
+
+### Error Boundaries
+- [ ] Wrap each dashboard route in Next.js error boundary
+- [ ] Friendly fallback UI: "Something went wrong" + Refresh/Go to Dashboard
+- [ ] Log errors to console (Sentry placeholder)
+- [ ] Never show raw stack traces to user
+
+### Small Additions
+- [ ] Confirm bulk actions (Approve all / Reject all) still work
+- [ ] Improve empty-state copy with clear CTAs after deletes empty a list
+- [ ] Confirmation dialog accessibility (Tab, Esc, focus trap)
+
+### Deliverables
+- [ ] Update CLAUDE.md with soft-delete pattern documentation
+- [ ] End-to-end test all CRUD flows on preview
+- [ ] Capture screenshots of delete modals, "..." menus, admin recovery
+- [ ] Create PR titled [v1.6.4-crud-and-fixes]

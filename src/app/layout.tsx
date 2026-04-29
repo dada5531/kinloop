@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Fraunces } from "next/font/google";
 
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { Toaster } from "sonner";
 
 import "./globals.css";
 
@@ -33,6 +34,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${fraunces.variable} min-h-screen font-sans antialiased`}>
         <AuthProvider>{children}</AuthProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            className: "font-sans",
+            style: { fontFamily: "var(--font-sans)" },
+          }}
+          richColors
+          closeButton
+        />
       </body>
     </html>
   );

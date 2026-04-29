@@ -26,6 +26,8 @@ import { CoachEmpty } from "@/components/illustrations/CoachEmpty";
 import { AchievementMicro, TipSaved, SleepIcon, BehaviorIcon, NutritionIcon, DevelopmentTipIcon, SafetyIcon, QuadrantTransition, CoachTransition } from "@/components/illustrations";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
+import { logError } from "@/lib/logger";
+import { showErrorToast } from "@/lib/error-toasts";
 
 /* ---------- types ---------- */
 
@@ -199,8 +201,8 @@ export default function CoachPage() {
           setDailyTip(data.tip);
           setDailyActivity(data.activity);
         }
-      } catch {
-        // Silently fail — cards just won't show
+      } catch (err) {
+        logError(err, { route: "coach.fetchDailyTip" });
       } finally {
         setDailyLoading(false);
       }
@@ -233,8 +235,9 @@ export default function CoachPage() {
       });
       setTipSaved(true);
       setShowAchievement(true);
-    } catch {
-      // Fail silently
+    } catch (err) {
+      logError(err, { route: "coach.saveTip" });
+      showErrorToast("save", { action: "save this tip" });
     }
   };
 
@@ -294,7 +297,7 @@ export default function CoachPage() {
                     setMessages([...newMessages, { role: "assistant", content: assistantContent }]);
                   }
                 } catch {
-                  // Skip malformed chunks
+                  // Skip malformed SSE chunks — intentional
                 }
               }
             }

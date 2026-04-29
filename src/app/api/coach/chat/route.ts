@@ -1,3 +1,4 @@
+import { safeFormatDate } from "@/lib/safe-date";
 import { NextRequest, NextResponse } from "next/server";
 
 import { claude, CLAUDE_MODEL } from "@/lib/anthropic";
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
           const { data: events } = await supabase
             .from("events")
             .select("title, start_time, location, action_items")
+            .is('deleted_at', null)
             .eq("child_id", childId)
             .gte("created_at", thirtyDaysAgo)
             .order("start_time", { ascending: false })
@@ -71,7 +73,7 @@ export async function POST(request: NextRequest) {
             ).forEach((e) => {
               childContextBlock += `- ${e.title}`;
               if (e.start_time)
-                childContextBlock += ` (${new Date(e.start_time).toLocaleDateString()})`;
+                childContextBlock += ` (${safeFormatDate(e.start_time)})`;
               childContextBlock += "\n";
             });
           }
@@ -80,6 +82,7 @@ export async function POST(request: NextRequest) {
           const { data: healthRecords } = await supabase
             .from("health_records")
             .select("type, visit_date, summary, extracted")
+            .is('deleted_at', null)
             .eq("child_id", childId)
             .order("visit_date", { ascending: false })
             .limit(3);
@@ -102,6 +105,7 @@ export async function POST(request: NextRequest) {
           const { data: activities } = await supabase
             .from("activities")
             .select("title, category, difficulty")
+            .is('deleted_at', null)
             .eq("child_id", childId)
             .order("created_at", { ascending: false })
             .limit(5);
@@ -115,7 +119,8 @@ export async function POST(request: NextRequest) {
             );
           }
         }
-      } catch {
+      } catch (err) {
+        console.error(`[Kinloop Error] coachChat.parseEvents:`, err instanceof Error ? err.message : err);
         // Continue without context
       }
     }

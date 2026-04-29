@@ -15,6 +15,9 @@ import DashboardAmbient from "@/components/DashboardAmbient";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QuadrantCard, PreviewRow } from "@/components/ui/quadrant-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { safeFormatDate, safeFormatTime, safeToISOString } from "@/lib/safe-date";
+import { logError } from "@/lib/logger";
+import { showErrorToast } from "@/lib/error-toasts";
 
 interface DashboardData {
   events: Array<{
@@ -86,8 +89,8 @@ export default function DashboardPage() {
         healthCount: healthRecords.length,
         activitiesCount: activities.length,
       });
-    } catch {
-      setData(null);
+    } catch (err) {
+      logError(err, { route: "dashboard.fetchData" });
     } finally {
       setLoading(false);
     }
@@ -169,7 +172,7 @@ export default function DashboardPage() {
                 label={evt.title}
                 meta={
                   evt.start_time
-                    ? new Date(evt.start_time).toLocaleDateString("en-US", {
+                    ? safeFormatDate(evt.start_time, {
                         month: "short",
                         day: "numeric",
                       })
@@ -202,7 +205,7 @@ export default function DashboardPage() {
                 key={rec.id}
                 dot="bg-development"
                 label={`${rec.type.replace("_", " ")}${rec.summary ? ` — ${rec.summary.slice(0, 35)}` : ""}`}
-                meta={new Date(rec.visit_date).toLocaleDateString("en-US", {
+                meta={safeFormatDate(rec.visit_date, {
                   month: "short",
                   day: "numeric",
                 })}

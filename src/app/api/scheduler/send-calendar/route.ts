@@ -1,3 +1,4 @@
+import { safeFormatDate } from "@/lib/safe-date";
 import { NextRequest, NextResponse } from "next/server";
 
 import { generateIcs } from "@/lib/calendar/ics-generator";
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
         <div style="margin-bottom: 16px; padding: 16px; background: #f9f8f6; border-radius: 8px; border-left: 4px solid #7C6EAF;">
           <strong style="font-size: 15px; color: #1a1a1a;">${evt.title}</strong><br/>
           <span style="color: #666; font-size: 13px;">
-            ${new Date(evt.startDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+            ${safeFormatDate(evt.startDate, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
             ${evt.location ? ` · ${evt.location}` : ""}
           </span>
         </div>
@@ -167,7 +168,8 @@ export async function POST(request: NextRequest) {
         status: "failed",
         error_message: error instanceof Error ? error.message : "Unknown error",
       });
-    } catch {
+    } catch (err) {
+      console.error(`[Kinloop Error] sendCalendar:`, err instanceof Error ? err.message : err);
       // Don't fail on audit log failure
     }
 

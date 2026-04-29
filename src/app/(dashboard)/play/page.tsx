@@ -37,6 +37,9 @@ import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { safeFormatDate, safeFormatTime, safeToISOString } from "@/lib/safe-date";
+import { logError } from "@/lib/logger";
+import { showErrorToast } from "@/lib/error-toasts";
 
 // ─── Types ──────────────────────────────────────────────────────
 interface ActivityExtractionResult {
@@ -448,8 +451,9 @@ export default function PlayLabPage() {
         const data = await res.json();
         setActivities(data);
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "play" });
+      showErrorToast("save");
     } finally {
       setActivitiesLoading(false);
     }
@@ -550,8 +554,9 @@ export default function PlayLabPage() {
         setInputUrl("");
         fetchActivities();
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "play" });
+      showErrorToast("save");
     } finally {
       setSaving(false);
     }
@@ -633,7 +638,8 @@ export default function PlayLabPage() {
             setCalendarInviteHint(true);
             setTimeout(() => setCalendarInviteHint(false), 8000);
           }
-        } catch {
+        } catch (err) {
+          logError(err, { route: "play.calendarInvite" });
           // Calendar invite is best-effort — don't block scheduling
         }
 
@@ -647,8 +653,9 @@ export default function PlayLabPage() {
         setTimeout(() => setScheduleSuccess(null), 5000);
         fetchActivities();
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "play" });
+      showErrorToast("save");
     } finally {
       setScheduleSaving(false);
     }
@@ -731,16 +738,9 @@ export default function PlayLabPage() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-foreground">{a.title}</p>
                         <p className="text-xs text-green-700">
-                          {new Date(a.scheduled_for!).toLocaleDateString("en-US", {
-                            weekday: "short",
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {safeFormatDate(a.scheduled_for, { weekday: "short", month: "short", day: "numeric" })}
                           {" at "}
-                          {new Date(a.scheduled_for!).toLocaleTimeString("en-US", {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
+                          {safeFormatTime(a.scheduled_for, { hour: "numeric", minute: "2-digit" })}
                           {a.duration_minutes && (
                             <span className="text-green-600"> · {a.duration_minutes} min</span>
                           )}
@@ -781,10 +781,7 @@ export default function PlayLabPage() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-medium text-muted-foreground">{a.title}</p>
                         <p className="text-[10px] text-muted-foreground/60">
-                          {new Date(a.scheduled_for!).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {safeFormatDate(a.scheduled_for, { month: "short", day: "numeric" })}
                         </p>
                       </div>
                       <button
@@ -1238,7 +1235,7 @@ export default function PlayLabPage() {
                             <div className="flex items-center gap-2 animate-accent-flush rounded-lg border-[0.5px] border-green-200 bg-green-50 px-3 py-2">
                               <Check className="h-4 w-4 text-green-600 animate-success-icon" />
                               <span className="text-sm font-medium text-green-700">
-                                Scheduled for {activity.scheduled_for ? new Date(activity.scheduled_for).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : "soon"}
+                                Scheduled for {activity.scheduled_for ? safeFormatDate(activity.scheduled_for, { weekday: "short", month: "short", day: "numeric" }, "soon") : "soon"}
                               </span>
                             </div>
                             {calendarInviteHint && (
@@ -1258,16 +1255,9 @@ export default function PlayLabPage() {
                               <Calendar className="h-3.5 w-3.5 text-green-600" />
                               <span className="text-xs font-medium text-green-700">
                                 Scheduled for{" "}
-                                {new Date(activity.scheduled_for).toLocaleDateString("en-US", {
-                                  weekday: "short",
-                                  month: "short",
-                                  day: "numeric",
-                                })}
+                                {safeFormatDate(activity.scheduled_for, { weekday: "short", month: "short", day: "numeric" })}
                                 {" at "}
-                                {new Date(activity.scheduled_for).toLocaleTimeString("en-US", {
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                })}
+                                {safeFormatTime(activity.scheduled_for, { hour: "numeric", minute: "2-digit" })}
                               </span>
                             </div>
                             <button

@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from("health_records")
       .select("*")
+      .is('deleted_at', null)
       .eq("child_id", childId)
       .order("visit_date", { ascending: false });
 
@@ -73,5 +74,38 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[Health Records POST] Error:", error);
     return NextResponse.json({ error: "Failed to save health record" }, { status: 500 });
+  }
+}
+
+
+// Soft-delete a health record
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const recordId = searchParams.get("id");
+    if (!recordId) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+    const supabase = getAdminClient();
+    // Also soft-delete associated measurements
+    const { error: measError } = await supabase
+      .from("measurements")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("health_record_id", recordId);
+    if (measError) {
+      console.error("[HealthRecords DELETE] Measurements soft-delete error:", measError);
+    }
+    const { error } = await supabase
+      .from("health_records")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", recordId);
+    if (error) {
+      console.error("[HealthRecords DELETE] Soft-delete error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[HealthRecords DELETE] Error:", error);
+    return NextResponse.json({ error: "Failed to delete health record" }, { status: 500 });
   }
 }

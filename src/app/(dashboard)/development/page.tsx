@@ -31,6 +31,9 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WHO_WEIGHT_GIRLS, WHO_HEIGHT_GIRLS, computePercentile } from "@/lib/who-growth-data";
+import { safeFormatDate, safeFormatTime, safeToISOString } from "@/lib/safe-date";
+import { logError } from "@/lib/logger";
+import { showErrorToast } from "@/lib/error-toasts";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -114,7 +117,7 @@ function getAgeMonths(dob: string, atDate?: string): number {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return safeFormatDate(dateStr, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -549,8 +552,9 @@ export default function DevelopmentPage() {
       if (mRes.ok) setMeasurements(await mRes.json());
       if (msRes.ok) setMilestones(await msRes.json());
       if (rRes.ok) setRecords(await rRes.json());
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "development" });
+      showErrorToast("save");
     } finally {
       setLoading(false);
     }
@@ -755,8 +759,9 @@ export default function DevelopmentPage() {
         setPasteContent("");
         fetchData();
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "development" });
+      showErrorToast("save");
     } finally {
       setSaving(false);
     }
@@ -809,8 +814,9 @@ export default function DevelopmentPage() {
           fetchData();
         }
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "development" });
+      showErrorToast("save");
     } finally {
       setFormSaving(false);
     }
@@ -831,8 +837,9 @@ export default function DevelopmentPage() {
         setShowAchievement(true);
       }
       fetchData();
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "development" });
+      showErrorToast("save");
     }
   };
 

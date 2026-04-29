@@ -104,6 +104,7 @@ export interface Database {
           raw_content: string | null;
           file_url: string | null;
           source_label: string | null;
+                  deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -125,6 +126,7 @@ export interface Database {
           raw_content?: string | null;
           file_url?: string | null;
           source_label?: string | null;
+                  deleted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -146,6 +148,7 @@ export interface Database {
           raw_content?: string | null;
           file_url?: string | null;
           source_label?: string | null;
+                  deleted_at?: string | null;
         };
         Relationships: [];
       };
@@ -164,6 +167,7 @@ export interface Database {
           height_cm: number | null;
           weight_kg: number | null;
           provider: string | null;
+                  deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -179,6 +183,7 @@ export interface Database {
           height_cm?: number | null;
           weight_kg?: number | null;
           provider?: string | null;
+                  deleted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -194,6 +199,7 @@ export interface Database {
           height_cm?: number | null;
           weight_kg?: number | null;
           provider?: string | null;
+                  deleted_at?: string | null;
         };
         Relationships: [];
       };
@@ -220,6 +226,7 @@ export interface Database {
           description: string | null;
           difficulty: string | null;
           category: string | null;
+                  deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -243,6 +250,7 @@ export interface Database {
           description?: string | null;
           difficulty?: string | null;
           category?: string | null;
+                  deleted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -266,6 +274,7 @@ export interface Database {
           description?: string | null;
           difficulty?: string | null;
           category?: string | null;
+                  deleted_at?: string | null;
         };
         Relationships: [];
       };
@@ -278,6 +287,7 @@ export interface Database {
           source: string | null;
           category: string | null;
           created_at: string;
+                  deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -287,6 +297,7 @@ export interface Database {
           source?: string | null;
           category?: string | null;
           created_at?: string;
+                  deleted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -296,6 +307,7 @@ export interface Database {
           source?: string | null;
           category?: string | null;
           created_at?: string;
+                  deleted_at?: string | null;
         };
         Relationships: [];
       };
@@ -306,6 +318,7 @@ export interface Database {
           child_id: string | null;
           created_at: string;
           updated_at: string | null;
+                  deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -313,6 +326,7 @@ export interface Database {
           child_id?: string | null;
           created_at?: string;
           updated_at?: string | null;
+                  deleted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -320,6 +334,7 @@ export interface Database {
           child_id?: string | null;
           created_at?: string;
           updated_at?: string | null;
+                  deleted_at?: string | null;
         };
         Relationships: [];
       };
@@ -546,6 +561,7 @@ export interface Database {
           source: string;
           health_record_id: string | null;
           created_at: string;
+                  deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -559,6 +575,7 @@ export interface Database {
           source?: string;
           health_record_id?: string | null;
           created_at?: string;
+                  deleted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -572,6 +589,7 @@ export interface Database {
           source?: string;
           health_record_id?: string | null;
           created_at?: string;
+                  deleted_at?: string | null;
         };
         Relationships: [];
       };
@@ -588,6 +606,7 @@ export interface Database {
           achieved_date: string | null;
           notes: string | null;
           created_at: string;
+                  deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -601,6 +620,7 @@ export interface Database {
           achieved_date?: string | null;
           notes?: string | null;
           created_at?: string;
+                  deleted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -614,6 +634,7 @@ export interface Database {
           achieved_date?: string | null;
           notes?: string | null;
           created_at?: string;
+                  deleted_at?: string | null;
         };
         Relationships: [];
       };

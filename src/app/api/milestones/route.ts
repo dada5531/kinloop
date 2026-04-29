@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("milestones")
       .select("*")
+      .is('deleted_at', null)
       .eq("child_id", childId)
       .order("age_months_expected", { ascending: true });
 
@@ -124,5 +125,30 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     console.error("[Milestones PATCH] Error:", error);
     return NextResponse.json({ error: "Failed to update milestone" }, { status: 500 });
+  }
+}
+
+
+// Soft-delete a milestone
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const milestoneId = searchParams.get("id");
+    if (!milestoneId) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+    const supabase = getAdminClient();
+    const { error } = await supabase
+      .from("milestones")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", milestoneId);
+    if (error) {
+      console.error("[Milestones DELETE] Soft-delete error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[Milestones DELETE] Error:", error);
+    return NextResponse.json({ error: "Failed to delete milestone" }, { status: 500 });
   }
 }

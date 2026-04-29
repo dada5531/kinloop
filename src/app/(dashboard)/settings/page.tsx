@@ -7,6 +7,8 @@ import { WelcomePhotoUploader } from "@/components/WelcomePhotoUploader";
 import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { logError } from "@/lib/logger";
+import { showErrorToast } from "@/lib/error-toasts";
 
 // ─── Types ──────────────────────────────────────────────────────
 interface Settings {
@@ -42,8 +44,9 @@ export default function SettingsPage() {
           setEmailInput(data.notification_email);
         }
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "settings" });
+      showErrorToast("save");
     } finally {
       setLoading(false);
     }
@@ -72,7 +75,8 @@ export default function SettingsPage() {
         setSaveError(data?.error || "Failed to save. Please try again.");
         setTimeout(() => setSaveError(null), 4000);
       }
-    } catch {
+    } catch (err) {
+      logError(err, { route: "settings.uploadPhoto" });
       setSaveError("Network error. Please try again.");
       setTimeout(() => setSaveError(null), 4000);
     } finally {

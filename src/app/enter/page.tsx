@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
 import { motion } from "framer-motion";
 import SigninCenterpiece from "@/components/illustrations/SigninCenterpiece";
+import { logError } from "@/lib/logger";
+import { showErrorToast } from "@/lib/error-toasts";
 
 /**
  * Sign-in page — v1.6.3 surface-motion.
@@ -48,7 +50,8 @@ function EnterForm() {
         setError(data.error || "Incorrect password.");
         setLoading(false);
       }
-    } catch {
+    } catch (err) {
+      logError(err, { route: "enter.verifyPassword" });
       setError("Something went wrong. Please try again.");
       setLoading(false);
     }

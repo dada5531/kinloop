@@ -34,6 +34,11 @@ import { useChild } from "@/components/providers/ChildProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { safeToISOString, safeFormatDate, safeFormatTime } from "@/lib/safe-date";
+import { logError } from "@/lib/logger";
+import { showErrorToast } from "@/lib/error-toasts";
+import { toast } from "sonner";
+import { validateExtractionResult, salvageExtractionResult } from "@/lib/extraction-schema";
 
 // ─── Types ──────────────────────────────────────────────────────
 interface ExtractedEvent {
@@ -175,6 +180,7 @@ export default function SchedulerPage() {
   const [extracting, setExtracting] = useState(false);
   const [extractedResults, setExtractedResults] = useState<ExtractionResult[]>([]);
   const [extractionError, setExtractionError] = useState<string | null>(null);
+  const [validationFailure, setValidationFailure] = useState<{ errors: string[]; raw: unknown } | null>(null);
   const [rawContent, setRawContent] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [approving, setApproving] = useState(false);
@@ -205,8 +211,8 @@ export default function SchedulerPage() {
         const data = await res.json();
         setEvents(data);
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "scheduler.fetchEvents", childId: selectedChildId || undefined });
     } finally {
       setEventsLoading(false);
     }
@@ -271,9 +277,24 @@ export default function SchedulerPage() {
         throw new Error(err.error || "Extraction failed");
       }
 
-      const result: ExtractionResult = await res.json();
-      result.sourceLabel = sourceLabel;
-      setExtractedResults((prev) => [...prev, result]);
+      const rawResult = await res.json();
+      const validation = validateExtractionResult(rawResult);
+      if (!validation.valid) {
+        // Try to salvage what we can
+        const salvaged = salvageExtractionResult(rawResult);
+        if (salvaged.events.length > 0) {
+          salvaged.sourceLabel = sourceLabel;
+          setExtractedResults((prev) => [...prev, salvaged]);
+          toast.warning("We had trouble reading parts of this email. Some fields may need manual editing.");
+        } else {
+          setValidationFailure({ errors: validation.errors, raw: rawResult });
+          toast.error("We had trouble reading this email — try pasting it again or scheduling manually.");
+        }
+      } else {
+        const result = validation.data!;
+        result.sourceLabel = sourceLabel;
+        setExtractedResults((prev) => [...prev, result]);
+      }
       setShowPasteDialog(false);
       setShowUploadDialog(false);
     } catch (err) {
@@ -369,8 +390,19 @@ export default function SchedulerPage() {
           throw new Error(err.error || "Extraction failed");
         }
 
-        const result: ExtractionResult = await res.json();
-        result.sourceLabel = file.name;
+        const rawResult = await res.json();
+        const validation = validateExtractionResult(rawResult);
+        let result: ExtractionResult;
+        if (!validation.valid) {
+          const salvaged = salvageExtractionResult(rawResult);
+          if (salvaged.events.length === 0) {
+            throw new Error("Could not read this file — try a different format or paste the text directly.");
+          }
+          result = { ...salvaged, sourceLabel: file.name } as ExtractionResult;
+          toast.warning(`Some fields in "${file.name}" may need manual editing.`);
+        } else {
+          result = { ...validation.data!, sourceLabel: file.name } as ExtractionResult;
+        }
 
         setFileUploads((prev) =>
           prev.map((u, j) =>
@@ -421,8 +453,8 @@ export default function SchedulerPage() {
         body: JSON.stringify({
           childId: selectedChildId,
           title: evt.title,
-          startTime: evt.startDate ? new Date(evt.startDate).toISOString() : null,
-          endTime: evt.endDate ? new Date(evt.endDate).toISOString() : null,
+          startTime: safeToISOString(evt.startDate),
+          endTime: safeToISOString(evt.endDate),
           location: evt.location,
           source: "paste",
           sourceLabel: result?.sourceLabel || "AI extraction",
@@ -461,8 +493,9 @@ export default function SchedulerPage() {
         );
         fetchEvents();
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "scheduler.handleApproveExtracted", childId: selectedChildId || undefined, input: evt.title });
+      showErrorToast("save", { action: "approve this event" });
     } finally {
       setApproving(false);
     }
@@ -483,8 +516,8 @@ export default function SchedulerPage() {
             body: JSON.stringify({
               childId: selectedChildId,
               title: evt.title,
-              startTime: evt.startDate ? new Date(evt.startDate).toISOString() : null,
-              endTime: evt.endDate ? new Date(evt.endDate).toISOString() : null,
+              startTime: safeToISOString(evt.startDate),
+              endTime: safeToISOString(evt.endDate),
               location: evt.location,
               source: "paste",
               sourceLabel: result.sourceLabel || "AI extraction",
@@ -512,8 +545,9 @@ export default function SchedulerPage() {
       setExtractedResults([]);
       setShowAchievement(true);
       fetchEvents();
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "scheduler.handleBatchApproveAll", childId: selectedChildId || undefined });
+      showErrorToast("save", { action: "approve these events" });
     } finally {
       setBatchApproving(false);
     }
@@ -528,8 +562,9 @@ export default function SchedulerPage() {
         body: JSON.stringify({ eventId, status }),
       });
       fetchEvents();
-    } catch {
-      // silently fail
+    } catch (err) {
+      logError(err, { route: "scheduler.handleUpdateStatus" });
+      showErrorToast("save", { action: "update this event" });
     }
   };
 
@@ -565,7 +600,7 @@ export default function SchedulerPage() {
     try {
       await navigator.clipboard.writeText(text);
     } catch {
-      // Fallback
+      // Clipboard fallback — intentional silent catch for clipboard API
       const el = document.createElement("textarea");
       el.value = text;
       document.body.appendChild(el);
@@ -650,6 +685,36 @@ export default function SchedulerPage() {
         </div>
       )}
 
+      {/* Validation failure fallback */}
+      {validationFailure && (
+        <div className="animate-slide-fade-in mb-4 rounded-xl border-[0.5px] border-amber-200 bg-amber-50 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-500" />
+            <p className="text-sm font-medium text-amber-800">We had trouble reading this email</p>
+            <button
+              onClick={() => setValidationFailure(null)}
+              className="ml-auto rounded-lg p-1 text-amber-400 hover:bg-amber-100 hover:text-amber-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <p className="mb-3 text-xs text-amber-700">
+            Try pasting the email again, or schedule the event manually using the form below.
+          </p>
+          {validationFailure.raw != null && (
+            <details className="rounded-lg bg-amber-100/50 p-3">
+              <summary className="cursor-pointer text-xs font-medium text-amber-700">
+                Show raw extracted data
+              </summary>
+              <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap text-[10px] text-amber-800">
+                {String(typeof validationFailure.raw === "string"
+                  ? validationFailure.raw
+                  : JSON.stringify(validationFailure.raw, null, 2))}
+              </pre>
+            </details>
+          )}
+        </div>
+      )}
       {/* Extracted results banner */}
       {extractedResults.length > 0 && (
         <div className="animate-slide-fade-in mb-6 rounded-xl border-[0.5px] border-scheduler/20 bg-scheduler-muted p-5">
@@ -910,10 +975,7 @@ export default function SchedulerPage() {
                         {evt.start_time && (
                           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                             <Clock className="h-3 w-3" />
-                            {new Date(evt.start_time).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
+                            {safeFormatDate(evt.start_time, { month: "short", day: "numeric" })}
                           </span>
                         )}
                         {evt.location && (
@@ -979,17 +1041,9 @@ export default function SchedulerPage() {
                 {selectedEvent.start_time && (
                   <span className="flex items-center gap-1.5">
                     <Clock className="h-4 w-4" />
-                    {new Date(selectedEvent.start_time).toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                    {safeFormatDate(selectedEvent.start_time, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                     {" at "}
-                    {new Date(selectedEvent.start_time).toLocaleTimeString("en-US", {
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
+                    {safeFormatTime(selectedEvent.start_time, { hour: "numeric", minute: "2-digit" })}
                   </span>
                 )}
                 {selectedEvent.location && (

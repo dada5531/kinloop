@@ -54,6 +54,7 @@ export async function GET(request: NextRequest, { params }: { params: { childId:
       .select(
         "id, title, start_time, end_time, location, status, source, action_items, amount_due, created_at",
       )
+      .is('deleted_at', null)
       .eq("child_id", childId)
       .order("created_at", { ascending: false })
       .limit(10);
@@ -76,6 +77,7 @@ export async function GET(request: NextRequest, { params }: { params: { childId:
     const { data: healthRecordsRaw } = await supabase
       .from("health_records")
       .select("id, visit_date, type, extracted, summary, height_cm, weight_kg, created_at")
+      .is('deleted_at', null)
       .eq("child_id", childId)
       .order("visit_date", { ascending: false })
       .limit(3);
@@ -119,6 +121,7 @@ export async function GET(request: NextRequest, { params }: { params: { childId:
     const { data: savedActivitiesRaw } = await supabase
       .from("activities")
       .select("id, title, duration_minutes, age_min, age_max, source_url, created_at")
+      .is('deleted_at', null)
       .eq("child_id", childId)
       .order("created_at", { ascending: false })
       .limit(5);
@@ -132,6 +135,7 @@ export async function GET(request: NextRequest, { params }: { params: { childId:
     const { data: conversationsRaw } = await supabase
       .from("coach_conversations")
       .select("id, created_at")
+      .is('deleted_at', null)
       .eq("child_id", childId)
       .order("created_at", { ascending: false })
       .limit(3);

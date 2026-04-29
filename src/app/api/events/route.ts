@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from("events")
       .select("*")
+      .is('deleted_at', null)
       .eq("child_id", childId)
       .order("created_at", { ascending: false });
 
@@ -117,5 +118,30 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     console.error("[Events PATCH] Error:", error);
     return NextResponse.json({ error: "Failed to update event" }, { status: 500 });
+  }
+}
+
+
+// Soft-delete an event
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const eventId = searchParams.get("id");
+    if (!eventId) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+    const supabase = getAdminClient();
+    const { error } = await supabase
+      .from("events")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", eventId);
+    if (error) {
+      console.error("[Events DELETE] Soft-delete error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[Events DELETE] Error:", error);
+    return NextResponse.json({ error: "Failed to delete event" }, { status: 500 });
   }
 }

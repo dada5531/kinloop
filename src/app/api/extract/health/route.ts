@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
         if (child) {
           childContext = buildChildContextString(child);
         }
-      } catch {
+      } catch (err) {
+        console.error(`[Kinloop Error] extractHealth.childContext:`, err instanceof Error ? err.message : err);
         // Continue without child context
       }
     }

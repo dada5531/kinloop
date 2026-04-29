@@ -8,6 +8,7 @@
  */
 
 import { generateIcs } from "./ics-generator";
+import { safeFormatDate, safeFormatTime } from "@/lib/safe-date";
 import { sendCalendarEmail } from "@/lib/integrations/resend";
 import { getAdminClient } from "@/lib/supabase/admin";
 
@@ -117,12 +118,12 @@ export async function sendCalendarInvite(
 
     // Build subject line
     const firstEvent = events[0];
-    const eventDate = new Date(firstEvent.startDate).toLocaleDateString("en-US", {
+    const eventDate = safeFormatDate(firstEvent.startDate, {
       weekday: "short",
       month: "short",
       day: "numeric",
     });
-    const eventTime = new Date(firstEvent.startDate).toLocaleTimeString("en-US", {
+    const eventTime = safeFormatTime(firstEvent.startDate, {
       hour: "numeric",
       minute: "2-digit",
     });
@@ -136,8 +137,8 @@ export async function sendCalendarInvite(
         <div style="margin-bottom: 16px; padding: 16px; background: #f9f8f6; border-radius: 8px; border-left: 4px solid ${source === "play_lab" ? "#E8A87C" : "#7C6EAF"};">
           <strong style="font-size: 15px; color: #1a1a1a;">${evt.title}</strong><br/>
           <span style="color: #666; font-size: 13px;">
-            ${new Date(evt.startDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-            at ${new Date(evt.startDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+            ${safeFormatDate(evt.startDate, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+            at ${safeFormatTime(evt.startDate, { hour: "numeric", minute: "2-digit" })}
             ${evt.location ? ` · ${evt.location}` : ""}
           </span>
           ${evt.description ? `<p style="margin: 8px 0 0 0; font-size: 13px; color: #555; line-height: 1.5;">${evt.description.slice(0, 200)}${evt.description.length > 200 ? "..." : ""}</p>` : ""}
@@ -231,7 +232,8 @@ export async function sendCalendarInvite(
         status: "failed",
         error_message: error instanceof Error ? error.message : "Unknown error",
       });
-    } catch {
+    } catch (err) {
+      console.error("[Kinloop Error] sendCalendarInvite:", err instanceof Error ? err.message : err);
       // Don't fail on audit log failure
     }
 
