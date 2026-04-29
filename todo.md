@@ -325,4 +325,4 @@
 - [x] Update CLAUDE.md with soft-delete pattern documentation (added Soft-Delete Pattern + Error Handling Pattern sections to Section 6)
 - [x] End-to-end test all CRUD flows on preview (delete confirmed working, edit confirmed working)
 - [ ] Capture screenshots of delete modals, "..." menus, admin recovery
-- [ ] Create PR titled [v1.6.4-crud-and-fixes]
+- [x] Create PR titled [v1.6.4-crud-and-fixes] — PR #33
