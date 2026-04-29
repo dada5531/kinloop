@@ -400,14 +400,14 @@
 
 ## v1.7 Phase 1 — Verification Additions
 
-- [ ] Add previewTipId query param override to /api/coach/daily route
-- [ ] Pass previewTipId from Coach page URL to the daily API call
-- [ ] Take screenshot: book tip with both Amazon + Audible pills (desktop)
-- [ ] Take screenshot: book tip with both Amazon + Audible pills (mobile 375px)
-- [ ] Take screenshot: book tip with Amazon only (desktop)
-- [ ] Take screenshot: book tip with Amazon only (mobile 375px)
-- [ ] Take screenshot: AAP institutional tip with no affiliate pills (desktop)
-- [ ] Take screenshot: AAP institutional tip with no affiliate pills (mobile 375px)
-- [ ] Take screenshot: disclosure footer visible with affiliate pills (desktop)
-- [ ] Take screenshot: disclosure footer visible with affiliate pills (mobile 375px)
-- [ ] Click affiliate link on preview, confirm Amazon redirect contains kinloop-20 tag
+- [x] Add previewTipId query param override to /api/coach/daily route
+- [x] Pass previewTipId from Coach page URL to the daily API call
+- [x] Take screenshot: book tip with both Amazon + Audible pills (desktop)
+- [x] Take screenshot: book tip with both Amazon + Audible pills (mobile 375px)
+- [x] Take screenshot: book tip with Amazon only (desktop)
+- [x] Take screenshot: book tip with Amazon only (mobile 375px)
+- [x] Take screenshot: AAP institutional tip with no affiliate pills (desktop)
+- [x] Take screenshot: AAP institutional tip with no affiliate pills (mobile 375px)
+- [x] Take screenshot: disclosure footer visible with affiliate pills (desktop)
+- [x] Take screenshot: disclosure footer visible with affiliate pills (mobile 375px)
+- [x] Click affiliate link on preview, confirm Amazon redirect contains kinloop-20 tag — PASS: final URL = amazon.com/s?k=...&tag=kinloop-20
