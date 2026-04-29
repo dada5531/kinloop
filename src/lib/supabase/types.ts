@@ -105,6 +105,8 @@ export interface Database {
           file_url: string | null;
           source_label: string | null;
                   deleted_at: string | null;
+          date_certainty: string | null;
+          original_date_text: string | null;
         };
         Insert: {
           id?: string;
@@ -127,6 +129,8 @@ export interface Database {
           file_url?: string | null;
           source_label?: string | null;
                   deleted_at?: string | null;
+          date_certainty?: string | null;
+          original_date_text?: string | null;
         };
         Update: {
           id?: string;
@@ -149,6 +153,8 @@ export interface Database {
           file_url?: string | null;
           source_label?: string | null;
                   deleted_at?: string | null;
+          date_certainty?: string | null;
+          original_date_text?: string | null;
         };
         Relationships: [];
       };

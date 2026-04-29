@@ -459,8 +459,8 @@ export default function SchedulerPage() {
 
     try {
       // Determine date certainty — use extraction output or infer from startDate
-      const dateCertainty = (evt as Record<string, unknown>).date_certainty as string || "exact";
-      const originalDateText = (evt as Record<string, unknown>).original_date_text as string | null || null;
+      const dateCertainty = evt.date_certainty || "exact";
+      const originalDateText = evt.original_date_text || null;
 
       const res = await fetch("/api/events", {
         method: "POST",
@@ -527,8 +527,8 @@ export default function SchedulerPage() {
       for (let ri = 0; ri < extractedResults.length; ri++) {
         const result = extractedResults[ri];
         for (const evt of result.events) {
-          const batchDateCertainty = (evt as Record<string, unknown>).date_certainty as string || "exact";
-          const batchOriginalDateText = (evt as Record<string, unknown>).original_date_text as string | null || null;
+          const batchDateCertainty = evt.date_certainty || "exact";
+          const batchOriginalDateText = evt.original_date_text || null;
 
           await fetch("/api/events", {
             method: "POST",
@@ -797,18 +797,18 @@ export default function SchedulerPage() {
                       <div className="min-w-0 flex-1">
                         <h3 className="text-sm font-medium text-foreground">{evt.title}</h3>
                         <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                          {(evt as Record<string, unknown>).date_certainty === "unknown" || !evt.startDate ? (
+                          {evt.date_certainty === "unknown" || !evt.startDate ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-medium text-stone-500">
                               <HelpCircle className="h-3 w-3" />
                               Date TBD
-                              {(evt as Record<string, unknown>).original_date_text && (
-                                <span className="text-stone-400">— &ldquo;{String((evt as Record<string, unknown>).original_date_text)}&rdquo;</span>
+                              {evt.original_date_text && (
+                                <span className="text-stone-400">— &ldquo;{String(evt.original_date_text)}&rdquo;</span>
                               )}
                             </span>
                           ) : (
                             <>
                               {evt.startDate}
-                              {(evt as Record<string, unknown>).date_certainty === "approximate" && (
+                              {evt.date_certainty === "approximate" && (
                                 <span className="inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 border border-amber-200">
                                   ~approx
                                 </span>
