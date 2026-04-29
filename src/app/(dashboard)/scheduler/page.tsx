@@ -802,7 +802,7 @@ export default function SchedulerPage() {
                               <HelpCircle className="h-3 w-3" />
                               Date TBD
                               {(evt as Record<string, unknown>).original_date_text && (
-                                <span className="text-stone-400">— "{String((evt as Record<string, unknown>).original_date_text)}"</span>
+                                <span className="text-stone-400">— &ldquo;{String((evt as Record<string, unknown>).original_date_text)}&rdquo;</span>
                               )}
                             </span>
                           ) : (
@@ -1152,7 +1152,7 @@ export default function SchedulerPage() {
                             <HelpCircle className="h-3.5 w-3.5" />
                             Date TBD
                             {selectedEvent.original_date_text && (
-                              <span className="ml-1 text-stone-400">— “{selectedEvent.original_date_text}”</span>
+                               <span className="ml-1 text-stone-400">— &ldquo;{selectedEvent.original_date_text}&rdquo;</span>
                             )}
                           </span>
                           <Button
@@ -1202,7 +1202,7 @@ export default function SchedulerPage() {
                           </span>
                           {isDateApprox && selectedEvent.original_date_text && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">
-                              Approximate — “{selectedEvent.original_date_text}”
+                               Approximate — &ldquo;{selectedEvent.original_date_text}&rdquo;
                             </span>
                           )}
                         </>
