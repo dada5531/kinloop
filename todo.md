@@ -366,13 +366,14 @@
 ## v1.7 — Affiliate Extension (SEPARATE PR, after scheduler fix verified)
 
 ### Phase 1 — Coach: Book Source Links
-- [ ] Add affiliate_url_amazon column on tips_corpus, populate via migration
-- [ ] Replace "Read more" with "Read on Amazon →" (primary) + "View source" (secondary) on tip cards
-- [ ] Affiliate disclosure footer on Coach page
-- [ ] Add Audible affiliate alongside Amazon for popular titles
-- [ ] Small Amazon "a" logo and Audible logo next to respective links
-- [ ] AUDIBLE_PARTNER_TAG env var (placeholder)
-- [ ] Send Phase 1 preview screenshots for sign-off
+- [x] Add affiliate_url_amazon + affiliate_url_audible columns to tips_corpus (migration 0006)
+- [x] Populate affiliate URLs for all 14 book-sourced tips (8 with Audible)
+- [x] Replace "Read more" with "Read on Amazon" pill (orange bg, ShoppingBag icon) + "View source" (secondary)
+- [x] Affiliate disclosure footer on Coach page (conditional, only when affiliate links present)
+- [x] Add Audible affiliate alongside Amazon for popular titles (Headphones icon pill)
+- [x] ShoppingBag + Headphones lucide icons for affiliate pills
+- [x] AUDIBLE_PARTNER_TAG env var (defaults to kinloop-20)
+- [ ] Send Phase 1 preview screenshots for sign-off (today's tip is AAP institutional — no affiliate links visible; verified DB has correct URLs for book tips)
 
 ### Phase 2 — Development: Zocdoc + Health Products
 - [ ] ZOCDOC_PARTNER_ID env var + "Book on Zocdoc →" button on next-recommended-action card
@@ -391,8 +392,8 @@
 - [ ] "Suggested action" pill UI under approved events
 
 ### Shared Infrastructure
-- [ ] /src/lib/affiliate/index.ts utility (generateAffiliateUrl, logAffiliateClick)
-- [ ] /api/affiliate/[partner]/redirect route (log + 302)
-- [ ] /admin/affiliate-clicks dashboard (admin-only)
-- [ ] /docs/affiliate-partnerships.md with application URLs and lead times
-- [ ] Update CLAUDE.md and ROADMAP.md
+- [x] /src/lib/affiliate/index.ts utility (generateAffiliateUrl, logAffiliateClick, buildTrackedUrl, partner configs)
+- [x] /api/affiliate/[partner]/redirect route (domain whitelist + structured logging + 302)
+- [ ] /admin/affiliate-clicks dashboard (admin-only) — deferred to Phase 3
+- [ ] /docs/affiliate-partnerships.md with application URLs and lead times — deferred to Phase 3
+- [ ] Update CLAUDE.md and ROADMAP.md — deferred to Phase 3
