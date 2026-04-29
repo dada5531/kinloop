@@ -22,15 +22,16 @@ UPDATE tips_corpus SET affiliate_url_amazon = CASE
 END
 WHERE source LIKE '%by %' OR source LIKE '%AAP%';
 
--- Populate Audible affiliate URLs for popular audiobook titles
+-- Populate Audible affiliate URLs via Amazon's Audible storefront (i=audible)
+-- Uses Amazon Associates tag (kinloop-20) for commission tracking
 UPDATE tips_corpus SET affiliate_url_audible = CASE
-  WHEN source LIKE '%No-Drama Discipline%' THEN 'https://www.audible.com/search?keywords=No-Drama+Discipline+Siegel&tag=kinloop-20'
-  WHEN source LIKE '%How to Talk So Kids%' THEN 'https://www.audible.com/search?keywords=How+to+Talk+So+Kids+Will+Listen+Faber&tag=kinloop-20'
-  WHEN source LIKE '%Whole-Brain Child%' THEN 'https://www.audible.com/search?keywords=Whole-Brain+Child+Siegel&tag=kinloop-20'
-  WHEN source LIKE '%Raising An Emotionally%' THEN 'https://www.audible.com/search?keywords=Raising+Emotionally+Intelligent+Child+Gottman&tag=kinloop-20'
-  WHEN source LIKE '%Healthy Sleep Habits%' THEN 'https://www.audible.com/search?keywords=Healthy+Sleep+Habits+Happy+Child+Weissbluth&tag=kinloop-20'
-  WHEN source LIKE '%Thirty Million Words%' THEN 'https://www.audible.com/search?keywords=Thirty+Million+Words+Suskind&tag=kinloop-20'
-  WHEN source LIKE '%Precious Little Sleep%' THEN 'https://www.audible.com/search?keywords=Precious+Little+Sleep+Dubief&tag=kinloop-20'
+  WHEN source LIKE '%No-Drama Discipline%' THEN 'https://www.amazon.com/s?k=No-Drama+Discipline+Siegel+audiobook&i=audible&tag=kinloop-20'
+  WHEN source LIKE '%How to Talk So Kids%' THEN 'https://www.amazon.com/s?k=How+to+Talk+So+Kids+Will+Listen+Faber+audiobook&i=audible&tag=kinloop-20'
+  WHEN source LIKE '%Whole-Brain Child%' THEN 'https://www.amazon.com/s?k=Whole-Brain+Child+Siegel+audiobook&i=audible&tag=kinloop-20'
+  WHEN source LIKE '%Raising An Emotionally%' THEN 'https://www.amazon.com/s?k=Raising+Emotionally+Intelligent+Child+Gottman+audiobook&i=audible&tag=kinloop-20'
+  WHEN source LIKE '%Healthy Sleep Habits%' THEN 'https://www.amazon.com/s?k=Healthy+Sleep+Habits+Happy+Child+Weissbluth+audiobook&i=audible&tag=kinloop-20'
+  WHEN source LIKE '%Thirty Million Words%' THEN 'https://www.amazon.com/s?k=Thirty+Million+Words+Suskind+audiobook&i=audible&tag=kinloop-20'
+  WHEN source LIKE '%Precious Little Sleep%' THEN 'https://www.amazon.com/s?k=Precious+Little+Sleep+Dubief+audiobook&i=audible&tag=kinloop-20'
   ELSE affiliate_url_audible
 END
 WHERE source LIKE '%by %';

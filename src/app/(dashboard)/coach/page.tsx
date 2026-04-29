@@ -445,7 +445,7 @@ export default function CoachPage() {
                       )}
                       {dailyTip.affiliate_url_audible && (
                         <a
-                          href={`/api/affiliate/audible/redirect?url=${encodeURIComponent(dailyTip.affiliate_url_audible)}&ctx_source=coach_tip`}
+                          href={`/api/affiliate/amazon/redirect?url=${encodeURIComponent(dailyTip.affiliate_url_audible)}&ctx_source=coach_tip_audible`}
                           target="_blank"
                           rel="noopener noreferrer sponsored"
                           className="inline-flex items-center gap-1 rounded-full bg-[#F8991D]/10 px-2.5 py-1 text-[11px] font-medium text-[#C17A00] transition-colors hover:bg-[#F8991D]/20"

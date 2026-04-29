@@ -385,7 +385,7 @@
 - [x] development-products.ts utility (getProductSuggestions, buildProductAffiliateUrl, buildTrackedZocdocUrl, getNextCheckupRecommendation)
 - [ ] Update health-extraction prompt for suggested_products array (deferred to Phase 2b)
 - [ ] GOODRX_PARTNER_ID env var + GoodRx links for medications (deferred to Phase 2b)
-- [ ] Send Phase 2 preview screenshots for sign-off
+- [x] Send Phase 2 preview screenshots for sign-off
 
 ### Phase 3 — Scheduler: Contextual Deep Links
 - [ ] Update scheduler-extraction prompt for event_type + suggested_action
@@ -414,3 +414,23 @@
 - [x] Take screenshot: disclosure footer visible with affiliate pills (desktop)
 - [x] Take screenshot: disclosure footer visible with affiliate pills (mobile 375px)
 - [x] Click affiliate link on preview, confirm Amazon redirect contains kinloop-20 tag — PASS: final URL = amazon.com/s?k=...&tag=kinloop-20
+
+## v1.7 Phase 2 Bug — Zocdoc + Audible Affiliate Redirects Broken
+- [x] Diagnose: Audit all affiliate redirect routes in codebase
+- [x] Diagnose: Check env var dependencies for each route
+- [x] Diagnose: Inspect rendered href on live preview for Zocdoc and Audible pills
+- [x] Diagnose: Click each broken pill, report HTTP status + response + final URL
+- [x] Diagnose: Report findings to user (all 5 questions answered)
+
+## v1.7 Affiliate Fixes — Audible + Zocdoc
+- [x] Audible: Migrate 8 tips_corpus.affiliate_url_audible to Amazon Audible store format (amazon.com/s?k=...+audiobook&i=audible&tag=kinloop-20)
+- [x] Audible: Update generateAffiliateUrl/Coach page to use new Amazon Audible store URL format
+- [x] Audible: Update domain whitelist — Audible links now go through amazon.com, not audible.com
+- [x] Zocdoc: user_settings table already uses key-value pattern (no migration needed)
+- [x] Zocdoc: ZIP code field on Settings page (5-digit US ZIP validation) — already implemented in Phase 2
+- [x] Zocdoc: Insurance provider dropdown on Settings page — already implemented in Phase 2
+- [x] Zocdoc: URL generation includes address={ZIP}&insurance_carrier={INSURANCE_SLUG} via buildZocdocUrl()
+- [x] Zocdoc: Fallback "Add your ZIP in Settings" when no ZIP is saved — already implemented in Phase 2
+- [x] Zocdoc: Seed demo data with ZIP 02138 (Cambridge MA) — inserted in DB + added to seed.sql
+- [ ] Test: Click "Listen on Audible" → lands on Amazon Audible store with tag visible
+- [ ] Test: Click "Book on Zocdoc" → lands on Zocdoc with Cambridge MA pediatricians

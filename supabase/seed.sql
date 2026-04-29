@@ -130,3 +130,24 @@ values
     'Bedtime resistance is very common at age 4, and the teeth-brushing trigger suggests Mia may be asserting her need for autonomy rather than being defiant. Here are some evidence-based strategies:\n\n**1. Offer controlled choices.** Instead of "time to brush teeth," try "Do you want to use the strawberry toothpaste or the mint one tonight?" This gives Mia a sense of control within your boundary.\n\n**2. Use a visual routine chart.** Create a simple bedtime sequence (bath → teeth → story → lights out) with pictures. When Mia can see what comes next, transitions feel less abrupt.\n\n**3. Connect before you redirect.** When the tantrum starts, get down to her eye level and acknowledge the feeling: "You are really upset about stopping playtime. That is hard." This activates the upstairs brain and helps her regulate.\n\n**4. Make it playful.** Let a stuffed dinosaur "brush its teeth first" or set a 2-minute sand timer as a game. Playfulness bypasses the power struggle entirely.\n\nSources: *The Whole-Brain Child* by Daniel Siegel, *How to Talk So Kids Will Listen* by Adele Faber',
     '[{"book_title": "The Whole-Brain Child", "book_author": "Daniel Siegel"}, {"book_title": "How to Talk So Kids Will Listen", "book_author": "Adele Faber"}]'
   );
+
+
+-- Demo healthcare settings (for Zocdoc pre-fill)
+insert into public.user_settings (id, user_id, setting_key, setting_value, created_at, updated_at)
+values
+  (
+    'aa000001-0000-0000-0000-000000000001',
+    '11111111-1111-1111-1111-111111111111',
+    'zocdoc_zip_code',
+    '02138',
+    now(),
+    now()
+  ),
+  (
+    'aa000001-0000-0000-0000-000000000002',
+    '11111111-1111-1111-1111-111111111111',
+    'insurance_provider',
+    'Other',
+    now(),
+    now()
+  );

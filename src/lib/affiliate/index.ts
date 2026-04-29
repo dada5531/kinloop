@@ -26,9 +26,9 @@ const PARTNER_CONFIGS: Record<AffiliatePartner, () => PartnerConfig> = {
   }),
   audible: () => ({
     name: "Audible",
-    tag: process.env.AUDIBLE_PARTNER_TAG || "kinloop-20",
-    baseUrl: "https://www.audible.com",
-    active: true, // Always active — uses default tag
+    tag: process.env.AMAZON_PARTNER_TAG || "kinloop-20",
+    baseUrl: "https://www.amazon.com", // Routes through Amazon's Audible storefront
+    active: true, // Always active — uses Amazon Associates tag
   }),
   zocdoc: () => ({
     name: "Zocdoc",
@@ -88,7 +88,8 @@ export function generateAffiliateUrl(
     case "amazon":
       return `https://www.amazon.com/s?k=${encoded}&tag=${tag}`;
     case "audible":
-      return `https://www.audible.com/search?keywords=${encoded}&tag=${tag}`;
+      // Route through Amazon's Audible storefront (i=audible) so Amazon Associates tag works
+      return `https://www.amazon.com/s?k=${encoded}+audiobook&i=audible&tag=${tag}`;
     default:
       return `${config.baseUrl}/search?q=${encoded}`;
   }
