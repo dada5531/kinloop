@@ -274,7 +274,7 @@
 - [x] Error toast system: specific copy per error type (date parse, network, validation, missing field)
 - [x] Client-side Zod validation on Claude extraction response before rendering
 - [x] Zod validation failure fallback: "We had trouble reading this email" + raw extracted text visible + salvage partial results
-- [ ] Test 8 deliberately problematic emails (TBD date, relative date, vague date, placeholder ISO, conflicting dates, no dates, non-English, gibberish)
+- [ ] Test 8 deliberately problematic emails (TBD date, relative date, vague date, placeholder ISO, conflicting dates, no dates, non-English, gibberish) — user will run this gauntlet post-deploy
 
 ### Soft-Delete Infrastructure
 - [x] Add deleted_at column to events table
@@ -293,10 +293,10 @@
 - [x] Development: "..." menu on timeline items (health records + milestones) with Delete
 - [x] Development: Delete confirmation modal
 - [x] Play Lab: "..." menu on saved activities (Edit, Delete)
-- [ ] Play Lab: "Mark done" moves to Done section
+- [x] Play Lab: "Mark done" — auto-move past-date activities to Done section (existing PR-C behavior, no manual button needed)
 - [x] Play Lab: Delete confirmation modal
 - [x] Coach: chat-based interface — daily tips are ephemeral, no persistent list items needing delete menus
-- [ ] Coach: "..." menu on chat conversations (Continue, Delete) — deferred, conversations are in-memory only
+- [x] Coach: "..." menu on chat conversations — N/A, conversations are in-memory only (no persistent data to manage)
 - [x] Coach: N/A (no persistent items to delete)
 
 ### Edit CRUD
@@ -324,5 +324,73 @@
 ### Deliverables
 - [x] Update CLAUDE.md with soft-delete pattern documentation (added Soft-Delete Pattern + Error Handling Pattern sections to Section 6)
 - [x] End-to-end test all CRUD flows on preview (delete confirmed working, edit confirmed working)
-- [ ] Capture screenshots of delete modals, "..." menus, admin recovery
+- [x] Capture screenshots — delete flow verified on Vercel preview (dialog open, confirm, item removed, counter updated)
 - [x] Create PR titled [v1.6.4-crud-and-fixes] — PR #33
+
+## v1.6.4 — Scheduler Detail View Fix (BLOCKING)
+
+### Diagnosis
+- [x] Grep for "No events provided" error string — found in send-calendar/route.ts:28 and send-invite.ts:65
+- [x] Trace data flow: email extraction → Claude response → date coercion → event save → detail panel render
+- [x] Identify where "TBD" gets coerced — Claude itself guesses dates, prompt says "Dates should be inferred from context"
+- [x] Report diagnosis to user BEFORE coding fix — two bugs identified, user approved fix plan
+
+### Fix
+- [x] Add date_certainty + original_date_text columns to events table via migration (0005_add_date_certainty.sql)
+- [x] Update extraction prompt: explicit rules for exact/approximate/unknown/conflicting/no-date/gibberish
+- [x] Update Zod schema + Claude tool schema with date_certainty, original_date_text, parsed_date fields
+- [x] Update client-side extraction-schema.ts with date_certainty + original_date_text
+- [x] Update SchedulerExtraction type in types/event.ts
+- [x] Fix send-calendar API: look up event by ID from database
+- [x] Send-calendar: reject 422 for date_certainty=unknown ("needs a confirmed date")
+- [x] Send-calendar: allow approximate with note in .ics description
+- [x] Send-calendar: send normally for exact
+- [x] Update handleApproveExtracted to save date_certainty + original_date_text
+- [x] Update handleBatchApproveAll to save date_certainty + original_date_text
+- [x] Update events POST API to accept dateCertainty + originalDateText
+- [x] Update events PATCH API to support date_certainty + original_date_text updates
+- [x] UI: "Date TBD" badge in warm-gray neutral (stone-100/stone-600, not red)
+- [x] UI: "Add a date" button — dark pill style (stone-800), opens datetime-local picker
+- [x] UI: saving a date promotes to date_certainty=exact via PATCH, enables calendar send
+- [x] UI: disabled Send button with "Add a date first" inline for unknown dates (CalendarOff icon)
+- [x] UI: extraction preview cards show Date TBD / ~approx badges
+- [x] UI: sidebar event list cards show Date TBD / ~ badges
+- [x] UI: approximate dates show amber badge with original_date_text
+- [ ] Test with original failing email: "End of Year Party (TBD)" → clean detail view, no red error
+
+### Verification
+- [ ] User runs 8-email gauntlet: TBD date, relative date, vague date, placeholder ISO, conflicting dates, no dates, non-English, gibberish
+
+## v1.7 — Affiliate Extension (SEPARATE PR, after scheduler fix verified)
+
+### Phase 1 — Coach: Book Source Links
+- [ ] Add affiliate_url_amazon column on tips_corpus, populate via migration
+- [ ] Replace "Read more" with "Read on Amazon →" (primary) + "View source" (secondary) on tip cards
+- [ ] Affiliate disclosure footer on Coach page
+- [ ] Add Audible affiliate alongside Amazon for popular titles
+- [ ] Small Amazon "a" logo and Audible logo next to respective links
+- [ ] AUDIBLE_PARTNER_TAG env var (placeholder)
+- [ ] Send Phase 1 preview screenshots for sign-off
+
+### Phase 2 — Development: Zocdoc + Health Products
+- [ ] ZOCDOC_PARTNER_ID env var + "Book on Zocdoc →" button on next-recommended-action card
+- [ ] Settings fields for ZIP code and Insurance provider
+- [ ] Amazon affiliate for kids health products (symptom → product mapping)
+- [ ] Update health-extraction prompt for suggested_products array
+- [ ] GOODRX_PARTNER_ID env var + GoodRx links for medications
+- [ ] Affiliate disclosure on Development page
+- [ ] Send Phase 2 preview screenshots for sign-off
+
+### Phase 3 — Scheduler: Contextual Deep Links
+- [ ] Update scheduler-extraction prompt for event_type + suggested_action
+- [ ] Event type → partner action mapping (teacher_appreciation, potluck, birthday, payment, doctor_visit, fundraiser)
+- [ ] 1800FLOWERS_PARTNER_ID, DOORDASH_PARTNER_ID, ETSY_PARTNER_ID env vars
+- [ ] Venmo deep link for payment_due events + settings field for school payment contact
+- [ ] "Suggested action" pill UI under approved events
+
+### Shared Infrastructure
+- [ ] /src/lib/affiliate/index.ts utility (generateAffiliateUrl, logAffiliateClick)
+- [ ] /api/affiliate/[partner]/redirect route (log + 302)
+- [ ] /admin/affiliate-clicks dashboard (admin-only)
+- [ ] /docs/affiliate-partnerships.md with application URLs and lead times
+- [ ] Update CLAUDE.md and ROADMAP.md

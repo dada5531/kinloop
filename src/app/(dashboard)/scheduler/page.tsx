@@ -18,10 +18,12 @@ import {
   AlertTriangle,
   Mail,
   CalendarPlus,
+  CalendarOff,
   CheckCheck,
   XCircle,
   Copy,
   ExternalLink,
+  HelpCircle,
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 
@@ -48,9 +50,11 @@ import { InlineEditForm } from "@/components/InlineEditForm";
 interface ExtractedEvent {
   title: string;
   description: string;
-  startDate: string;
+  startDate: string | null;
   endDate: string | null;
   location: string | null;
+  date_certainty?: "exact" | "approximate" | "unknown";
+  original_date_text?: string | null;
 }
 
 interface ExtractedActionItem {
@@ -92,6 +96,8 @@ interface SavedEvent {
   reply_draft: string | null;
   file_url: string | null;
   created_at: string;
+  date_certainty: "exact" | "approximate" | "unknown" | null;
+  original_date_text: string | null;
 }
 
 interface FileUploadState {
@@ -452,14 +458,18 @@ export default function SchedulerPage() {
     const result = extractedResults[resultIndex];
 
     try {
+      // Determine date certainty — use extraction output or infer from startDate
+      const dateCertainty = (evt as Record<string, unknown>).date_certainty as string || "exact";
+      const originalDateText = (evt as Record<string, unknown>).original_date_text as string | null || null;
+
       const res = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           childId: selectedChildId,
           title: evt.title,
-          startTime: safeToISOString(evt.startDate),
-          endTime: safeToISOString(evt.endDate),
+          startTime: dateCertainty === "unknown" ? null : safeToISOString(evt.startDate),
+          endTime: dateCertainty === "unknown" ? null : safeToISOString(evt.endDate),
           location: evt.location,
           source: "paste",
           sourceLabel: result?.sourceLabel || "AI extraction",
@@ -480,6 +490,8 @@ export default function SchedulerPage() {
           rawContent,
           replyDraft: result?.suggestedReply,
           status: "approved",
+          dateCertainty,
+          originalDateText,
         }),
       });
 
@@ -515,14 +527,17 @@ export default function SchedulerPage() {
       for (let ri = 0; ri < extractedResults.length; ri++) {
         const result = extractedResults[ri];
         for (const evt of result.events) {
+          const batchDateCertainty = (evt as Record<string, unknown>).date_certainty as string || "exact";
+          const batchOriginalDateText = (evt as Record<string, unknown>).original_date_text as string | null || null;
+
           await fetch("/api/events", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               childId: selectedChildId,
               title: evt.title,
-              startTime: safeToISOString(evt.startDate),
-              endTime: safeToISOString(evt.endDate),
+              startTime: batchDateCertainty === "unknown" ? null : safeToISOString(evt.startDate),
+              endTime: batchDateCertainty === "unknown" ? null : safeToISOString(evt.endDate),
               location: evt.location,
               source: "paste",
               sourceLabel: result.sourceLabel || "AI extraction",
@@ -543,6 +558,8 @@ export default function SchedulerPage() {
               rawContent,
               replyDraft: result.suggestedReply,
               status: "approved",
+              dateCertainty: batchDateCertainty,
+              originalDateText: batchOriginalDateText,
             }),
           });
         }
@@ -779,8 +796,25 @@ export default function SchedulerPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <h3 className="text-sm font-medium text-foreground">{evt.title}</h3>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {evt.startDate}
+                        <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                          {(evt as Record<string, unknown>).date_certainty === "unknown" || !evt.startDate ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-medium text-stone-500">
+                              <HelpCircle className="h-3 w-3" />
+                              Date TBD
+                              {(evt as Record<string, unknown>).original_date_text && (
+                                <span className="text-stone-400">— "{String((evt as Record<string, unknown>).original_date_text)}"</span>
+                              )}
+                            </span>
+                          ) : (
+                            <>
+                              {evt.startDate}
+                              {(evt as Record<string, unknown>).date_certainty === "approximate" && (
+                                <span className="inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 border border-amber-200">
+                                  ~approx
+                                </span>
+                              )}
+                            </>
+                          )}
                           {evt.endDate && ` – ${evt.endDate}`}
                           {evt.location && ` · ${evt.location}`}
                         </p>
@@ -1001,10 +1035,18 @@ export default function SchedulerPage() {
                         </p>
                       )}
                       <div className="mt-1.5 flex items-center gap-3">
-                        {evt.start_time && (
+                        {(evt.date_certainty === "unknown" || !evt.start_time) ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-medium text-stone-500">
+                            <HelpCircle className="h-3 w-3" />
+                            Date TBD
+                          </span>
+                        ) : (
                           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                             <Clock className="h-3 w-3" />
                             {safeFormatDate(evt.start_time, { month: "short", day: "numeric" })}
+                            {evt.date_certainty === "approximate" && (
+                              <span className="text-[9px] text-amber-600">~</span>
+                            )}
                           </span>
                         )}
                         {evt.location && (
@@ -1095,71 +1137,141 @@ export default function SchedulerPage() {
 
               <h2 className="mb-2 font-serif-display text-lg font-semibold text-foreground">{selectedEvent.title}</h2>
 
-              <div className="mb-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
-                {selectedEvent.start_time && (
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4" />
-                    {safeFormatDate(selectedEvent.start_time, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-                    {" at "}
-                    {safeFormatTime(selectedEvent.start_time, { hour: "numeric", minute: "2-digit" })}
-                  </span>
-                )}
-                {selectedEvent.location && (
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4" />
-                    {selectedEvent.location}
-                  </span>
-                )}
-              </div>
+              {/* Date display — certainty-aware */}
+              {(() => {
+                const certainty = selectedEvent.date_certainty || (selectedEvent.start_time ? "exact" : "unknown");
+                const isDateUnknown = certainty === "unknown" || !selectedEvent.start_time;
+                const isDateApprox = certainty === "approximate";
 
-              {/* Send to Calendar button */}
-              {selectedEvent.status === "approved" && selectedEvent.start_time && (
-                <div className="mb-6">
-                  {calendarSuccess === selectedEvent.id ? (
-                    <div className="flex items-center gap-2 rounded-xl border-[0.5px] border-green-200 bg-green-50 px-4 py-3">
-                      <Check className="h-4 w-4 text-green-600" />
-                      <span className="text-sm text-green-700">
-                        Calendar invite sent to your email
-                      </span>
-                    </div>
-                  ) : calendarError && sendingCalendar === null ? (
-                    <div className="flex items-center gap-2 rounded-xl border-[0.5px] border-red-200 bg-red-50 px-4 py-3">
-                      <AlertTriangle className="h-4 w-4 text-red-500" />
-                      <span className="text-sm text-red-700">{calendarError}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="ml-auto"
-                        onClick={() => {
-                          setCalendarError(null);
-                          handleSendToCalendar(selectedEvent);
-                        }}
-                      >
-                        Retry
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      onClick={() => handleSendToCalendar(selectedEvent)}
-                      disabled={sendingCalendar === selectedEvent.id}
-                      className="w-full justify-center"
-                    >
-                      {sendingCalendar === selectedEvent.id ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending invite...
-                        </>
+                return (
+                  <>
+                    <div className="mb-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
+                      {isDateUnknown ? (
+                        <div className="flex flex-col gap-2">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600">
+                            <HelpCircle className="h-3.5 w-3.5" />
+                            Date TBD
+                            {selectedEvent.original_date_text && (
+                              <span className="ml-1 text-stone-400">— “{selectedEvent.original_date_text}”</span>
+                            )}
+                          </span>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="w-fit rounded-full bg-stone-800 px-4 text-xs font-medium text-white hover:bg-stone-700"
+                            onClick={() => {
+                              // Open an inline date picker by setting the editing state
+                              const dateInput = document.createElement("input");
+                              dateInput.type = "datetime-local";
+                              dateInput.className = "sr-only";
+                              dateInput.onchange = async (e) => {
+                                const val = (e.target as HTMLInputElement).value;
+                                if (!val) return;
+                                try {
+                                  await fetch(`/api/events?itemId=${selectedEvent.id}`, {
+                                    method: "PATCH",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      start_time: new Date(val).toISOString(),
+                                      date_certainty: "exact",
+                                      original_date_text: null,
+                                    }),
+                                  });
+                                  fetchEvents();
+                                  toast.success("Date added! You can now send this to your calendar.");
+                                } catch (err) {
+                                  logError(err, { route: "scheduler.addDate", input: selectedEvent.id });
+                                  showErrorToast("save", { action: "add a date" });
+                                }
+                                dateInput.remove();
+                              };
+                              document.body.appendChild(dateInput);
+                              dateInput.showPicker();
+                            }}
+                          >
+                            Add a date
+                          </Button>
+                        </div>
                       ) : (
                         <>
-                          <CalendarPlus className="mr-2 h-4 w-4" />
-                          Send to my calendar
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="h-4 w-4" />
+                            {safeFormatDate(selectedEvent.start_time!, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                            {" at "}
+                            {safeFormatTime(selectedEvent.start_time!, { hour: "numeric", minute: "2-digit" })}
+                          </span>
+                          {isDateApprox && selectedEvent.original_date_text && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">
+                              Approximate — “{selectedEvent.original_date_text}”
+                            </span>
+                          )}
                         </>
                       )}
-                    </Button>
-                  )}
-                </div>
-              )}
+                      {selectedEvent.location && (
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4" />
+                          {selectedEvent.location}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Send to Calendar button — gated by date certainty */}
+                    {selectedEvent.status === "approved" && (
+                      <div className="mb-6">
+                        {isDateUnknown ? (
+                          <div className="flex items-center gap-2 rounded-xl border-[0.5px] border-stone-200 bg-stone-50 px-4 py-3">
+                            <CalendarOff className="h-4 w-4 text-stone-400" />
+                            <span className="text-sm text-stone-500">Add a date first to send to your calendar</span>
+                          </div>
+                        ) : calendarSuccess === selectedEvent.id ? (
+                          <div className="flex items-center gap-2 rounded-xl border-[0.5px] border-green-200 bg-green-50 px-4 py-3">
+                            <Check className="h-4 w-4 text-green-600" />
+                            <span className="text-sm text-green-700">
+                              Calendar invite sent to your email
+                            </span>
+                          </div>
+                        ) : calendarError && sendingCalendar === null ? (
+                          <div className="flex items-center gap-2 rounded-xl border-[0.5px] border-red-200 bg-red-50 px-4 py-3">
+                            <AlertTriangle className="h-4 w-4 text-red-500" />
+                            <span className="text-sm text-red-700">{calendarError}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="ml-auto"
+                              onClick={() => {
+                                setCalendarError(null);
+                                handleSendToCalendar(selectedEvent);
+                              }}
+                            >
+                              Retry
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleSendToCalendar(selectedEvent)}
+                            disabled={sendingCalendar === selectedEvent.id}
+                            className="w-full justify-center"
+                          >
+                            {sendingCalendar === selectedEvent.id ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Sending invite...
+                              </>
+                            ) : (
+                              <>
+                                <CalendarPlus className="mr-2 h-4 w-4" />
+                                Send to my calendar
+                                {isDateApprox && <span className="ml-1 text-xs text-muted-foreground">(approximate)</span>}
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
 
               {/* Action items */}
               {selectedEvent.action_items &&

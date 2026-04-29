@@ -9,6 +9,7 @@ import type { SchedulerExtraction } from "@/types/event";
  * from parent communications (emails, PDFs, images).
  *
  * Prompt lives in: /prompts/scheduler-extraction.md
+ * v2.0 — adds date_certainty + original_date_text fields
  */
 
 // ─── Zod Schema ─────────────────────────────────────────────────
@@ -17,9 +18,11 @@ export const schedulerExtractionSchema = z.object({
     z.object({
       title: z.string(),
       description: z.string(),
-      startDate: z.string(),
+      startDate: z.string().nullable(),
       endDate: z.string().nullable(),
       location: z.string().nullable(),
+      date_certainty: z.enum(["exact", "approximate", "unknown"]).default("exact"),
+      original_date_text: z.string().nullable().default(null),
     }),
   ),
   actionItems: z.array(
@@ -46,7 +49,7 @@ export const schedulerExtractionSchema = z.object({
 const extractionToolSchema = {
   name: "extract_scheduler_data",
   description:
-    "Extract structured events, action items, amounts due, and suggested reply from a parent communication (email, PDF, or image).",
+    "Extract structured events, action items, amounts due, and suggested reply from a parent communication (email, PDF, or image). Follow the Date Handling Rules in the system prompt exactly.",
   input_schema: {
     type: "object" as const,
     properties: {
@@ -62,8 +65,9 @@ const extractionToolSchema = {
               description: "Brief event description or context",
             },
             startDate: {
-              type: "string",
-              description: "ISO 8601 date (YYYY-MM-DD) or datetime",
+              type: ["string", "null"],
+              description:
+                "ISO 8601 date (YYYY-MM-DD or YYYY-MM-DDTHH:MM) when date_certainty is exact or approximate. null when date_certainty is unknown.",
             },
             endDate: {
               type: ["string", "null"],
@@ -73,8 +77,27 @@ const extractionToolSchema = {
               type: ["string", "null"],
               description: "Event location or null",
             },
+            date_certainty: {
+              type: "string",
+              enum: ["exact", "approximate", "unknown"],
+              description:
+                "Date confidence level. 'exact' = clean unambiguous date. 'approximate' = relative or conflicting date (best guess provided). 'unknown' = TBD, vague, placeholder, or missing date.",
+            },
+            original_date_text: {
+              type: ["string", "null"],
+              description:
+                "Raw date text from the email, preserved exactly as written. null only when date_certainty is 'exact'. For approximate/unknown, preserve the original text (e.g. 'TBD', 'next Tuesday', 'late June', 'May 8 or 9').",
+            },
           },
-          required: ["title", "description", "startDate", "endDate", "location"],
+          required: [
+            "title",
+            "description",
+            "startDate",
+            "endDate",
+            "location",
+            "date_certainty",
+            "original_date_text",
+          ],
         },
       },
       actionItems: {

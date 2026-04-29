@@ -27,9 +27,11 @@ export interface SchedulerExtraction {
   events: {
     title: string;
     description: string;
-    startDate: string;
+    startDate: string | null;
     endDate: string | null;
     location: string | null;
+    date_certainty: "exact" | "approximate" | "unknown";
+    original_date_text: string | null;
   }[];
   actionItems: {
     task: string;

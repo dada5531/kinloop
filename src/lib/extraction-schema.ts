@@ -13,9 +13,11 @@ import { z } from "zod";
 export const ExtractedEventSchema = z.object({
   title: z.string().min(1, "Event must have a title"),
   description: z.string().default(""),
-  startDate: z.string().default(""),
+  startDate: z.union([z.string(), z.null()]).default(null),
   endDate: z.union([z.string(), z.null()]).default(null),
   location: z.union([z.string(), z.null()]).default(null),
+  date_certainty: z.enum(["exact", "approximate", "unknown"]).default("exact"),
+  original_date_text: z.union([z.string(), z.null()]).default(null),
 });
 
 export const ExtractedActionItemSchema = z.object({

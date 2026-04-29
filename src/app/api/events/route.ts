@@ -70,6 +70,8 @@ export async function POST(request: NextRequest) {
       reply_draft: body.replyDraft || null,
       file_url: body.fileUrl || null,
       status: body.status || "approved",
+      date_certainty: body.dateCertainty || "exact",
+      original_date_text: body.originalDateText || null,
     };
 
     const { data, error } = await supabase.from("events").insert(row).select().single();
@@ -115,6 +117,8 @@ export async function PATCH(request: NextRequest) {
     if (body.start_time !== undefined) updates.start_time = body.start_time;
     if (body.end_time !== undefined) updates.end_time = body.end_time;
     if (body.location !== undefined) updates.location = body.location;
+    if (body.date_certainty !== undefined) updates.date_certainty = body.date_certainty;
+    if (body.original_date_text !== undefined) updates.original_date_text = body.original_date_text;
 
     const { data, error } = await supabase
       .from("events")
